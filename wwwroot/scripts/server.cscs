@@ -40,20 +40,6 @@ function postRoot(args)
 }
 
 
-
-CreateEndpoint("PUT", "/dodajCustomera", "addCust");
-function addCust(args)
-{
-    
-    SQLINSERT dodajCustomera
-
-    log.add("cust dodan")
-
-    ret5un 200;
-
-
-}
-
 //---------------------------------------------------
 
 function ExecSQL(queryString)
