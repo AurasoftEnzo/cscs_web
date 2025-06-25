@@ -1,0 +1,70 @@
+// SQLConnectionString("Server=127.0.0.1,1433;Database=T__DATAX_Y4__BY4;MultipleActiveResultSets=true;User Id=sa;Password=aura;TrustServerCertificate=true;");
+
+CreateEndpoint("GET", "/", "getRoot");
+
+brojac = -1;
+
+function getRoot()
+{
+    brojac++;    
+    // WriteConsole("brojac: " + brojac);
+
+    if(brojac % 3 == 0)
+    {
+        return ReadFileAllText("C:\\Users\\User\\Desktop\\DATAGRID_red.html");
+    }
+    elif(brojac % 3 == 1)
+    {
+        return ReadFileAllText("C:\\Users\\User\\Desktop\\DATAGRID_blue.html");
+    }
+    else
+    {
+        return ExecSQL("SELECT TOP 10 TRIM(ARTI_ARTIKL) FROM " + "T__DATAX_Y4__BY4" + ".dbo.NKMKARTI");
+    }
+}
+
+
+CreateEndpoint("GET", "/red", "getRed");
+function getRed(){return ReadFileAllText("C:\\Users\\User\\Desktop\\DATAGRID_red.html");}
+
+CreateEndpoint("GET", "/blue", "getBlue");
+function getBlue(){return ReadFileAllText("C:\\Users\\User\\Desktop\\DATAGRID_blue.html");}
+
+
+CreateEndpoint("POST", "/", "postRoot");
+function postRoot(args)
+{
+    WriteConsole("POST args: " + args);
+    
+    return 10 + int(args[0]) + int(args[1]) + int(args[2]);
+}
+
+
+
+CreateEndpoint("PUT", "/dodajCustomera", "addCust");
+function addCust(args)
+{
+    
+    SQLINSERT dodajCustomera
+
+    log.add("cust dodan")
+
+    ret5un 200;
+
+
+}
+
+//---------------------------------------------------
+
+function ExecSQL(queryString)
+{
+    try
+    {
+        return sqlquery(queryString);
+    }catch(exc)
+    {
+        return "Error reading from db: " + exc;
+    }
+}
+
+
