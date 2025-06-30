@@ -14,11 +14,11 @@ namespace CSCS_Web_Enzo_1
         static CSCS_SQL CSCS_SQL { get; set; }
         static CSCSWebFunctions CSCSWebFunctions { get; set; }
 
-        public static void Initialize(WebApplication app, CSCSConfig cscsConfig)
+        public static void Initialize(WebApplication serverApp, CSCSConfig cscsConfig)
         {
             CSCSConfig = cscsConfig;
 
-            WebApplication = app;
+            WebApplication = serverApp;
             
             Interpreter = new Interpreter();
 
@@ -61,7 +61,7 @@ namespace CSCS_Web_Enzo_1
         {
             string script = Utils.GetFileContents(fileName);
 
-            PreprocessScripts();
+            //string step2 = PreprocessScripts();
 
             //preprocess this file
             var tokenSet = GetPreprocessTokens();
@@ -73,22 +73,23 @@ namespace CSCS_Web_Enzo_1
 
         }
 
-        static void PreprocessScripts()
-        {
-            var filesStr = ""; // App.GetConfiguration("PreprocessFiles", "");
-            var tokenSet = GetPreprocessTokens();
-            if (string.IsNullOrWhiteSpace(filesStr) || tokenSet.Count == 0)
-            {
-                return;
-            }
-            var scriptsDirStr = CSCSConfig.ScriptsDirectory; // App.GetConfiguration("ScriptsPath", "");
+                        //static string PreprocessScripts()
+                        //{
+                        //    var filesStr = CSCSConfig.PreprocessSripts; // App.GetConfiguration("PreprocessFiles", "");
+                        //    var tokenSet = GetPreprocessTokens();
+                        //    if (string.IsNullOrWhiteSpace(filesStr) || tokenSet.Count == 0)
+                        //    {
+                        //        return "";
+                        //    }
+                        //    var scriptsDirStr = CSCSConfig.ScriptsDirectory; // App.GetConfiguration("ScriptsPath", "");
 
-            var files = filesStr.Split(',');
-            foreach (var file in files)
-            {
-                Utils.PreprocessScriptFile(file, tokenSet, scriptsDirStr);
-            }
-        }
+                        //    var files = filesStr.Split(',');
+                        //    foreach (var file in files)
+                        //    {
+                        //        string step2 = Utils.PreprocessScriptFile(file, tokenSet, scriptsDirStr);
+                        //        return step2;
+                        //    }
+                        //}
 
         static HashSet<string> GetPreprocessTokens()
         {

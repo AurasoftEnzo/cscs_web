@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+
+
+    <!-- CSS -->
+    <style>
+        #divOne {
+            margin: 20px;
+            padding: 10px;
+            background-color: greenyellow;
+        }
+
+        .paragraphMargins {
+            margin: 20px;
+            padding: 10px;
+            background-color: darkgray;
+        }
+
+
+
+        .divGray {
+            margin: 20px;
+            padding: 10px;
+            background-color: darkgray;
+            color: red;
+            font-weight: bolder;
+        }
+
+        .divGreen {
+            margin: 20px;
+            padding: 10px;
+            background-color: darkgreen;
+            color: white;
+            font-weight: bolder;
+        }
+        .divBorder {
+            border: 1px solid black;
+            margin: 20px;
+        }
+
+    </style>
+    <!--  ili   -->
+    <!-- <link rel="stylesheet" href="www.aurasoft.hr/cssovi/css1.css"> -->
+
+
+</head>
+
+<body>
+    <h1>{{title}}</h1>
+
+    <h2>companyName:<br />{{companyName}}</h2>
+
+    <h3>companyAddress:<br />{{companyAddress}}</h3>
+    <br />
+
+    ------------------------------------------
+    <p>bodyParagraphText:<br />{{bodyParagraphText}}</p>
+
+    <br/>
+    <br/>
+    ------------------------------------------
+    <h3>placeholder1:</h3>
+    <p>{{placeholder1}}</p>
+
+    ------------------------------------------
+
+    <div class="{{div1Class}} divBorder">
+        <h4>div1</h4>
+        <p>This is a paragraph in div1.</p>
+    </div>
+    <div class="{{div2Class}} divBorder">
+        <h4>div1</h4>
+        <p>This is a paragraph in div1.</p>
+    </div>
+    <div class="{{div3Class}} divBorder">
+        <h4>div1</h4>
+        <p>This is a paragraph in div1.</p>
+    </div>
+    <div class="{{div4Class}} divBorder">
+        <h4>div1</h4>
+        <p>This is a paragraph in div1.</p>
+    </div>
+    <div class="{{div5Class}} divBorder">
+        <h4>div1</h4>
+        <p>This is a paragraph in div1.</p>
+    </div>
+    <div class="{{div6Class}} divBorder">
+        <h4>div1</h4>
+        <p>This is a paragraph in div1.</p>
+    </div>
+
+    ------------------------------------------
+
+    <!-- Bindanje DEFINE varijabli -->
+    <br />
+    <br />
+    <br />
+    <h2>-- Bindanje DEFINE varijabli --</h2>
+    <h4>Artikl prvi:</h4>
+    <p>DEFINE varijabla "ARTI_ARTIKL" je jednaka "{{DEFINE_ARTI_ARTIKL}}"</p>
+    <p>DEFINE varijabla "ARTI_NAZIV" je jednaka "{{DEFINE_ARTI_NAZIV}}"</p>
+
+
+    ------------------------------------------
+
+    <!-- IF 1: -->
+    <br />
+    <br />
+    <br />
+    <h2>-- IF uvjetno templatiranje --</h2>
+    {{IF_listaId}}
+    <ul id="divOne" style="font-size: 35px;" class="divOneClass">
+        <li>
+            <p style="font-size: 23px; color: blue; font-weight: bold;" class="paragraphMargins">{{nesto1}}</p>
+        </li>
+        <li>
+            <p style="font-size: 21px; color: green; font-weight: bold;" class="paragraphMargins">{{nesto2}}</p>
+        </li>
+        <li>
+            <p style="font-size: 19px; color: purple; font-weight: bold;" class="paragraphMargins">{{nesto3}}</p>
+        </li>
+    </ul>
+    {{IF_listaId}}
+
+
+
+    ------------------------------------------
+
+    <!-- IF 2: long colored text -->
+    <br />
+    <br />
+    <br />
+    <h2>-- IF uvjetno templatiranje 2 --</h2>
+    {{IF_ifId1}}
+    <p>
+        This is a paragraph that will be shown only if the condition in IF_ifId1 is true.
+        <br />
+        <b>This is a bold text.</b>
+        <br />
+        <i>This is an italic text.</i>
+        <br />
+        <u>This is an underlined text.</u>
+        <br />
+        <span style="color: red;">This is a red text.</span>
+        <br />
+        <span style="color: green;">This is a green text.</span>
+        <br />
+        <span style="color: blue;">This is a blue text.</span>
+        <br />
+        <br />
+        <span style="color: orange;">This is an orange text.</span>
+        <br />
+        <span style="color: purple;">This is a purple text.</span>
+    </p>
+    {{IF_ifId1}}
+
+
+
+
+
+
+    ------------------------------------------
+
+    <!-- PARTIAL html from SCRIPT -->
+    <br />
+    <br />
+    <br />
+    {{olPlaceholder}}
+    <!--
+        <ol>
+            10 items in list
+        </ol>
+
+        <button>Klikni me</button>
+        OR
+        <image src="https://aurasoft.hr/images/AuraSoftLogoBlue.png" alt="Aurasoft logo" />
+    -->
+
+
+    <script>
+        {{javascriptBodyEnd}}
+    </script>
+</body>
+
+</html>

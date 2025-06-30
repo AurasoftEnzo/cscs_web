@@ -5,5 +5,6 @@
         public string SQLConnectionString { get; set; }
         public string ScriptsDirectory { get; set; }
         public string StartScript { get; set; }
+        public string PreprocessSripts { get; set; }
     }
 }

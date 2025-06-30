@@ -1,0 +1,131 @@
+
+// bodyJSON = GetBodyJSON(JSONstring);
+
+// var1 = bodyJSON["customer"]["address"]["city"];
+
+//---------------------------
+
+
+/*## 3. Usage in CSCS Scripts:
+ 
+```cscs
+*/
+// Middleware functions
+function AuthMiddleware(request) {
+    headers = request[3]; // headers are at index 3
+    if (!headers["Authorization"]) {
+        return { error: "Unauthorized", status: 401 };
+    }
+    // Return empty/nothing to continue to next middleware/endpoint
+}
+ 
+function LoggingMiddleware(request) {
+    var method = request[0];
+    var path = request[1];
+    Console.WriteLine(method + " " + path);
+    // Continue processing
+}
+ 
+// Endpoint with middleware
+CreateEndpoint("GET", "/secure/data", GetSecureData)
+UseMiddleware(AuthMiddleware)
+UseMiddleware(LoggingMiddleware)
+ 
+// Regular endpoint without middleware
+CreateEndpoint("GET", "/public/data", GetPublicData)
+ 
+// Handler functions
+function GetSecureData(request) {
+    return { data: "Secret information" };
+}
+ 
+function GetPublicData(request) {
+    return { data: "Public information" };
+}
+
+//--------------------------------
+/*
+## Advanced Example with Error Handling:
+
+```cscs
+ */
+function ErrorHandlingMiddleware(request) {
+    try {
+        // Nothing to do here, just continue
+    } catch (e) {
+        return {
+            error: "Internal server error",
+            details: e.message,
+            status: 500
+        };
+    }
+}
+ 
+function RateLimitMiddleware(request) {
+    var ip = request[3]["X-Forwarded-For"]; // Get client IP from headers
+    if (IsRateLimited(ip)) {
+        return {
+            error: "Too many requests",
+            status: 429
+        };
+    }
+}
+ 
+CreateEndpoint("GET", "/api/limited", GetLimitedData)
+UseMiddleware(ErrorHandlingMiddleware)
+UseMiddleware(RateLimitMiddleware)
+UseMiddleware(AuthMiddleware)
+
+
+//-----------------------------------------------------
+
+// // CreateEndpoint("GET", "/", "func1");
+// CreateEndpoint("POST", "/", "func1");
+// // CreateEndpoint("PUT", "/", "func1");
+
+
+// function func1(args){
+//     method = args[0]; // HTTP method
+//     // print("method:\n" + method);
+    
+//     requestPath = args[1]; // HTTP method
+//     // print("requestPath:\n" + requestPath);
+
+//     routeParams = args[2]; // Route parameters
+//     // print("routeParams:\n" + routeParams);
+    
+//     queryParams = args[3]; // Query string
+//     // print("queryParams:\n" + queryParams);
+    
+//     headers = args[4]; // Request headers
+//     // print("headers:\n" + headers);
+
+//     body = args[5]; // Request body
+//     // print("body:\n" + body);
+
+
+//     argsString = "method:\n" + method + "\n" +
+//                  "requestPath:\n" + requestPath + "\n" +
+//                  "routeParams:\n" + routeParams + "\n" +
+//                  "queryParams:\n" + queryParams + "\n" +
+//                  "headers:\n" + headers + "\n" +
+//                  "body:\n" + body;
+//     print("argsString:\n\n" + argsString);
+
+//     print("\n--------------------\n");
+
+
+//     JSONVar = GetVariableFromJSON(body);
+
+//     print(JSONVar);
+
+//     print("\n--------------------\n");
+    
+//     print("1. :\n" + JSONVar["username"]);
+//     print("2. :\n" + JSONVar["foos"][1]["prop2"]);
+
+//     print("\n--------------------\n");
+
+//     return 200;
+// }
+

@@ -1,56 +1,79 @@
-// SQLConnectionString("Server=127.0.0.1,1433;Database=T__DATAX_Y4__BY4;MultipleActiveResultSets=true;User Id=sa;Password=aura;TrustServerCertificate=true;");
+// CreateEndpoint("GET", "/", "func1");
+CreateEndpoint("POST", "/", "func1");
+// CreateEndpoint("PUT", "/", "func1");
 
-CreateEndpoint("GET", "/", "getRoot");
 
-brojac = -1;
+function func1(args){
 
-function getRoot()
-{
-    brojac++;    
-    // WriteConsole("brojac: " + brojac);
+    method = args[0]; // HTTP method -> string
+    requestPath = args[1]; // request path(route) -> string
+    routeParams = args[2]; // Route parameters -> hash table / dictionary
+    queryParams = args[3]; // Query string -> string
+    headers = args[4]; // Request headers -> hash table / dictionary
+    body = args[5]; // Request body -> string
 
-    if(brojac % 3 == 0)
-    {
-        return ReadFileAllText("C:\\Users\\User\\Desktop\\DATAGRID_red.html");
-    }
-    elif(brojac % 3 == 1)
-    {
-        return ReadFileAllText("C:\\Users\\User\\Desktop\\DATAGRID_blue.html");
-    }
-    else
-    {
-        return ExecSQL("SELECT TOP 10 TRIM(ARTI_ARTIKL) FROM " + "T__DATAX_Y4__BY4" + ".dbo.NKMKARTI");
-    }
+    argsString = "method:\n" + method + "\n" +
+                 "requestPath:\n" + requestPath + "\n" +
+                 "routeParams:\n" + routeParams + "\n" +
+                 "queryParams:\n" + queryParams + "\n" +
+                 "headers:\n" + headers + "\n" +
+                 "body:\n" + body;
+    print("argsString:\n\n" + argsString);
+    print("\n--------------------\n");
+
+
+    // ---------------------------
+
+    JSONVar = GetVariableFromJSON(body);
+    print(JSONVar);
+
+    print("\n--------------------\n");
+
+    print("1. :\n" + JSONVar["username"]);
+    print("2. :\n" + JSONVar["foos"][1]["prop2"]);
+
+    print("\n--------------------\n");
+
+
+    // ---------------------------
+
+    // if(method == "GET")
+    // {
+    //     // Handle GET request
+    //     print("Handling GET request");
+    //     // You can return some data or HTML here
+    //     return "GET request received";
+    // }
+    // else if(method == "POST")
+    // {
+    //     // Handle POST request
+    //     print("Handling POST request");
+    //     // You can process the body and return a response
+    //     return "POST request received with body: " + body;
+    // }
+    // else
+    // {
+    //     // Unsupported method
+    //     print("Unsupported method: " + method);
+    //     return "Unsupported method: " + method;
+    // }
+
+    // // NAPRAVIT OVAKO:
+    //clientAccepts = args["headers"]["Accept"]; // application/xml, text/html, application/json, */*
+
+                finalhtml = readfile("C:\\indexWinx.html");
+
+                finalHTML = strReplace(finalHTML, "{{{{companyCode}}}}", SQLQuery("SELECT companyCode FROM company WHERE id = 1;")[1][0]);
+
+                // finalHTML += "<body>"
+                // finalHTML += "<h1>Hello, World!</h1>"
+
+
+                finalHTML += "</body>";
+                finalHTML += "</html>";
+
+                // return finalHTML       
+
+    return 200;
 }
-
-
-CreateEndpoint("GET", "/red", "getRed");
-function getRed(){return ReadFileAllText("C:\\Users\\User\\Desktop\\DATAGRID_red.html");}
-
-CreateEndpoint("GET", "/blue", "getBlue");
-function getBlue(){return ReadFileAllText("C:\\Users\\User\\Desktop\\DATAGRID_blue.html");}
-
-
-CreateEndpoint("POST", "/", "postRoot");
-function postRoot(args)
-{
-    WriteConsole("POST args: " + args);
-    
-    return 10 + int(args[0]) + int(args[1]) + int(args[2]);
-}
-
-
-//---------------------------------------------------
-
-function ExecSQL(queryString)
-{
-    try
-    {
-        return sqlquery(queryString);
-    }catch(exc)
-    {
-        return "Error reading from db: " + exc;
-    }
-}
-
 

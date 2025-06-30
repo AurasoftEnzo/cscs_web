@@ -1,0 +1,11 @@
+// FUNKCIJE ZA IMPLEMENTIRAT
+
+hndlVar = ReadHtmlFile("..\\path\\file.html");
+
+SendDefinesToHtml(hndlVar);
+
+ConditionalRender(hndlVar, "listaId", showButtonOrImage % 2 == 0);
+
+FillHtmlUsingDictionary(hndlVar, valuesDictionary);
+
+FillPlaceholder(hndlVar, "placeholderName", "new value for placeholder");

@@ -159,6 +159,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var cscsConfig = builder.Configuration.GetSection("CSCSConfig").Get<CSCSConfig>();
 
-var app = builder.Build();
+var serverApp = builder.Build();
 
-CSCSWebApplication.Initialize(app, cscsConfig);
+CSCSWebApplication.Initialize(serverApp, cscsConfig);
