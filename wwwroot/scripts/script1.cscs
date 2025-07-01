@@ -1,31 +1,31 @@
 CreateEndpoint("GET", "/", "getFunc1");
 
 function getFunc1(reqArgs){
-    method = args[0]; // HTTP method -> string
-    requestPath = args[1]; // request path(route) -> string
-    routeParams = args[2]; // Route parameters -> hash table / dictionary
-    queryParams = args[3]; // Query string -> string
-    headers = args[4]; // Request headers -> hash table / dictionary
-    body = args[5]; // Request body -> string
+                    method = reqArgs[0]; // HTTP method -> string
+                    requestPath = reqArgs[1]; // request path(route) -> string
+                    routeParams = reqArgs[2]; // Route parameters -> hash table / dictionary
+                    queryParams = reqArgs[3]; // Query string -> string
+                    headers = reqArgs[4]; // Request headers -> hash table / dictionary
+                    body = reqArgs[5]; // Request body -> string
 
-    print("\n-- ARGS --------------\n");
-    argsString = "method:\n" + method + "\n" +
-                 "requestPath:\n" + requestPath + "\n" +
-                 "routeParams:\n" + routeParams + "\n" +
-                 "queryParams:\n" + queryParams + "\n" +
-                 "headers:\n" + headers + "\n" +
-                 "body:\n" + body;
-    print("argsString:\n\n" + argsString);
-    print("\n----------------------\n");  
+                    print("\n-- reqArgs --------------\n");
+                    argsString = "method:\n" + method + "\n" +
+                                "requestPath:\n" + requestPath + "\n" +
+                                "routeParams:\n" + routeParams + "\n" +
+                                "queryParams:\n" + queryParams + "\n" +
+                                "headers:\n" + headers + "\n" +
+                                "body:\n" + body;
+                    print("argsString:\n\n" + argsString);
+                    print("\n----------------------\n");  
 
     // ---------------------------------------------
     // ---------------------------------------------
-    //----------------------------------------------------------
+    //----------------------------------------------
 
     htmlHndlVar = ReadHtmlFile("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\templates\\placeholdersTemplate.html");
 
     valuesDictionary = {};
-    valuesDictionary["title"] = "ASConto - Poslovne Knjige WEB";
+    valuesDictionary["title"] = "ASConto - Poslovne Knjige (WEB verzija)";
     valuesDictionary["companyName"] = "Aura Soft d.o.o.";
     valuesDictionary["companyAddress"] = "Kapetana Lazarića 1d, 52000 Pazin";
     valuesDictionary["bodyParagraphText"] = 
@@ -51,16 +51,18 @@ function getFunc1(reqArgs){
 
     // ---------------------------------------------
 
-    valuesDictionary["div1Class"] = Math.Round(((showButtonOrImage + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div2Class"] = Math.Round(((showButtonOrImage + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div3Class"] = Math.Round(((showButtonOrImage + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div4Class"] = Math.Round(((showButtonOrImage + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div5Class"] = Math.Round(((showButtonOrImage + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div6Class"] = Math.Round(((showButtonOrImage + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
+    valuesDictionary["div1Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
+    valuesDictionary["div2Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
+    valuesDictionary["div3Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
+    valuesDictionary["div4Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
+    valuesDictionary["div5Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
+    valuesDictionary["div6Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
 
     
     // IF --------------
-    ConditionalRender(htmlHndlVar, "listaId", showButtonOrImage % 2 == 0);
+    ConditionalRender(htmlHndlVar, "listaId", counter % 2 == 0);
+
+    ConditionalRender(htmlHndlVar, "IfId1", counter % 2 == 1);
 
     valuesDictionary["nesto1"] = "\"NEŠTO1\"" + "<br/><br/>" + "<b>\"NEŠTO1\"</b>" + "<br/><br/>" + "<i>\"NEŠTO1\"</i>";
     valuesDictionary["nesto2"] = "\"NEŠTO2\"" + "<br/><br/>" + "<b>\"NEŠTO2\"</b>" + "<br/><br/>" + "<i>\"NEŠTO2\"</i>";
@@ -71,19 +73,19 @@ function getFunc1(reqArgs){
 
 
     //// PARTIAL html from SCRIPT
-    showButtonOrImage = 1;
+    counter = 1;
 
     olString = "<ol>\n";
-    for(i = 0; i < 10; i++){
+    for(i = 0; i < 25; i++){
         olString += "\t<li>Item " + i + "</li>\n";
     }
     olString += "<ol>\n<br/><br/>\n";
 
-    if(showButtonOrImage % 2 == 0){
+    if(counter % 2 == 0){
         olString += "\t<button>Klikni me</button>";
     }
-    if(showButtonOrImage % 2 == 1){
-        olString += "\t<img src=\"https://aurasoft.hr/images/AuraSoftLogoBlue.png\" alt=\"Aurasoft logo\" />";
+    if(counter % 2 == 1){
+        olString += "\t<image src=\"https://aurasoft.hr/images/AuraSoftLogoBlue.png\" alt=\"Aurasoft logo\" />";
     }
 
     valuesDictionary["olPlaceholder"] = olString;
@@ -91,25 +93,21 @@ function getFunc1(reqArgs){
 
     /// ------------------------------------------
 
-    FillHtmlUsingDictionary(htmlHndlVar, valuesDictionary);
-
-    FillPlaceholder(htmlHndlVar, "placeholder1", "new value for placeholder1");
+    
+    FillOnePlaceholder(htmlHndlVar, "placeholder1", "new value for placeholder1");
 
 
     // --- JS script at the botom ------------------------------------------
 
-    valuesDictionary["javascriptBodyEnd"] = "alert(\"Hello World!\");";
-
-    // ---------------------------------------------
-
-
-    finalHtml = RenderHtml(htmlHndlVar);
+    valuesDictionary["bodyEndJavascript1"] = "alert(\"Hello World!\");";
+    valuesDictionary["bodyEndJavascript2"] = ReadFile("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\js\\site.js");";
 
 
-    showButtonOrImage++;
 
-    return finalHtml;
 
+    finalHtmlString = RenderHtml(htmlHndlVar);
+
+    return finalHtmlString;
 }
 
 

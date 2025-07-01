@@ -1,6 +1,6 @@
 // FUNKCIJE ZA IMPLEMENTIRAT
 
-hndlVar = ReadHtmlFile("..\\path\\file.html");
+hndlVar = LoadHtmlFile("..\\path\\file.html");
 
 SendDefinesToHtml(hndlVar);
 
@@ -9,3 +9,11 @@ ConditionalRender(hndlVar, "listaId", showButtonOrImage % 2 == 0);
 FillHtmlUsingDictionary(hndlVar, valuesDictionary);
 
 FillPlaceholder(hndlVar, "placeholderName", "new value for placeholder");
+
+finalHtmlString = RenderHtml(hndlVar);
+
+//------------------
+
+function nesto(args){
+    value1 = args["hashKey"] // IMPLEMENTIRAT
+}
