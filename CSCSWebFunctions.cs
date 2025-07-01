@@ -22,7 +22,7 @@ namespace CSCS_Web_Enzo_1
 
             interpreter.RegisterFunction("FillTemplateFromDictionary", new FillTemplateFromDictionaryFunction());
             interpreter.RegisterFunction("FillTemplatePlaceholder", new FillTemplatePlaceholderFunction());
-            interpreter.RegisterFunction("FillTemplateFromDEFINEs", new FillTemplateFromDEFINEsFunction());
+            //interpreter.RegisterFunction("FillTemplateFromDEFINEs", new FillTemplateFromDEFINEsFunction());
 
             interpreter.RegisterFunction("RenderCondition", new RenderConditionFunction());
 
@@ -310,6 +310,13 @@ namespace CSCS_Web_Enzo_1
     {
         protected override Variable Evaluate(ParsingScript script)
         {
+
+            return Variable.EmptyInstance;
+            // Needs Implementation...
+
+
+
+
             List<Variable> args = script.GetFunctionArgs();
             Utils.CheckArgs(args.Count, 1, m_name);
 

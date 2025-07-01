@@ -1,0 +1,15 @@
+var1 = 5;
+print("var1 = " + var1);
+
+var1 = "abc";
+print("var1 = " + var1);
+
+var1 = var1 + 2; // abc2
+print("var1 = " + var1);
+
+var1 = 5; //5
+print("var1 = " + var1);
+
+
+var1 = var1 + 2; //7
+print("var1 = " + var1);
