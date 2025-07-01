@@ -16,148 +16,490 @@ namespace CSCS_Web_Enzo_1
         internal void Init(Interpreter interpreter)
         {
             interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction());
+
+
+            interpreter.RegisterFunction("LoadHtmlTemplate", new LoadHtmlTemplateFunction());
+
+            interpreter.RegisterFunction("FillTemplateFromDictionary", new FillTemplateFromDictionaryFunction());
+            interpreter.RegisterFunction("FillTemplatePlaceholder", new FillTemplatePlaceholderFunction());
+            interpreter.RegisterFunction("FillTemplateFromDEFINEs", new FillTemplateFromDEFINEsFunction());
+
+            interpreter.RegisterFunction("RenderCondition", new RenderConditionFunction());
+
+            interpreter.RegisterFunction("RenderHtml", new RenderHtmlFunction());
+        }
+    }
+
+    class CreateEndpointFunction : ParserFunction
+    {
+        private async Task<Variable> ExecScriptFunction(HttpContext context,
+            string scriptFunctionName, string httpMethod)
+        {
+            // Prepare arguments for the CSCS script function
+            //var args = new List<Variable>();
+
+            // Create a request object containing all parts of the request
+            var requestData = new Variable(Variable.VarType.ARRAY);
+
+            //requestData.AddVariable(new Variable(httpMethod));
+            requestData.AddVariable(new Variable(httpMethod));
+            requestData.AddVariable(new Variable(context.Request.Path));
+            // ???
+
+            // Add route parameters
+            var routeParams = new Variable(Variable.VarType.ARRAY);
+            foreach (var (key, value) in context.Request.RouteValues)
+            {
+                routeParams.SetHashVariable(key, new Variable(value?.ToString()));
+            }
+            requestData.AddVariable(routeParams);
+
+            // Add query parameters
+            var queryParams = new Variable(Variable.VarType.ARRAY);
+            foreach (var (key, value) in context.Request.Query)
+            {
+                queryParams.SetHashVariable(key, new Variable(value.ToString()));
+            }
+            requestData.AddVariable(queryParams);
+
+            // Add headers
+            var headers = new Variable(Variable.VarType.ARRAY);
+            foreach (var (key, value) in context.Request.Headers)
+            {
+                headers.SetHashVariable(key, new Variable(value.ToString()));
+            }
+            requestData.AddVariable(headers);
+
+            // Add body (for POST/PUT)
+            var body = Variable.EmptyInstance;
+            if (context.Request.ContentLength > 0)
+            {
+                try
+                {
+                    using var reader = new StreamReader(context.Request.Body);
+                    var bodyContent = await reader.ReadToEndAsync();
+                    body = new Variable(bodyContent);
+                }
+                catch
+                {
+
+                    // /* Handle error */ !!!!!!!
+
+                }
+            }
+            requestData.AddVariable(body);
+
+            // Execute the CSCS script function with all request data
+            //return CSCSWebApplication.Interpreter.Run(scriptFunctionName, new List<Variable> { requestData });
+            return CSCSWebApplication.Interpreter.Run(scriptFunctionName, requestData);
         }
 
-        class CreateEndpointFunction : ParserFunction
+        protected override Variable Evaluate(ParsingScript script)
         {
-            private async Task<Variable> ExecScriptFunction(HttpContext context,
-                string scriptFunctionName, string httpMethod)
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 3, m_name);
+
+            var httpMethod = Utils.GetSafeString(args, 0).ToUpper();
+            var endpointRoute = Utils.GetSafeString(args, 1);
+            var scriptFunctionName = Utils.GetSafeString(args, 2).ToLower();
+
+            switch (httpMethod)
             {
-                // Prepare arguments for the CSCS script function
-                //var args = new List<Variable>();
-
-                // Create a request object containing all parts of the request
-                var requestData = new Variable(Variable.VarType.ARRAY);
-
-                //requestData.AddVariable(new Variable(httpMethod));
-                requestData.AddVariable(new Variable(httpMethod));
-                requestData.AddVariable(new Variable(context.Request.Path));
-                // ???
-
-                // Add route parameters
-                var routeParams = new Variable(Variable.VarType.ARRAY);
-                foreach (var (key, value) in context.Request.RouteValues)
-                {
-                    routeParams.SetHashVariable(key, new Variable(value?.ToString()));
-                }
-                requestData.AddVariable(routeParams);
-
-                // Add query parameters
-                var queryParams = new Variable(Variable.VarType.ARRAY);
-                foreach (var (key, value) in context.Request.Query)
-                {
-                    queryParams.SetHashVariable(key, new Variable(value.ToString()));
-                }
-                requestData.AddVariable(queryParams);
-
-                // Add headers
-                var headers = new Variable(Variable.VarType.ARRAY);
-                foreach (var (key, value) in context.Request.Headers)
-                {
-                    headers.SetHashVariable(key, new Variable(value.ToString()));
-                }
-                requestData.AddVariable(headers);
-
-                // Add body (for POST/PUT)
-                var body = Variable.EmptyInstance;
-                if (context.Request.ContentLength > 0)
-                {
-                    try
-                    {
-                        using var reader = new StreamReader(context.Request.Body);
-                        var bodyContent = await reader.ReadToEndAsync();
-                        body = new Variable(bodyContent);
-                    }
-                    catch
-                    {
-
-                        // /* Handle error */ !!!!!!!
-
-                    }
-                }
-                requestData.AddVariable(body);
-
-                // Execute the CSCS script function with all request data
-                //return CSCSWebApplication.Interpreter.Run(scriptFunctionName, new List<Variable> { requestData });
-                return CSCSWebApplication.Interpreter.Run(scriptFunctionName, requestData);
+                case "GET":
+                    CSCSWebApplication.WebApplication.MapGet(endpointRoute,
+                        async context => {
+                            var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
+                            await ProcessResponse(context, result);
+                        });
+                    break;
+                case "POST":
+                    CSCSWebApplication.WebApplication.MapPost(endpointRoute,
+                        async context => {
+                            var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
+                            await ProcessResponse(context, result);
+                        });
+                    break;
+                case "PUT":
+                    CSCSWebApplication.WebApplication.MapPut(endpointRoute,
+                        async context => {
+                            var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
+                            await ProcessResponse(context, result);
+                        });
+                    break;
+                case "DELETE":
+                    CSCSWebApplication.WebApplication.MapDelete(endpointRoute,
+                        async context => {
+                            var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
+                            await ProcessResponse(context, result);
+                        });
+                    break;
+                default:
+                    throw new Exception($"Invalid HTTP method: {httpMethod}");
             }
 
-            protected override Variable Evaluate(ParsingScript script)
+            return Variable.EmptyInstance;
+        }
+
+        private async Task ProcessResponse(HttpContext context, Variable result)
+        {
+            if (result == null || result.Type == Variable.VarType.NONE)
             {
-                List<Variable> args = script.GetFunctionArgs();
-                Utils.CheckArgs(args.Count, 3, m_name);
-
-                var httpMethod = Utils.GetSafeString(args, 0).ToUpper();
-                var endpointRoute = Utils.GetSafeString(args, 1);
-                var scriptFunctionName = Utils.GetSafeString(args, 2).ToLower();
-
-                switch (httpMethod)
-                {
-                    case "GET":
-                        CSCSWebApplication.WebApplication.MapGet(endpointRoute,
-                            async context => {
-                                var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
-                                await ProcessResponse(context, result);
-                            });
-                        break;
-                    case "POST":
-                        CSCSWebApplication.WebApplication.MapPost(endpointRoute,
-                            async context => {
-                                var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
-                                await ProcessResponse(context, result);
-                            });
-                        break;
-                    case "PUT":
-                        CSCSWebApplication.WebApplication.MapPut(endpointRoute,
-                            async context => {
-                                var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
-                                await ProcessResponse(context, result);
-                            });
-                        break;
-                    case "DELETE":
-                        CSCSWebApplication.WebApplication.MapDelete(endpointRoute,
-                            async context => {
-                                var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
-                                await ProcessResponse(context, result);
-                            });
-                        break;
-                    default:
-                        throw new Exception($"Invalid HTTP method: {httpMethod}");
-                }
-
-                return Variable.EmptyInstance;
+                context.Response.StatusCode = 204; // No Content
+                return;
             }
 
-            private async Task ProcessResponse(HttpContext context, Variable result)
+            // Handle different response types
+            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
+            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
             {
-                if (result == null || result.Type == Variable.VarType.NONE)
-                {
-                    context.Response.StatusCode = 204; // No Content
-                    return;
-                }
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+            }
+            else if (result.Type == Variable.VarType.NUMBER)
+            {
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync(result.AsString());
+            }
+            else // Default to string handling
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync(result.AsString());
+            }
+        }
+    }
 
-                // Handle different response types
-                //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
-                if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
-                {
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
-                }
-                else if (result.Type == Variable.VarType.NUMBER)
-                {
-                    context.Response.ContentType = "text/plain";
-                    await context.Response.WriteAsync(result.AsString());
-                }
-                else // Default to string handling
-                {
-                    context.Response.ContentType = "text/html";
-                    await context.Response.WriteAsync(result.AsString());
-                }
+
+
+    #region Templating HTMLs
+
+    public static class HtmlTemplates
+    {
+        public static int templateHndl = 1;
+        public static Dictionary<int, List<string>> TemplatesDictionary = new Dictionary<int, List<string>>();
+    }
+
+    class LoadHtmlTemplateFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            var htmlTemplatePath = Utils.GetSafeString(args, 0);
+
+            if (!File.Exists(htmlTemplatePath))
+            {
+                Console.WriteLine($"HTML template file not found: {htmlTemplatePath}");
+
+                return new Variable(-1);
+            }
+
+
+            try
+            {
+                List<string> templateContent = File.ReadAllLines(htmlTemplatePath).ToList();
+
+                HtmlTemplates.TemplatesDictionary[HtmlTemplates.templateHndl] = templateContent;
+
+                return new Variable(HtmlTemplates.templateHndl++);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Reading template file threw an error: {ex.Message}");
+
+                return new Variable(-2);
+            }        
+        }
+
+        private async Task ProcessResponse(HttpContext context, Variable result)
+        {
+            if (result == null || result.Type == Variable.VarType.NONE)
+            {
+                context.Response.StatusCode = 204; // No Content
+                return;
+            }
+
+            // Handle different response types
+            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
+            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+            }
+            else if (result.Type == Variable.VarType.NUMBER)
+            {
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync(result.AsString());
+            }
+            else // Default to string handling
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync(result.AsString());
             }
         }
     }
 
     
+    class FillTemplatePlaceholderFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 3, m_name);
+
+            var templateHndl = Utils.GetSafeInt(args, 0);
+            var placeholderName = Utils.GetSafeString(args, 1);
+            var newValue = Utils.GetSafeVariable(args, 2);
+
+            var tempHtmlLines = HtmlTemplates.TemplatesDictionary[templateHndl];
+
+            List<string> relatedLines = tempHtmlLines.FindAll(p => p.Contains("{{" + placeholderName + "}}"));
+
+            bool wasError = false;
+            foreach (var line in relatedLines)
+            {
+                var lineIndex = tempHtmlLines.FindIndex(p => p.Contains("{{" + placeholderName + "}}"));
+                if (lineIndex == -1)
+                {
+                    wasError = true;
+                }
+
+                string newLine = tempHtmlLines[lineIndex].Replace(@"{{" + placeholderName + "}}", newValue.AsString());
+
+                HtmlTemplates.TemplatesDictionary[templateHndl][lineIndex] = newLine;
+            }
+
+            if (wasError)
+            {
+                throw new Exception($"Placeholder '{{{{{placeholderName}}}}}' not found in template with handle {templateHndl}.");
+            }
+
+            return Variable.EmptyInstance;
+            return new Variable(wasError);
+        }
+
+        private async Task ProcessResponse(HttpContext context, Variable result)
+        {
+            if (result == null || result.Type == Variable.VarType.NONE)
+            {
+                context.Response.StatusCode = 204; // No Content
+                return;
+            }
+
+            // Handle different response types
+            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
+            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+            }
+            else if (result.Type == Variable.VarType.NUMBER)
+            {
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync(result.AsString());
+            }
+            else // Default to string handling
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync(result.AsString());
+            }
+        }
+    }
+
+    class FillTemplateFromDictionaryFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            var htmlTemplatePath = Utils.GetSafeString(args, 0);
+
+            if (!File.Exists(htmlTemplatePath))
+            {
+                Console.WriteLine($"HTML template file not found: {htmlTemplatePath}");
+            }
+
+            return new Variable(0);
+        }
+
+        private async Task ProcessResponse(HttpContext context, Variable result)
+        {
+            if (result == null || result.Type == Variable.VarType.NONE)
+            {
+                context.Response.StatusCode = 204; // No Content
+                return;
+            }
+
+            // Handle different response types
+            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
+            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+            }
+            else if (result.Type == Variable.VarType.NUMBER)
+            {
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync(result.AsString());
+            }
+            else // Default to string handling
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync(result.AsString());
+            }
+        }
+    }
+
+
+
+
+    // OVO NEĆE DELAT DOK NE DODAMO DEFINE KOMANDU IZ WpfCSCS-a u OVAJ SOLUTION !!!
+    class FillTemplateFromDEFINEsFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            var htmlTemplatePath = Utils.GetSafeString(args, 0);
+
+            if (!File.Exists(htmlTemplatePath))
+            {
+                Console.WriteLine($"HTML template file not found: {htmlTemplatePath}");
+            }
+
+            return new Variable(0);
+        }
+
+        private async Task ProcessResponse(HttpContext context, Variable result)
+        {
+            if (result == null || result.Type == Variable.VarType.NONE)
+            {
+                context.Response.StatusCode = 204; // No Content
+                return;
+            }
+
+            // Handle different response types
+            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
+            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+            }
+            else if (result.Type == Variable.VarType.NUMBER)
+            {
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync(result.AsString());
+            }
+            else // Default to string handling
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync(result.AsString());
+            }
+        }
+    }
+
+
+
+    class RenderConditionFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            var htmlTemplatePath = Utils.GetSafeString(args, 0);
+
+            if (!File.Exists(htmlTemplatePath))
+            {
+                Console.WriteLine($"HTML template file not found: {htmlTemplatePath}");
+            }
+
+            return new Variable(0);
+        }
+
+        private async Task ProcessResponse(HttpContext context, Variable result)
+        {
+            if (result == null || result.Type == Variable.VarType.NONE)
+            {
+                context.Response.StatusCode = 204; // No Content
+                return;
+            }
+
+            // Handle different response types
+            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
+            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+            }
+            else if (result.Type == Variable.VarType.NUMBER)
+            {
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync(result.AsString());
+            }
+            else // Default to string handling
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync(result.AsString());
+            }
+        }
+    }
+
+
+    class RenderHtmlFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            int htmlHndl = Utils.GetSafeInt(args, 0);
+            
+            List<string>? finalHtmlLines = new List<string>();
+            if (!HtmlTemplates.TemplatesDictionary.TryGetValue(htmlHndl, out finalHtmlLines)){
+                //Console.WriteLine($"Failed to retrieve HTML with handle {htmlHndl}!");
+                throw new Exception($"Failed to retrieve HTML with handle {htmlHndl}!");
+            }
+            
+            return new Variable(string.Join("\n", finalHtmlLines));
+        }
+
+        private async Task ProcessResponse(HttpContext context, Variable result)
+        {
+            if (result == null || result.Type == Variable.VarType.NONE)
+            {
+                context.Response.StatusCode = 204; // No Content
+                return;
+            }
+
+            // Handle different response types
+            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
+            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+            }
+            else if (result.Type == Variable.VarType.NUMBER)
+            {
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync(result.AsString());
+            }
+            else // Default to string handling
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync(result.AsString());
+            }
+        }
+    }
+
+    #endregion
+
+
+
+    // --- OLD + Middleware ---------------------------------
+
     //public class CSCSWebFunctions_WITH_MIDDLEWARE
     //{
     //    internal void Init(Interpreter interpreter)
@@ -378,85 +720,85 @@ namespace CSCS_Web_Enzo_1
     //---------------------------------------------        
     //---------------------------------------------
 
-    public class CSCSWebFunctions_Enzo_BEZ_AIja
+    class CSCSWebFunctions_Enzo_BEZ_AIja
     {
-        //static WebApplication WebApplication { get; set; } = CSCSWebApplication.GetWebApplication();
+        ////static WebApplication WebApplication { get; set; } = CSCSWebApplication.GetWebApplication();
 
-        internal void Init(Interpreter interpreter)
-        {
-            interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction());
-        }
+        //internal void Init(Interpreter interpreter)
+        //{
+        //    interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction());
+        //}
 
-        class CreateEndpointFunction : ParserFunction
-        {
-            private Variable ExecScriptFunction(string scriptFunctionName, List<Variable> args)
-            {
-                if(args == null || args.Count == 0)
-                {
-                    args = new List<Variable>() { new Variable(new List<Variable>() { new Variable(1), new Variable(2), new Variable(3), }) };
-                }
+        //class CreateEndpointFunction : ParserFunction
+        //{
+        //    private Variable ExecScriptFunction(string scriptFunctionName, List<Variable> args)
+        //    {
+        //        if(args == null || args.Count == 0)
+        //        {
+        //            args = new List<Variable>() { new Variable(new List<Variable>() { new Variable(1), new Variable(2), new Variable(3), }) };
+        //        }
 
-                Variable result = CSCSWebApplication.Interpreter.Run(
-                    scriptFunctionName  , args     /* null, new Variable(item), Variable.EmptyInstance, GetScript(win)*/
-                    );
-                return result;
-            }
+        //        Variable result = CSCSWebApplication.Interpreter.Run(
+        //            scriptFunctionName  , args     /* null, new Variable(item), Variable.EmptyInstance, GetScript(win)*/
+        //            );
+        //        return result;
+        //    }
 
 
-            protected override Variable Evaluate(ParsingScript script)
-            {
-                List<Variable> args = script.GetFunctionArgs();
-                Utils.CheckArgs(args.Count, 3, m_name);
+        //    protected override Variable Evaluate(ParsingScript script)
+        //    {
+        //        List<Variable> args = script.GetFunctionArgs();
+        //        Utils.CheckArgs(args.Count, 3, m_name);
 
-                //var endpointName = Utils.GetSafeString(args, 0).ToLower();
-                var httpMethod = Utils.GetSafeString(args, 0).ToUpper();
-                var endpointRoute = Utils.GetSafeString(args, 1);
-                var scriptFunctionName = Utils.GetSafeString(args, 2).ToLower();
+        //        //var endpointName = Utils.GetSafeString(args, 0).ToLower();
+        //        var httpMethod = Utils.GetSafeString(args, 0).ToUpper();
+        //        var endpointRoute = Utils.GetSafeString(args, 1);
+        //        var scriptFunctionName = Utils.GetSafeString(args, 2).ToLower();
 
-                switch (httpMethod)
-                {
-                    case "GET":
-                        CSCSWebApplication.WebApplication.MapGet(endpointRoute,
-                            () => new CustomHTMLResult(ExecScriptFunction(scriptFunctionName, null).AsString()));
-                        break;
-                    case "POST":
-                        //CSCSWebApplication.WebApplication.MapPost(endpointRoute,
-                        //    () => ExecScriptFunction(scriptFunctionName, null).AsString());
+        //        switch (httpMethod)
+        //        {
+        //            case "GET":
+        //                CSCSWebApplication.WebApplication.MapGet(endpointRoute,
+        //                    () => new CustomHTMLResult(ExecScriptFunction(scriptFunctionName, null).AsString()));
+        //                break;
+        //            case "POST":
+        //                //CSCSWebApplication.WebApplication.MapPost(endpointRoute,
+        //                //    () => ExecScriptFunction(scriptFunctionName, null).AsString());
                         
-                        CSCSWebApplication.WebApplication.MapPost(endpointRoute,
-                            () => ExecScriptFunction(scriptFunctionName, null).AsString());
-                        break;
+        //                CSCSWebApplication.WebApplication.MapPost(endpointRoute,
+        //                    () => ExecScriptFunction(scriptFunctionName, null).AsString());
+        //                break;
 
-                    // case "PUT":
-                    //     script.SetHttpMethod(HttpMethod.PUT);
-                    //     break;
-                    // case "DELETE":
-                    //     script.SetHttpMethod(HttpMethod.DELETE);
-                    //     break;
+        //            // case "PUT":
+        //            //     script.SetHttpMethod(HttpMethod.PUT);
+        //            //     break;
+        //            // case "DELETE":
+        //            //     script.SetHttpMethod(HttpMethod.DELETE);
+        //            //     break;
 
-                    default:
-                        throw new Exception($"Invalid HTTP method: {httpMethod}");
-                }
+        //            default:
+        //                throw new Exception($"Invalid HTTP method: {httpMethod}");
+        //        }
 
-                return Variable.EmptyInstance;
-            }
-        }
+        //        return Variable.EmptyInstance;
+        //    }
+        //}
 
-        class CustomHTMLResult : IResult
-        {
-            private readonly string _htmlContent;
-            public CustomHTMLResult(string htmlContent)
-            {
-                _htmlContent = htmlContent;
-            }
-            public async Task ExecuteAsync(HttpContext httpContext)
-            {
-                httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
-                httpContext.Response.ContentType = MediaTypeNames.Text.Html;
-                httpContext.Response.ContentLength = Encoding.UTF8.GetByteCount(_htmlContent);
-                await httpContext.Response.WriteAsync(_htmlContent);
-            }
-        }
+        //class CustomHTMLResult : IResult
+        //{
+        //    private readonly string _htmlContent;
+        //    public CustomHTMLResult(string htmlContent)
+        //    {
+        //        _htmlContent = htmlContent;
+        //    }
+        //    public async Task ExecuteAsync(HttpContext httpContext)
+        //    {
+        //        httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+        //        httpContext.Response.ContentType = MediaTypeNames.Text.Html;
+        //        httpContext.Response.ContentLength = Encoding.UTF8.GetByteCount(_htmlContent);
+        //        await httpContext.Response.WriteAsync(_htmlContent);
+        //    }
+        //}
     }
 
     

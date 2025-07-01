@@ -68,7 +68,7 @@ namespace CSCS_Web_Enzo_1
             var scriptsDirStr = CSCSConfig.ScriptsDirectory; // App.GetConfiguration("ScriptsPath", "");
             var split2 = Utils.PreprocessScriptFile(fileName, tokenSet, scriptsDirStr);
 
-            Variable result = null;
+            //Variable result = null;
             return Interpreter.Process(split2, fileName, false);
 
         }

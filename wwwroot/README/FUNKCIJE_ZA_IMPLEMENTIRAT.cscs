@@ -1,19 +1,49 @@
-// FUNKCIJE ZA IMPLEMENTIRAT
+// --------------------------------------------------------------
+// --- GOTOVO =) =) =) ---------------------------
 
-hndlVar = LoadHtmlFile("..\\path\\file.html");
+//učitavanje templatea
+hndlVar = LoadHtmlTemplate("..\\path\\file.html");
 
-SendDefinesToHtml(hndlVar);
-
-ConditionalRender(hndlVar, "listaId", showButtonOrImage % 2 == 0);
-
-FillHtmlUsingDictionary(hndlVar, valuesDictionary);
-
-FillPlaceholder(hndlVar, "placeholderName", "new value for placeholder");
+// 1 placeholder i vrijednost
+FillTemplatePlaceholder(hndlVar, "placeholderName", "new value");
 
 finalHtmlString = RenderHtml(hndlVar);
 
-//------------------
 
-function nesto(args){
-    value1 = args["hashKey"] // IMPLEMENTIRAT
-}
+
+
+
+
+
+
+
+//-----------------------------
+//--- PREOSTALO ---------------
+
+                        // --- Vezano za request argumente od klijenta ... -----
+                                function nesto(args){
+                                    value1 = args["hashKey"] // IMPLEMENTIRAT
+                                }
+
+
+// više placeholdera i vrijenosti
+FillTemplateFromDictionary(hndlVar, valuesDictionary);
+
+
+//IF
+RenderCondition(hndlVar, "listaId", showButtonOrImage % 2 == 0);
+
+
+
+
+
+
+
+
+
+
+//------------------------------.---------------------
+// --- UPITNO -----------------------------------------------------
+
+//Send DEFINEd variable values to DEFINE_ placeholders in template
+FillTemplateFromDEFINEs(hndlVar);
