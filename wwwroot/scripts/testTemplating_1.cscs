@@ -1,9 +1,23 @@
-counter = 1;
+﻿// Import("CSCS.Math");
+
+counter1 = 1;
+// counter2 = 2;
+
+function getRandomBool(){
+    if(Math.Round((Math.Random() * 100)) % 2 == 0){
+        return true;
+    }else{
+        return false;
+    } 
+
+    // return (counter1 + counter2 * 3 + 1) % 2 == 0;
+}
 
 CreateEndpoint("GET", "/", "getHandler1");
-
 function getHandler1(reqArgs){
+    try{
 
+        // --- GET REQUEST ARGUMENTS ------------------------------------------------
         method = reqArgs[0]; // HTTP method -> string
         requestPath = reqArgs[1]; // request path(route) -> string
         routeParams = reqArgs[2]; // Route parameters -> hash table / dictionary
@@ -11,238 +25,212 @@ function getHandler1(reqArgs){
         headers = reqArgs[4]; // Request headers -> hash table / dictionary
         body = reqArgs[5]; // Request body -> string
 
+            // print("\n-- reqArgs --------------\n");
+            // argsString = "method:\n" + method + "\n" +
+            //             "requestPath:\n" + requestPath + "\n" +
+            //             "routeParams:\n" + routeParams + "\n" +
+            //             "queryParams:\n" + queryParams + "\n" +
+            //             "headers:\n" + headers + "\n" +
+            //             "body:\n" + body;
+            // print(argsString);
+            // print("----------------------\n");  
 
-        // print("\n-- reqArgs --------------\n");
-        // argsString = "method:\n" + method + "\n" +
-        //             "requestPath:\n" + requestPath + "\n" +
-        //             "routeParams:\n" + routeParams + "\n" +
-        //             "queryParams:\n" + queryParams + "\n" +
-        //             "headers:\n" + headers + "\n" +
-        //             "body:\n" + body;
-        // print(argsString);
-        // print("----------------------\n");  
-
-    //----------------------------------------------
-
-    htmlHndl = LoadHtmlTemplate("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\templates\\template1.html");
-    if(htmlHndl < 1){
-        return "Server error occured.\nTry again later.";
-    }
-
-    // print("--- htmlHndl INTEGER ------------------------------------------");
-    // print("htmlHndl = " + htmlHndl);
-    // print("");
-
-
-
-
-
-
-
-    // if(!FillTemplatePlaceholder(htmlHndl, "placeholder1", "novi TEKSTTTTTT za \"placeholder1\""))
-    // {
-    //     print("{{placeholder1}} not found in template.");
-    // }
-    // else{
-    //     print("{{placeholder1}} FOUND in template.");
-    // }
-    
-
-
-    // if(!FillTemplatePlaceholder(htmlHndl, "title", "KNJIGE"))
-    // {
-    //     print("{{title}} not found in template.");
-    // }
-    // else{
-    //     print("{{title}} FOUND in template.");
-    // }
-
-
-
-    
-    
-    // if(!FillTemplatePlaceholder(htmlHndl, "companyName", "AuRaSoft d.O.o."))
-    // {
-    //     print("{{companyname}} not found in template.");
-    // }
-    // else{
-    //     print("{{companyname}} FOUND in template.");
-    // }
-
-
-
-
-
-
-    try{
-        FillTemplatePlaceholder(htmlHndl, "title", "Poslovne knjige ASCONTO");
+        //-----------------------------------------------------------------------------------
         
-    }catch(ex){
-        print("Error while filling template placeholders: " + ex);
-
-        return "Server error occured.\nTry again later.";
-    }
-
-    try{
         
-        FillTemplatePlaceholder(htmlHndl, "companyName", "AuRaSoft d.O.o.");
-    }catch(ex){
-        print("Error while filling template placeholders: " + ex);
-
-        return "Server error occured.\nTry again later.";
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-///-----------------------------------
-///-----------------------------------
-///-----------------------------------
-///-----------------------------------
-
-    
-    
-
-    
-    // print("----------------------------------1");
-    
-
-    valuesDictionary = {};
-
-
-
-    valuesDictionary["title"] = "ASConto - Poslovne Knjige (WEB verzija)";
-    valuesDictionary["companyName"] = "Aura Soft d.o.o.";
-    valuesDictionary["companyAddress"] = "Kapetana Lazarića 1d, 52000 Pazin";
-
-    // print("----------------------------------2");
-
-    valuesDictionary["bodyParagraphText"] = 
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
-
-    
-
-// print("----------------------------------3");
-
-    valuesDictionary["div1Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div2Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div3Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div4Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div5Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-    valuesDictionary["div6Class"] = Math.Round(((counter + (Math.Random() * 100))) % 2 == 0 ? "divGreen" : "divGray");
-
-    
-    // print("----------------------------------4");
-    
-
-
-    //// PARTIAL html from SCRIPT
-    
-
-    orderedListString = "<ol>\n";
-    for(i = 0; i < 25; i++){
-        orderedListString += "\t<li>Item " + i + "</li>\n";
-    }
-    orderedListString += "<ol>\n<br/><br/>\n";
-
-    if(counter % 2 == 0){
-        orderedListString += "\t<button>Klikni me</button>";
-    }
-    if(counter % 2 == 1){
-        orderedListString += "\t<image src=\"https://aurasoft.hr/images/AuraSoftLogoBlue.png\" alt=\"Aurasoft logo\" />";
-    }
-
-    valuesDictionary["orderedListPlaceholder"] = orderedListString;
-
-
-
-
-    // --- JS script at the botom ------------------------------------------
-
-    valuesDictionary["bodyEndJavascript1"] = "alert(\"Hello World!\");";
-    valuesDictionary["bodyEndJavascript2"] = ReadFile("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\js\\site.js");";
-
-
-
-    FillTemplateFromDictionary(hndlVar, valuesDictionary);
-
-
-
-///-----------------------------------
-///-----------------------------------
-
-
-        // // // // IF --------------
-
-        // RenderCondition(htmlHndl, "IfId2", counter % 2 == 1);
-        // valuesDictionary["nesto1"] = "\"NEŠTO1\"" + "<br/><br/>" + "<b>\"NEŠTO1\"</b>" + "<br/><br/>" + "<i>\"NEŠTO1\"</i>";
-        // valuesDictionary["nesto2"] = "\"NEŠTO2\"" + "<br/><br/>" + "<b>\"NEŠTO2\"</b>" + "<br/><br/>" + "<i>\"NEŠTO2\"</i>";
-        // valuesDictionary["nesto3"] = "\"NEŠTO3\"" + "<br/><br/>" + "<b>\"NEŠTO3\"</b>" + "<br/><br/>" + "<i>\"NEŠTO3\"</i>";
-
-
-        // //// BOLJA VARIJANTA -> proslijedit rezultat arg3-a u return
-        // // if(RenderCondition(htmlHndl, "listaId", false)){
-        // if(RenderCondition(htmlHndl, "listaId", true)){
-        //     valuesDictionary["nesto1"] = "\"NEŠTO1\"" + "<br/><br/>" + "<b>\"NEŠTO1\"</b>" + "<br/><br/>" + "<i>\"NEŠTO1\"</i>";
-        //     valuesDictionary["nesto2"] = "\"NEŠTO2\"" + "<br/><br/>" + "<b>\"NEŠTO2\"</b>" + "<br/><br/>" + "<i>\"NEŠTO2\"</i>";
-        //     valuesDictionary["nesto3"] = "\"NEŠTO3\"" + "<br/><br/>" + "<b>\"NEŠTO3\"</b>" + "<br/><br/>" + "<i>\"NEŠTO3\"</i>";
-        // }
-
-    
-    ///-----------------------------------
-    ///-----------------------------------
-
-
-
-    try{
-        finalHtmlString = RenderHtml(htmlHndl);
-
-        // print("--- finalHtmlString STRING ------------------------------------------");
-        // print( finalHtmlString);
+        //--- Loading HTML Template ----------------------------------------------------------------------------
+
+        htmlHndl = LoadHtmlTemplate("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\templates\\template1.html");
+        if(htmlHndl < 1){
+            return "Server error occured.\nTry again later.";
+        }
+
+        // print("--- htmlHndl INTEGER ------------------------------------------");
+        // print("htmlHndl = " + htmlHndl);
         // print("");
 
-        return finalHtmlString;
-    }catch(ex){
-        print("Error while rendering html: " + ex); // nama(u server console(ili log također))
-        return "Server error occured.\nTry again later."; // klijentu
-    } 
+        //-----------------------------------------------------------------------------------
+
+
+        //--- TEMPLATE PLACEHOLDER FILLING (one at a time) ------------------------------------------------
+
+        // if(!FillTemplatePlaceholder(htmlHndl, "placeholder1", "novi TEKSTTTTTT za \"placeholder1\""))
+        // {
+        //     print("{{placeholder1}} not found in template.");
+        // }
+        // else{
+        //     print("{{placeholder1}} FOUND in template.");
+        // }
+
+
+        // if(!FillTemplatePlaceholder(htmlHndl, "title", "KNJIGE"))
+        // {
+        //     print("{{title}} not found in template.");
+        // }
+        // else{
+        //     print("{{title}} FOUND in template.");
+        // }
+        
+        
+        // if(!FillTemplatePlaceholder(htmlHndl, "companyName", "AuRaSoft d.O.o."))
+        // {
+        //     print("{{companyname}} not found in template.");
+        // }
+        // else{
+        //     print("{{companyname}} FOUND in template.");
+        // }
+
+        try{
+            FillTemplatePlaceholder(htmlHndl, "title", "Poslovne knjige ASCONTO");
+            
+        }catch(ex){
+            print("Error while filling template placeholders: " + ex);
+
+            return "Server error occured.\nTry again later.";
+        }
+
+        try{
+            
+            FillTemplatePlaceholder(htmlHndl, "companyName", "AuRaSoft d.O.o.");
+        }catch(ex){
+            print("Error while filling template placeholders: " + ex);
+
+            return "Server error occured.\nTry again later.";
+        }
+
+        //-----------------------------------------------------------------------------------
+
+        // DICTIONARY SVIH VARIJABLI ZA PLACEHOLDERE
+
+        valuesDictionary = {};
+
+        valuesDictionary["title"] = "ASConto - Poslovne Knjige (WEB verzija)";
+        valuesDictionary["companyName"] = "Aura Soft d.o.o.";
+        valuesDictionary["companyAddress"] = "Kapetana Lazarića 1d, 52000 Pazin";
+
+        valuesDictionary["bodyParagraphText"] = ReadFile("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\textFiles\\LoremIpsum.txt");
+        valuesDictionary["bodyParagraphText"] = valuesDictionary["bodyParagraphText"][0];
+
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
+
+        
+        valuesDictionary["div1Class"] = (getRandomBool() ? "divGreen" : "divGray");
+        valuesDictionary["div2Class"] = (getRandomBool() ? "divGreen" : "divGray");
+        valuesDictionary["div3Class"] = (getRandomBool() ? "divGreen" : "divGray");
+        valuesDictionary["div4Class"] = (getRandomBool() ? "divGreen" : "divGray");
+        valuesDictionary["div5Class"] = (getRandomBool() ? "divGreen" : "divGray");
+        valuesDictionary["div6Class"] = (getRandomBool() ? "divGreen" : "divGray");
+        
+
+        
+        //// PARTIAL html from SCRIPT
+
+        // --- partialHtml1
+        partialHtml1String = "<h2>-- PARTIAL html from CSCS SCRIPT --</h2>\n";
+        partialHtml1String += "<p>This is a paragraph that will be shown in the html.</p>\n";
+        partialHtml1String += "<p>This is a paragraph that will be shown in the html.</p>\n";
+        partialHtml1String += "<p>This is a paragraph that will be shown in the html.</p>\n";
+        valuesDictionary["partialHtml1"] = partialHtml1String;
+
+        // --- partialHtml2
+        partialHtml2String = "<h3>-- ANOTHER partial html from CSCS SCRIPT ........ --</h3>\n";
+        partialHtml2String += "<p>This is a paragraph that will be shown in the html.</p>\n";
+        partialHtml2String += "<p>This is a paragraph that will be shown in the html.</p>\n";
+        partialHtml2String += "<p>This is a paragraph that will be shown in the html.</p>\n";
+        valuesDictionary["partialHtml2"] = partialHtml2String;
+
+        // --- partialHtml3OrderedList
+        orderedListString = "<ol>\n";
+        for(i = 0; i < 25; i++){
+            orderedListString += "    <li>Item " + i + "</li>\n";
+        }
+        orderedListString += "<ol>    <br/><br/>\n";
+
+        if(counter1 % 2 == 0){
+            orderedListString += "    <button>Klikni me</button>";
+        }
+        if(counter1 % 2 == 1){
+            orderedListString += "    <image src=\"https://aurasoft.hr/images/AuraSoftLogoBlue.png\" alt=\"Aurasoft logo\" />";
+        }
+        valuesDictionary["partialHtml3OrderedList"] = orderedListString;
+
+        //-----------------------------------------------------------------------------------
+
+
+        // --- RenderConditions ------------------------------------------------------------
+        // IF 1 --------------
+
+        RenderCondition(htmlHndl, "condition1", counter1 % 2 == 1);
+        valuesDictionary["nesto1"] = "\"NEŠTO1\"" + "<br/><br/>" + "<b>\"NEŠTO1\"</b>" + "<br/><br/>" + "<i>\"NEŠTO1\"</i>";
+        valuesDictionary["nesto2"] = "\"NEŠTO2\"" + "<br/><br/>" + "<b>\"NEŠTO2\"</b>" + "<br/><br/>" + "<i>\"NEŠTO2\"</i>";
+        valuesDictionary["nesto3"] = "\"NEŠTO3\"" + "<br/><br/>" + "<b>\"NEŠTO3\"</b>" + "<br/><br/>" + "<i>\"NEŠTO3\"</i>";
+        
+        // IF 2 --------------
+        RenderCondition(htmlHndl, "condition2", counter1 % 2 == 0);
+        
+            // //// BOLJA VARIJANTA -> proslijedit rezultat arg3-a u return
+            // // if(RenderCondition(htmlHndl, "listaId", false)){
+            // if(RenderCondition(htmlHndl, "listaId", true)){
+            //     valuesDictionary["nesto1"] = "\"NEŠTO1\"" + "<br/><br/>" + "<b>\"NEŠTO1\"</b>" + "<br/><br/>" + "<i>\"NEŠTO1\"</i>";
+            //     valuesDictionary["nesto2"] = "\"NEŠTO2\"" + "<br/><br/>" + "<b>\"NEŠTO2\"</b>" + "<br/><br/>" + "<i>\"NEŠTO2\"</i>";
+            //     valuesDictionary["nesto3"] = "\"NEŠTO3\"" + "<br/><br/>" + "<b>\"NEŠTO3\"</b>" + "<br/><br/>" + "<i>\"NEŠTO3\"</i>";
+            // }
+
+        //-----------------------------------------------------------------------------------
+
+
+        // --- JS script at the botom ------------------------------------------
+        if(counter1 % 4 != 0){
+            valuesDictionary["bodyEndJavascript1"] = "console.log(\"Hello World!\");";
+        }else{
+            valuesDictionary["bodyEndJavascript1"] = "alert(\"Hello World!\");";
+        }
+        
+        // // NE DELA ZBOG TEGA JER JE TO ARRAY OD 1 STRINGA
+        valuesDictionary["bodyEndJavascript2"] = ReadFile("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\js\\site.js");
+        valuesDictionary["bodyEndJavascript2"] = valuesDictionary["bodyEndJavascript2"][0];
+
+        //-----------------------------------------------------------------------------------
+
+
+        // Finally - populate template with dictionary values
+        FillTemplateFromDictionary(htmlHndl, valuesDictionary);
+
+        //-----------------------------------------------------------------------------------
+
+    
+
+        // --- Generate/Render "final" HTML string ------------------------------------------");
+        try{
+            finalHtmlString = RenderHtml(htmlHndl);
+
+            // print("--- finalHtmlString STRING ------------------------------------------");
+            // print( finalHtmlString);
+            // print("");
+
+
+            counter1++;
+
+
+            return finalHtmlString;
+        }catch(ex){
+            print("Error while rendering html: " + ex); // nama(u server console(ili log također))
+            return "Server error occured.\nTry again later."; // klijentu
+        } 
+        //-----------------------------------------------------------------------------------
+
+
+    }catch(topExc){
+        print(topExc);
+    }
+    
 }
 
 
-
-
-// function shouldIDisplayThatSection(){
-//     return (Math.Round(((counter + (Math.Random() * 100))) % 2 == 0));
-// }

@@ -1,29 +1,35 @@
-﻿using Microsoft.AspNetCore.Builder;
-using SplitAndMerge;
-using System.Net.Mime;
-using System.Text;
-using System.Xml.Linq;
-
+﻿using CSCS.InterpreterManager;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
+using SplitAndMerge;
+using System;
+using System.Net.Mime;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 
 
 namespace CSCS_Web_Enzo_1
 {
     public class CSCSWebFunctions
     {
+        public CSCSWebFunctions(Interpreter interpreter)
+        {
+            Init(interpreter);
+        }
+
         internal void Init(Interpreter interpreter)
         {
             interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction());
-
 
             interpreter.RegisterFunction("LoadHtmlTemplate", new LoadHtmlTemplateFunction());
 
             interpreter.RegisterFunction("FillTemplateFromDictionary", new FillTemplateFromDictionaryFunction());
             interpreter.RegisterFunction("FillTemplatePlaceholder", new FillTemplatePlaceholderFunction());
             //interpreter.RegisterFunction("FillTemplateFromDEFINEs", new FillTemplateFromDEFINEsFunction());
-
+            
             interpreter.RegisterFunction("RenderCondition", new RenderConditionFunction());
 
             interpreter.RegisterFunction("RenderHtml", new RenderHtmlFunction());
@@ -170,6 +176,7 @@ namespace CSCS_Web_Enzo_1
 
 
 
+    
     #region Templating HTMLs
 
     public static class HtmlTemplates
@@ -210,47 +217,12 @@ namespace CSCS_Web_Enzo_1
                 return new Variable(-2);
             }        
         }
-
-        private async Task ProcessResponse(HttpContext context, Variable result)
-        {
-            if (result == null || result.Type == Variable.VarType.NONE)
-            {
-                context.Response.StatusCode = 204; // No Content
-                return;
-            }
-
-            // Handle different response types
-            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
-            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
-            {
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
-            }
-            else if (result.Type == Variable.VarType.NUMBER)
-            {
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync(result.AsString());
-            }
-            else // Default to string handling
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.WriteAsync(result.AsString());
-            }
-        }
     }
 
-    
-    class FillTemplatePlaceholderFunction : ParserFunction
+    public static class Placeholders
     {
-        protected override Variable Evaluate(ParsingScript script)
+        public static bool ReplaceAll(int templateHndl, string placeholderName, string newValue)
         {
-            List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 3, m_name);
-
-            var templateHndl = Utils.GetSafeInt(args, 0);
-            var placeholderName = Utils.GetSafeString(args, 1);
-            var newValue = Utils.GetSafeVariable(args, 2);
-
             var tempHtmlLines = HtmlTemplates.TemplatesDictionary[templateHndl];
 
             List<string> relatedLines = tempHtmlLines.FindAll(p => p.Contains("{{" + placeholderName + "}}"));
@@ -264,7 +236,7 @@ namespace CSCS_Web_Enzo_1
                     wasError = true;
                 }
 
-                string newLine = tempHtmlLines[lineIndex].Replace(@"{{" + placeholderName + "}}", newValue.AsString());
+                string newLine = tempHtmlLines[lineIndex].Replace(@"{{" + placeholderName + "}}", newValue);
 
                 HtmlTemplates.TemplatesDictionary[templateHndl][lineIndex] = newLine;
             }
@@ -274,35 +246,48 @@ namespace CSCS_Web_Enzo_1
                 throw new Exception($"Placeholder '{{{{{placeholderName}}}}}' not found in template with handle {templateHndl}.");
             }
 
-            return Variable.EmptyInstance;
-            return new Variable(wasError);
+            return true;
         }
+    }
 
-        private async Task ProcessResponse(HttpContext context, Variable result)
+    class FillTemplatePlaceholderFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
         {
-            if (result == null || result.Type == Variable.VarType.NONE)
-            {
-                context.Response.StatusCode = 204; // No Content
-                return;
-            }
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 3, m_name);
 
-            // Handle different response types
-            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
-            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
-            {
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
-            }
-            else if (result.Type == Variable.VarType.NUMBER)
-            {
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync(result.AsString());
-            }
-            else // Default to string handling
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.WriteAsync(result.AsString());
-            }
+            var templateHndl = Utils.GetSafeInt(args, 0);
+            var placeholderName = Utils.GetSafeString(args, 1);
+            var newValue = Utils.GetSafeVariable(args, 2);
+
+            Placeholders.ReplaceAll(templateHndl, placeholderName, newValue.AsString());
+
+            //var tempHtmlLines = HtmlTemplates.TemplatesDictionary[templateHndl];
+
+            //List<string> relatedLines = tempHtmlLines.FindAll(p => p.Contains("{{" + placeholderName + "}}"));
+
+            //bool wasError = false;
+            //foreach (var line in relatedLines)
+            //{
+            //    var lineIndex = tempHtmlLines.FindIndex(p => p.Contains("{{" + placeholderName + "}}"));
+            //    if (lineIndex == -1)
+            //    {
+            //        wasError = true;
+            //    }
+
+            //    string newLine = tempHtmlLines[lineIndex].Replace(@"{{" + placeholderName + "}}", newValue.AsString());
+
+            //    HtmlTemplates.TemplatesDictionary[templateHndl][lineIndex] = newLine;
+            //}
+
+            //if (wasError)
+            //{
+            //    throw new Exception($"Placeholder '{{{{{placeholderName}}}}}' not found in template with handle {templateHndl}.");
+            //}
+
+            return Variable.EmptyInstance;
+            //return new Variable(wasError);
         }
     }
 
@@ -310,51 +295,36 @@ namespace CSCS_Web_Enzo_1
     {
         protected override Variable Evaluate(ParsingScript script)
         {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 2, m_name);
+
+            int htmlHndl = Utils.GetSafeInt(args, 0);
+            Variable valuesDictionary = Utils.GetSafeVariable(args, 1);
+
+            List<string> dictionaryKeys = valuesDictionary.GetKeys(); 
+            List<Variable> dictionaryVariables = valuesDictionary.GetAllKeys(); 
+           
+            foreach (var key in dictionaryKeys)
+            {
+                Variable newValue = valuesDictionary.GetVariable(key);
+
+                Placeholders.ReplaceAll(htmlHndl, key, newValue.AsString());
+            }
+
+
+            //List<string> htmlLines = HtmlTemplates.TemplatesDictionary[htmlHndl]
+
+
+            //if (!File.Exists(htmlTemplatePath))
+            //{
+            //    Console.WriteLine($"HTML template file not found: {htmlTemplatePath}");
+            //}
+
+
+
+            //return new Variable(0);
 
             return Variable.EmptyInstance;
-            // Needs Implementation...
-
-
-
-
-            List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 1, m_name);
-
-            var htmlTemplatePath = Utils.GetSafeString(args, 0);
-
-            if (!File.Exists(htmlTemplatePath))
-            {
-                Console.WriteLine($"HTML template file not found: {htmlTemplatePath}");
-            }
-
-            return new Variable(0);
-        }
-
-        private async Task ProcessResponse(HttpContext context, Variable result)
-        {
-            if (result == null || result.Type == Variable.VarType.NONE)
-            {
-                context.Response.StatusCode = 204; // No Content
-                return;
-            }
-
-            // Handle different response types
-            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
-            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
-            {
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
-            }
-            else if (result.Type == Variable.VarType.NUMBER)
-            {
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync(result.AsString());
-            }
-            else // Default to string handling
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.WriteAsync(result.AsString());
-            }
         }
     }
 
@@ -378,33 +348,6 @@ namespace CSCS_Web_Enzo_1
 
             return new Variable(0);
         }
-
-        private async Task ProcessResponse(HttpContext context, Variable result)
-        {
-            if (result == null || result.Type == Variable.VarType.NONE)
-            {
-                context.Response.StatusCode = 204; // No Content
-                return;
-            }
-
-            // Handle different response types
-            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
-            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
-            {
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
-            }
-            else if (result.Type == Variable.VarType.NUMBER)
-            {
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync(result.AsString());
-            }
-            else // Default to string handling
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.WriteAsync(result.AsString());
-            }
-        }
     }
 
 
@@ -414,43 +357,42 @@ namespace CSCS_Web_Enzo_1
         protected override Variable Evaluate(ParsingScript script)
         {
             List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 1, m_name);
+            Utils.CheckArgs(args.Count, 3, m_name);
 
-            var htmlTemplatePath = Utils.GetSafeString(args, 0);
+            int templateHndl = Utils.GetSafeInt(args, 0);   
+            string conditionIdentifier = Utils.GetSafeString(args, 1);
+            bool shouldDisplay = Utils.ConvertToBool(Utils.GetSafeInt(args, 2));
 
-            if (!File.Exists(htmlTemplatePath))
+
+            var tempHtmlLines = HtmlTemplates.TemplatesDictionary[templateHndl];
+
+            List<string> relatedLines = tempHtmlLines.FindAll(p => p.Contains("{{IF_" + conditionIdentifier + "}}"));
+
+            if(relatedLines.Count != 2)
             {
-                Console.WriteLine($"HTML template file not found: {htmlTemplatePath}");
+                throw new Exception($"Condition '{{{{IF_{conditionIdentifier}}}}}' must have exactly 2 lines in the template with handle {templateHndl}.");
             }
 
-            return new Variable(0);
-        }
+            if (shouldDisplay)
+            {
+                foreach (var line in relatedLines)
+                {
+                    int lineIndex = tempHtmlLines.FindLastIndex(p => p.Contains("{{IF_" + conditionIdentifier + "}}"));
+                    HtmlTemplates.TemplatesDictionary[templateHndl].RemoveAt(lineIndex);
 
-        private async Task ProcessResponse(HttpContext context, Variable result)
-        {
-            if (result == null || result.Type == Variable.VarType.NONE)
-            {
-                context.Response.StatusCode = 204; // No Content
-                return;
+                    lineIndex = tempHtmlLines.FindLastIndex(p => p.Contains("{{IF_" + conditionIdentifier + "}}"));
+                }
             }
-
-            // Handle different response types
-            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
-            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
+            else // remove template block
             {
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+                int firstIndex = tempHtmlLines.FindIndex(p => p.Contains("{{IF_" + conditionIdentifier + "}}"));
+                HtmlTemplates.TemplatesDictionary[templateHndl].RemoveRange(
+                    firstIndex,
+                    tempHtmlLines.FindLastIndex(p => p.Contains("{{IF_" + conditionIdentifier + "}}")) - firstIndex + 1
+                    );
             }
-            else if (result.Type == Variable.VarType.NUMBER)
-            {
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync(result.AsString());
-            }
-            else // Default to string handling
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.WriteAsync(result.AsString());
-            }
+                        
+            return Variable.EmptyInstance;
         }
     }
 
@@ -472,36 +414,12 @@ namespace CSCS_Web_Enzo_1
             
             return new Variable(string.Join("\n", finalHtmlLines));
         }
-
-        private async Task ProcessResponse(HttpContext context, Variable result)
-        {
-            if (result == null || result.Type == Variable.VarType.NONE)
-            {
-                context.Response.StatusCode = 204; // No Content
-                return;
-            }
-
-            // Handle different response types
-            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
-            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
-            {
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
-            }
-            else if (result.Type == Variable.VarType.NUMBER)
-            {
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync(result.AsString());
-            }
-            else // Default to string handling
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.WriteAsync(result.AsString());
-            }
-        }
     }
 
     #endregion
+
+
+
 
 
 
@@ -656,51 +574,8 @@ namespace CSCS_Web_Enzo_1
 
     //            return requestData;
     //        }
-
-    //        private async Task ProcessResponse(HttpContext context, Variable result)
-    //        {
-    //            if (result == null || result.Type == Variable.VarType.NONE)
-    //            {
-    //                context.Response.StatusCode = 204; // No Content
-    //                return;
-    //            }
-
-    //            // Handle JSON responses
-    //            if (result.Type == Variable.VarType.ARRAY ||
-    //                result.Type == Variable.VarType.DICTIONARY)
-    //            {
-    //                context.Response.ContentType = "application/json";
-    //                await context.Response.WriteAsync(JsonSerializer.Serialize(result.ToJson()));
-    //            }
-    //            // Handle string responses
-    //            else if (result.Type == Variable.VarType.STRING)
-    //            {
-    //                // Detect if it's HTML
-    //                var str = result.AsString();
-    //                if (str.StartsWith("<") && str.EndsWith(">"))
-    //                {
-    //                    context.Response.ContentType = "text/html";
-    //                }
-    //                else
-    //                {
-    //                    context.Response.ContentType = "text/plain";
-    //                }
-    //                await context.Response.WriteAsync(str);
-    //            }
-    //            // Handle numeric responses
-    //            else if (result.Type == Variable.VarType.NUMBER)
-    //            {
-    //                context.Response.ContentType = "text/plain";
-    //                await context.Response.WriteAsync(result.AsString());
-    //            }
-    //            // Default case
-    //            else
-    //            {
-    //                context.Response.ContentType = "text/plain";
-    //                await context.Response.WriteAsync(result.AsString());
-    //            }
-    //        }
     //    }
+
     //    public class UseMiddlewareFunction : ParserFunction
     //    {
     //        protected override Variable Evaluate(ParsingScript script)

@@ -7,7 +7,7 @@
     <title>{{title}}</title>
 
 
-    <!-- CSS -->
+    <!-- CSS ------------------------------------------------------------------>
     <style>
         #divOne {
             margin: 20px;
@@ -20,7 +20,6 @@
             padding: 10px;
             background-color: darkgray;
         }
-
 
 
         .divGray {
@@ -38,12 +37,13 @@
             color: white;
             font-weight: bolder;
         }
+
         .divBorder {
             border: 1px solid black;
             margin: 20px;
         }
-
     </style>
+
     <!--  ili   -->
     <!-- <link rel="stylesheet" href="www.aurasoft.hr/cssovi/css1.css"> -->
 
@@ -56,19 +56,17 @@
     <h2>companyName:<br />{{companyName}}</h2>
 
     <h3>companyAddress:<br />{{companyAddress}}</h3>
-    <br />
 
-    ¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
-    <p>bodyParagraphText:<br />{{bodyParagraphText}}</p>
 
-    <br/>
-    <br/>
-    ¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
-    <h3>placeholder1:</h3>
-    <p>{{placeholder1}}</p>
+    <hr />
 
-    ¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+    <h4>bodyParagraphText:</h4>
+    <p>{{bodyParagraphText}}</p>
 
+    <hr />
+
+
+    <!-- promjena klase containera-->
     <div class="{{div1Class}} divBorder">
         <h4>div1</h4>
         <p>This is a paragraph in div1.</p>
@@ -77,11 +75,11 @@
         <h4>div1</h4>
         <p>This is a paragraph in div1.</p>
     </div>
-    <div class="divGray divBorder">
+    <div class="{{div3Class}} divBorder">
         <h4>div1</h4>
         <p>This is a paragraph in div1.</p>
     </div>
-    <div class="divGreen divBorder">
+    <div class="{{div4Class}} divBorder">
         <h4>div1</h4>
         <p>This is a paragraph in div1.</p>
     </div>
@@ -94,9 +92,11 @@
         <p>This is a paragraph in div1.</p>
     </div>
 
-    ¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+    <hr />
 
-    <!-- Bindanje DEFINE varijabli -->
+
+    <!-- Bindanje DEFINE varijabli ------------------------------------->
+
     <!-- 
         <br />
         <br />
@@ -105,16 +105,17 @@
         <h4>Artikl prvi:</h4>
         <p>DEFINE varijabla "ARTI_ARTIKL" je jednaka "{{DEFINE_ARTI_ARTIKL}}"</p>
         <p>DEFINE varijabla "ARTI_NAZIV" je jednaka "{{DEFINE_ARTI_NAZIV}}"</p>
+    
+        <hr/>
     -->
 
-    ¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+
+
+    <!-- IF uvjetno templatiranje -->
 
     <!-- IF 1: -->
-    <br />
-    <br />
-    <br />
-    <h2>-- IF uvjetno templatiranje --</h2>
-    {{IF_listaId}}
+    {{IF_condition1}}
+    <h2>-- IF uvjetno templatiranje 1 --</h2>
     <ul id="divOne" style="font-size: 35px;" class="divOneClass">
         <li>
             <p style="font-size: 23px; color: blue; font-weight: bold;" class="paragraphMargins">{{nesto1}}</p>
@@ -126,20 +127,14 @@
             <p style="font-size: 19px; color: purple; font-weight: bold;" class="paragraphMargins">{{nesto3}}</p>
         </li>
     </ul>
-    {{IF_listaId}}
+    {{IF_condition1}}
 
-
-
-    ¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
 
     <!-- IF 2: long colored text -->
-    <br />
-    <br />
-    <br />
+    {{IF_condition2}}
     <h2>-- IF uvjetno templatiranje 2 --</h2>
-    {{IF_ifId2}}
     <p>
-        This is a paragraph that will be shown only if the condition in IF_ifId1 is true.
+        This is a paragraph that will be shown only if the condition in IF_condition2 is true.
         <br />
         <b>This is a bold text.</b>
         <br />
@@ -158,26 +153,25 @@
         <br />
         <span style="color: purple;">This is a purple text.</span>
     </p>
-    {{IF_ifId2}}
+    {{IF_condition2}}
 
 
-
-
-
-
-    ¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
-
-
-
+    <hr />
 
 
     <!-- PARTIAL html from CSCS SCRIPT -->
+
+    <h1>-- PARTIAL htmls from CSCS SCRIPT --</h1>
+    <br/>
+
+    {{partialHtml1}}
     <br />
+    {{partialHtml2}}
     <br />
-    <br />
-    {{orderedListPlaceholder}}
+    {{partialHtml3OrderedList}}
 
 
+    <hr />
 
 
 

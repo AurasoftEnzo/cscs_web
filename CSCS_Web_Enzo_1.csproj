@@ -7,8 +7,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="CSCS\**" />
+    <Content Remove="CSCS\**" />
+    <EmbeddedResource Remove="CSCS\**" />
+    <None Remove="CSCS\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Utils.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CSCS.Core" Version="1.0.7" />
+    <PackageReference Include="CSCS.InterpreterManager" Version="1.0.7" />
+    <PackageReference Include="CSCS.Math" Version="1.0.6" />
+    <PackageReference Include="CSCS.SqlClient" Version="1.0.6" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
     <PackageReference Include="System.CodeDom" Version="9.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Modules\" />
   </ItemGroup>
 
 </Project>
