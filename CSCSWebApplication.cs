@@ -25,7 +25,7 @@ namespace CSCS_Web_Enzo_1
 
         // Sql
         static CscsSqlModule CscsSqlModule { get; set; } = new CscsSqlModule();
-        static CscsSqlModuleInstance CscsSqlModuleInstance { get; set; } = (CscsSqlModuleInstance)CscsSqlModule.CreateInstance(Interpreter);
+        static CscsSqlModuleInstance CscsSqlModuleInstance { get; set; }
 
         // Math
         //static CscsMathModule CscsMathModule = new CSCSMath.CscsMathModule();
@@ -57,7 +57,7 @@ namespace CSCS_Web_Enzo_1
             //CscsMathModule CSCSMath = new CscsMathModule();
             //var CSCSMathInstance = CSCSMath.CreateInstance(Interpreter);
 
-
+            CscsSqlModuleInstance = (CscsSqlModuleInstance)CscsSqlModule.CreateInstance(Interpreter);
 
 
             //Interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction(appIndex));
@@ -71,7 +71,7 @@ namespace CSCS_Web_Enzo_1
             //CSCS_SQL.SqlServerConnection = new SqlConnection(CSCS_SQL.ConnectionString);
             //CSCS_SQL.Init(Interpreter);
 
-            
+
 
 
             //skriptu izvršit

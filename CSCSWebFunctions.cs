@@ -1,8 +1,11 @@
 ﻿using CSCS.InterpreterManager;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Primitives;
 using SplitAndMerge;
 using System;
+using System.Globalization;
+using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -23,6 +26,14 @@ namespace CSCS_Web_Enzo_1
         internal void Init(Interpreter interpreter)
         {
             interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction());
+            
+            
+            interpreter.RegisterFunction("DeserializeJson", new DeserializeJsonFunction());
+            interpreter.RegisterFunction("SerializeJson", new SerializeJsonFunction());
+
+            interpreter.RegisterFunction("Sql2Json", new Sql2JsonFunction());
+
+
 
             interpreter.RegisterFunction("LoadHtmlTemplate", new LoadHtmlTemplateFunction());
 
@@ -48,8 +59,8 @@ namespace CSCS_Web_Enzo_1
             var requestData = new Variable(Variable.VarType.ARRAY);
 
             //requestData.AddVariable(new Variable(httpMethod));
-            requestData.AddVariable(new Variable(httpMethod));
-            requestData.AddVariable(new Variable(context.Request.Path));
+            requestData.SetHashVariable("HttpMethod", new Variable(context.Request.Method));
+            requestData.SetHashVariable("RequestPath", new Variable(context.Request.Path));
             // ???
 
             // Add route parameters
@@ -58,7 +69,7 @@ namespace CSCS_Web_Enzo_1
             {
                 routeParams.SetHashVariable(key, new Variable(value?.ToString()));
             }
-            requestData.AddVariable(routeParams);
+            requestData.SetHashVariable("RouteValues", routeParams);
 
             // Add query parameters
             var queryParams = new Variable(Variable.VarType.ARRAY);
@@ -66,7 +77,7 @@ namespace CSCS_Web_Enzo_1
             {
                 queryParams.SetHashVariable(key, new Variable(value.ToString()));
             }
-            requestData.AddVariable(queryParams);
+            requestData.SetHashVariable("QueryParams", queryParams);
 
             // Add headers
             var headers = new Variable(Variable.VarType.ARRAY);
@@ -74,7 +85,7 @@ namespace CSCS_Web_Enzo_1
             {
                 headers.SetHashVariable(key, new Variable(value.ToString()));
             }
-            requestData.AddVariable(headers);
+            requestData.SetHashVariable("Headers", headers);
 
             // Add body (for POST/PUT)
             var body = Variable.EmptyInstance;
@@ -84,16 +95,21 @@ namespace CSCS_Web_Enzo_1
                 {
                     using var reader = new StreamReader(context.Request.Body);
                     var bodyContent = await reader.ReadToEndAsync();
-                    body = new Variable(bodyContent);
+
+                    requestData.SetHashVariable("Body", body = new Variable(bodyContent));
                 }
                 catch
                 {
-
                     // /* Handle error */ !!!!!!!
-
                 }
             }
-            requestData.AddVariable(body);
+            else
+            {
+                requestData.SetHashVariable("Body", body = Variable.EmptyInstance);
+            }
+
+
+            //requestData.AddVariable(body);
 
             // Execute the CSCS script function with all request data
             //return CSCSWebApplication.Interpreter.Run(scriptFunctionName, new List<Variable> { requestData });
@@ -175,8 +191,675 @@ namespace CSCS_Web_Enzo_1
     }
 
 
+    #region JSON (De)Serialization
 
+    class SerializeJsonFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            Variable jsonVariable = Utils.GetSafeVariable(args, 0);
+
+            // Deserialize the JSON string into a variable
+            string serializedJson = SerializeJson(jsonVariable);    
+
+            // Return the deserialized variable
+            return new Variable(serializedJson);
+        }
+
+        private string SerializeJson(Variable jsonVariable)
+        {
+            return @"""SERIALIZED JSON"""; // <<<-----      //  ParseJSON(jsonString.Trim());
+        }
+
+        private Variable ParseJSON(string json)
+        {
+            json = json.Trim();
+
+            if (string.IsNullOrEmpty(json))
+            {
+                return new Variable(Variable.VarType.UNDEFINED);
+            }
+
+            // Handle null
+            if (json == "null")
+            {
+                return new Variable(Variable.VarType.UNDEFINED);
+            }
+
+            // Handle boolean
+            if (json == "true")
+            {
+                return new Variable(true);
+            }
+            if (json == "false")
+            {
+                return new Variable(false);
+            }
+
+            // Handle string
+            if (json.StartsWith("\"") && json.EndsWith("\""))
+            {
+                string stringValue = json.Substring(1, json.Length - 2);
+                // Unescape JSON string
+                stringValue = stringValue.Replace("\\\"", "\"")
+                                        .Replace("\\\\", "\\")
+                                        .Replace("\\n", "\n")
+                                        .Replace("\\r", "\r")
+                                        .Replace("\\t", "\t");
+                return new Variable(stringValue);
+            }
+
+            // Handle number
+            // decimal point must be "."
+            if (double.TryParse(json /*.Replace(".", ",")*/ , CultureInfo.InvariantCulture, out double numValue))
+            {
+                return new Variable(numValue);
+            }
+
+            // Handle array
+            if (json.StartsWith("[") && json.EndsWith("]"))
+            {
+                return ParseJSONArray(json);
+            }
+
+            // Handle object
+            if (json.StartsWith("{") && json.EndsWith("}"))
+            {
+                return ParseJSONObject(json);
+            }
+
+            // If we can't parse it, return as string
+            return new Variable(json);
+        }
+
+        private Variable ParseJSONArray(string json)
+        {
+            Variable arrayVar = new Variable(Variable.VarType.ARRAY);
+
+            // Remove brackets
+            string content = json.Substring(1, json.Length - 2).Trim();
+
+            if (string.IsNullOrEmpty(content))
+            {
+                return arrayVar;
+            }
+
+            List<string> elements = SplitJSONArray(content);
+
+            foreach (string element in elements)
+            {
+                Variable elementVar = ParseJSON(element.Trim());
+                arrayVar.AddVariable(elementVar);
+            }
+
+            return arrayVar;
+        }
+
+        private Variable ParseJSONObject(string json)
+        {
+            Variable objectVar = new Variable(Variable.VarType.ARRAY);
+
+            // Remove braces
+            string content = json.Substring(1, json.Length - 2).Trim();
+
+            if (string.IsNullOrEmpty(content))
+            {
+                return objectVar;
+            }
+
+            List<string> pairs = SplitJSONObject(content);
+
+            foreach (string pair in pairs)
+            {
+                int colonIndex = FindColonIndex(pair);
+                if (colonIndex > 0)
+                {
+                    string key = pair.Substring(0, colonIndex).Trim();
+                    string value = pair.Substring(colonIndex + 1).Trim();
+
+                    // Remove quotes from key
+                    if (key.StartsWith("\"") && key.EndsWith("\""))
+                    {
+                        key = key.Substring(1, key.Length - 2);
+                    }
+
+                    Variable valueVar = ParseJSON(value);
+                    objectVar.SetHashVariable(key, valueVar);
+                }
+            }
+
+            return objectVar;
+        }
+
+        private List<string> SplitJSONArray(string content)
+        {
+            List<string> elements = new List<string>();
+            int bracketCount = 0;
+            int braceCount = 0;
+            int startIndex = 0;
+            bool inString = false;
+            bool escaped = false;
+
+            for (int i = 0; i < content.Length; i++)
+            {
+                char c = content[i];
+
+                if (escaped)
+                {
+                    escaped = false;
+                    continue;
+                }
+
+                if (c == '\\' && inString)
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    inString = !inString;
+                }
+
+                if (!inString)
+                {
+                    if (c == '[') bracketCount++;
+                    else if (c == ']') bracketCount--;
+                    else if (c == '{') braceCount++;
+                    else if (c == '}') braceCount--;
+                    else if (c == ',' && bracketCount == 0 && braceCount == 0)
+                    {
+                        elements.Add(content.Substring(startIndex, i - startIndex));
+                        startIndex = i + 1;
+                    }
+                }
+            }
+
+            if (startIndex < content.Length)
+            {
+                elements.Add(content.Substring(startIndex));
+            }
+
+            return elements;
+        }
+
+        private List<string> SplitJSONObject(string content)
+        {
+            List<string> pairs = new List<string>();
+            int bracketCount = 0;
+            int braceCount = 0;
+            int startIndex = 0;
+            bool inString = false;
+            bool escaped = false;
+
+            for (int i = 0; i < content.Length; i++)
+            {
+                char c = content[i];
+
+                if (escaped)
+                {
+                    escaped = false;
+                    continue;
+                }
+
+                if (c == '\\' && inString)
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    inString = !inString;
+                }
+
+                if (!inString)
+                {
+                    if (c == '[') bracketCount++;
+                    else if (c == ']') bracketCount--;
+                    else if (c == '{') braceCount++;
+                    else if (c == '}') braceCount--;
+                    else if (c == ',' && bracketCount == 0 && braceCount == 0)
+                    {
+                        pairs.Add(content.Substring(startIndex, i - startIndex));
+                        startIndex = i + 1;
+                    }
+                }
+            }
+
+            if (startIndex < content.Length)
+            {
+                pairs.Add(content.Substring(startIndex));
+            }
+
+            return pairs;
+        }
+
+        private int FindColonIndex(string pair)
+        {
+            bool inString = false;
+            bool escaped = false;
+
+            for (int i = 0; i < pair.Length; i++)
+            {
+                char c = pair[i];
+
+                if (escaped)
+                {
+                    escaped = false;
+                    continue;
+                }
+
+                if (c == '\\' && inString)
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    inString = !inString;
+                }
+
+                if (!inString && c == ':')
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+    }
     
+    class Sql2JsonFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            Variable sqlResult = Utils.GetSafeVariable(args, 0);
+            //bool trimStrings = script.get
+
+            // Deserialize the JSON string into a variable
+            string serializedJson = SerializeJsonFromCSCSSqlResult(sqlResult);    
+
+            // Return the deserialized variable
+            return new Variable(serializedJson);
+        }
+
+        private string SerializeJsonFromCSCSSqlResult(Variable sqlResult)
+        {
+            if(sqlResult == null || sqlResult.Tuple == null || sqlResult.Tuple.Count < 2)
+            {
+                return "[]"; // Return empty JSON array if no data
+            }
+
+            StringBuilder jsonBuilder = new StringBuilder("");
+
+            List<Variable> headersTuple = sqlResult.Tuple[0].Tuple;
+            List<string> headers = new List<string>();
+            foreach (var headerVariable in headersTuple)
+            {
+                if (headerVariable.Type != Variable.VarType.STRING)
+                {
+                    throw new Exception("SQL result headers must be strings.");
+                }
+
+                headers.Add(headerVariable.String);
+            }
+            
+            List<Variable> rowsTuple = sqlResult.Tuple.GetRange(1, sqlResult.Tuple.Count - 1);
+
+            jsonBuilder.Append("[\n");
+
+            foreach (var rowVariable in rowsTuple)
+            {
+                jsonBuilder.Append("\t{");
+
+                for (int i = 0; i < rowVariable.Tuple.Count; i++)
+                {
+                    Variable itemVariable = rowVariable.Tuple[i];
+                    string itemHeader = headers[i];
+                    
+                    string itemValue = null;
+                    switch (itemVariable.Type)
+                    {
+                        case Variable.VarType.NUMBER:
+                        case Variable.VarType.INT:
+                            itemValue = itemVariable.Value.ToString();
+                            break;
+
+                        case Variable.VarType.STRING:
+                            itemValue = $"\"{itemVariable.String}\"";
+                            break;
+
+                        case Variable.VarType.DATETIME:
+                            itemValue = $"\"{itemVariable.DateTime.ToString("yyyy-MM-dd")}\"";
+                            break;
+                            
+                        case Variable.VarType.NONE:
+                        case Variable.VarType.UNDEFINED:
+                        case Variable.VarType.OBJECT:
+                            itemValue = "\"\"";
+                            break;
+
+                        case Variable.VarType.ARRAY:
+                        case Variable.VarType.ARRAY_NUM:
+                        case Variable.VarType.ARRAY_STR:
+                        case Variable.VarType.ARRAY_INT:
+                        case Variable.VarType.MAP_INT:
+                        case Variable.VarType.MAP_NUM:
+                        case Variable.VarType.MAP_STR:
+                        case Variable.VarType.BYTE_ARRAY:
+                        case Variable.VarType.QUIT:
+                        case Variable.VarType.BREAK:
+                        case Variable.VarType.CONTINUE:
+                        case Variable.VarType.ENUM:
+                        case Variable.VarType.VARIABLE:
+                        case Variable.VarType.CUSTOM:
+                        case Variable.VarType.POINTER:
+                        default:
+                            itemValue = "\"\"";
+                            break;
+                    }
+                    
+                    jsonBuilder.Append($"\t\t\"{itemHeader}\" : {itemValue},\n");
+                }
+                
+                jsonBuilder.Append("\t},\n");
+            }
+
+            jsonBuilder.Append("]");
+            return jsonBuilder.ToString();
+        }
+
+    }
+    
+    
+    class DeserializeJsonFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            string jsonString = Utils.GetSafeString(args, 0).Trim();
+
+            // Deserialize the JSON string into a variable
+            Variable deserializedVariable = ParseJSON(jsonString.Trim());
+
+            // Return the deserialized variable
+            return deserializedVariable;
+        }
+
+        private Variable ParseJSON(string json)
+        {
+            json = json.Trim();
+
+            if (string.IsNullOrEmpty(json))
+            {
+                return new Variable(Variable.VarType.UNDEFINED);
+            }
+
+            // Handle null
+            if (json == "null")
+            {
+                return new Variable(Variable.VarType.UNDEFINED);
+            }
+
+            // Handle boolean
+            if (json == "true")
+            {
+                return new Variable(true);
+            }
+            if (json == "false")
+            {
+                return new Variable(false);
+            }
+
+            // Handle string
+            if (json.StartsWith("\"") && json.EndsWith("\""))
+            {
+                string stringValue = json.Substring(1, json.Length - 2);
+                // Unescape JSON string
+                stringValue = stringValue.Replace("\\\"", "\"")
+                                        .Replace("\\\\", "\\")
+                                        .Replace("\\n", "\n")
+                                        .Replace("\\r", "\r")
+                                        .Replace("\\t", "\t");
+                return new Variable(stringValue);
+            }
+
+            // Handle number
+            // decimal point must be "."
+            if (double.TryParse(json /*.Replace(".", ",")*/ , CultureInfo.InvariantCulture, out double numValue))
+            {
+                return new Variable(numValue);
+            }
+
+            // Handle array
+            if (json.StartsWith("[") && json.EndsWith("]"))
+            {
+                return ParseJSONArray(json);
+            }
+
+            // Handle object
+            if (json.StartsWith("{") && json.EndsWith("}"))
+            {
+                return ParseJSONObject(json);
+            }
+
+            // If we can't parse it, return as string
+            return new Variable(json);
+        }
+
+        private Variable ParseJSONArray(string json)
+        {
+            Variable arrayVar = new Variable(Variable.VarType.ARRAY);
+
+            // Remove brackets
+            string content = json.Substring(1, json.Length - 2).Trim();
+
+            if (string.IsNullOrEmpty(content))
+            {
+                return arrayVar;
+            }
+
+            List<string> elements = SplitJSONArray(content);
+
+            foreach (string element in elements)
+            {
+                Variable elementVar = ParseJSON(element.Trim());
+                arrayVar.AddVariable(elementVar);
+            }
+
+            return arrayVar;
+        }
+
+        private Variable ParseJSONObject(string json)
+        {
+            Variable objectVar = new Variable(Variable.VarType.ARRAY);
+
+            // Remove braces
+            string content = json.Substring(1, json.Length - 2).Trim();
+
+            if (string.IsNullOrEmpty(content))
+            {
+                return objectVar;
+            }
+
+            List<string> pairs = SplitJSONObject(content);
+
+            foreach (string pair in pairs)
+            {
+                int colonIndex = FindColonIndex(pair);
+                if (colonIndex > 0)
+                {
+                    string key = pair.Substring(0, colonIndex).Trim();
+                    string value = pair.Substring(colonIndex + 1).Trim();
+
+                    // Remove quotes from key
+                    if (key.StartsWith("\"") && key.EndsWith("\""))
+                    {
+                        key = key.Substring(1, key.Length - 2);
+                    }
+
+                    Variable valueVar = ParseJSON(value);
+                    objectVar.SetHashVariable(key, valueVar);
+                }
+            }
+
+            return objectVar;
+        }
+
+        private List<string> SplitJSONArray(string content)
+        {
+            List<string> elements = new List<string>();
+            int bracketCount = 0;
+            int braceCount = 0;
+            int startIndex = 0;
+            bool inString = false;
+            bool escaped = false;
+
+            for (int i = 0; i < content.Length; i++)
+            {
+                char c = content[i];
+
+                if (escaped)
+                {
+                    escaped = false;
+                    continue;
+                }
+
+                if (c == '\\' && inString)
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    inString = !inString;
+                }
+
+                if (!inString)
+                {
+                    if (c == '[') bracketCount++;
+                    else if (c == ']') bracketCount--;
+                    else if (c == '{') braceCount++;
+                    else if (c == '}') braceCount--;
+                    else if (c == ',' && bracketCount == 0 && braceCount == 0)
+                    {
+                        elements.Add(content.Substring(startIndex, i - startIndex));
+                        startIndex = i + 1;
+                    }
+                }
+            }
+
+            if (startIndex < content.Length)
+            {
+                elements.Add(content.Substring(startIndex));
+            }
+
+            return elements;
+        }
+
+        private List<string> SplitJSONObject(string content)
+        {
+            List<string> pairs = new List<string>();
+            int bracketCount = 0;
+            int braceCount = 0;
+            int startIndex = 0;
+            bool inString = false;
+            bool escaped = false;
+
+            for (int i = 0; i < content.Length; i++)
+            {
+                char c = content[i];
+
+                if (escaped)
+                {
+                    escaped = false;
+                    continue;
+                }
+
+                if (c == '\\' && inString)
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    inString = !inString;
+                }
+
+                if (!inString)
+                {
+                    if (c == '[') bracketCount++;
+                    else if (c == ']') bracketCount--;
+                    else if (c == '{') braceCount++;
+                    else if (c == '}') braceCount--;
+                    else if (c == ',' && bracketCount == 0 && braceCount == 0)
+                    {
+                        pairs.Add(content.Substring(startIndex, i - startIndex));
+                        startIndex = i + 1;
+                    }
+                }
+            }
+
+            if (startIndex < content.Length)
+            {
+                pairs.Add(content.Substring(startIndex));
+            }
+
+            return pairs;
+        }
+
+        private int FindColonIndex(string pair)
+        {
+            bool inString = false;
+            bool escaped = false;
+
+            for (int i = 0; i < pair.Length; i++)
+            {
+                char c = pair[i];
+
+                if (escaped)
+                {
+                    escaped = false;
+                    continue;
+                }
+
+                if (c == '\\' && inString)
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    inString = !inString;
+                }
+
+                if (!inString && c == ':')
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+    }
+
+    #endregion
+
+    //--------------------------------------------------
+
     #region Templating HTMLs
 
     public static class HtmlTemplates

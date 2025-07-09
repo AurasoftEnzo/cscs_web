@@ -22,6 +22,7 @@
     <PackageReference Include="CSCS.InterpreterManager" Version="1.0.7" />
     <PackageReference Include="CSCS.Math" Version="1.0.6" />
     <PackageReference Include="CSCS.SqlClient" Version="1.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.3.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
     <PackageReference Include="System.CodeDom" Version="9.0.5" />
   </ItemGroup>

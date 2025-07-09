@@ -14,30 +14,54 @@ function getRandomBool(){
 }
 
 CreateEndpoint("GET", "/", "getHandler1");
-function getHandler1(reqArgs){
+function getHandler1(request){
     try{
 
-        // --- GET REQUEST ARGUMENTS ------------------------------------------------
-        method = reqArgs[0]; // HTTP method -> string
-        requestPath = reqArgs[1]; // request path(route) -> string
-        routeParams = reqArgs[2]; // Route parameters -> hash table / dictionary
-        queryParams = reqArgs[3]; // Query string -> string
-        headers = reqArgs[4]; // Request headers -> hash table / dictionary
-        body = reqArgs[5]; // Request body -> string
-
-            // print("\n-- reqArgs --------------\n");
-            // argsString = "method:\n" + method + "\n" +
-            //             "requestPath:\n" + requestPath + "\n" +
-            //             "routeParams:\n" + routeParams + "\n" +
-            //             "queryParams:\n" + queryParams + "\n" +
-            //             "headers:\n" + headers + "\n" +
-            //             "body:\n" + body;
-            // print(argsString);
-            // print("----------------------\n");  
-
-        //-----------------------------------------------------------------------------------
+        // --- GET REQUEST ARGUMENTS ----------------------------------------------------------------------------
         
+        HttpMethod = request["HttpMethod"]; // HTTP method -> string
+        RequestPath = request["RequestPath"]; // request path (route??) -> string
+        RouteValues = request["RouteValues"]; // Route Values -> hash table / dictionary
+        QueryParams = request["QueryParams"]; // Query string -> string
+        Headers = request["Headers"]; // Request headers -> hash table / dictionary
+        Body = request["Body"]; // Request body -> string
+
+
+
+        // requestArgsString = 
+        //     "HttpMethod:    = " + request["HttpMethod"] + "\n" +
+        //     "RequestPath:   = " + request["RequestPath"] + "\n" +
+        //     "RouteValues:   = " + request["RouteValues"] + "\n" +
+        //     "QueryParams:   = " + request["QueryParams"] + "\n" +
+        //     "Headers:       = " + request["Headers"] + "\n" +
+        //     "Body:          = " + request["Body"] + "\n";
+
+        // print("--- request params values:\n\n" + requestArgsString + "\n---------------------------------------\n");
+
+
+
+        // ----------------------------------------------------------------------------------------------------------------
         
+
+
+
+
+
+
+
+        // --- JSON DESERIALIZATION
+
+        RunJSONDeserialization();
+
+        //----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
         //--- Loading HTML Template ----------------------------------------------------------------------------
 
         htmlHndl = LoadHtmlTemplate("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\templates\\template1.html");
@@ -230,7 +254,77 @@ function getHandler1(reqArgs){
     }catch(topExc){
         print(topExc);
     }
-    
+
+}
+
+function RunJSONDeserialization(){
+
+        // --- JSON STRING TO OBJECT/TUPLE/HASH/ARRAY ----------------------------------------------------------
+        JsonString = "{\"brLinija\":3,\"kupacSif\":\"2025-12-31\",\"kupacNaz\":[\"naziv1\",\"naziv2\"],\"adresaKupca\":{\"grad\":\"Pazin\",\"broj\":\"5A\",\"popisVrataNaZgradi\":[\"zapad\",\"sjever\"]},\"Lines\":[{\"sifArtikla\":\"111111\",\"NazArtikla\":\"artikal1\",\"cijena\":10.02},{\"sifArtikla\":\"123XXXXX\",\"NazArtikla\":\"artikal1\",\"cijena\":55.02},{\"sifArtikla\":\"123XXXXX\",\"NazArtikla\":\"artikal1\",\"cijena\":55.02},{\"sifArtikla\":\"123XXXXX\",\"NazArtikla\":\"artikal1\",\"cijena\":55.02},{\"sifArtikla\":\"123XXXXX\",\"NazArtikla\":\"artikal1\",\"cijena\":55.02}]}";
+
+        JsonObject = DeserializeJson(JsonString);
+
+        print("\n---- JSON string TO Object/Tuple/Hash/Array --------------------------------\n");
+        
+        // print("JsonObject:\n" +  string(JsonObject) + "\n");
+
+
+        print("brLinija:                             = " + ( JsonObject["brLinija"] + 5 )); // 8 ???
+        print("kupacSif:                             = " + JsonObject["kupacSif"] + 5 +); // 2025-12-315 ???
+        print("kupacNazivi:                          = " + JsonObject["kupacNaz"][0] + ", " + JsonObject["kupacNaz"][1]);
+
+        print("");
+
+        print("adresaKupca.grad:                     = " + JsonObject["adresaKupca"]["grad"]);
+        print("adresaKupca.broj:                     = " + JsonObject["adresaKupca"]["broj"]);
+
+        // print("--- adresaKupca.popisVrataNaZgradi: ----------------------\n" + JsonObject["adresaKupca"]["popisVrataNaZgradi"] + "\n");
+
+        print("adresaKupca.popisVrataNaZgradi[0]:    = " + JsonObject["adresaKupca"]["popisVrataNaZgradi"][0]);
+        print("adresaKupca.popisVrataNaZgradi[1]:    = " + JsonObject["adresaKupca"]["popisVrataNaZgradi"][1]);
+
+        print("");
+
+        print("--- FOR variant -------------------------------------------");
+
+        for(i = 0; i < size(JsonObject["Lines"]); i++)
+        {
+            print("Lines[" + i + "].sifArtikla:       = " + JsonObject["Lines"][i]["sifArtikla"]);
+            print("Lines[" + i + "].NazArtikla:       = " + JsonObject["Lines"][i]["NazArtikla"]);
+            print("Lines[" + i + "].cijena:           = " + JsonObject["Lines"][i]["cijena"]);
+            print("---------------------------------------------------");
+        }
+
+        print("");
+
+        print("--- FOR EACH variant -------------------------------------------");
+
+        for(line : JsonObject["Lines"])
+        {
+            print("Lines[" + i + "].sifArtikla:                             = " + line["sifArtikla"]);
+            print("Lines[" + i + "].NazArtikla:                             = " + line["NazArtikla"]);
+            print("Lines[" + i + "].cijena:                                 = " + line["cijena"]);
+        }
+
+
+
+        print("");
+        // print("");
+        // print("***********************");
+        // print(12.5);
 }
 
 
+
+
+
+CreateEndpoint("GET", "/getJson", "handleGetJsonEndpointFunction");
+function handleGetJsonEndpointFunction(){
+    objekt1 = {};
+    objekt1["sveVrijednosti"] = {"key1": "val1", "key2": 555, "key3": 12.5, "key4": true, "key5": ["item1", "item2", "item3"]};
+    objekt1["potpis"] = "Ovo je potpis objekta 1";
+
+    JsonTextString = SerializeJson(objekt1)
+
+    return JsonTextString;
+}
