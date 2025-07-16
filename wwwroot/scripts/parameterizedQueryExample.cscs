@@ -1,0 +1,18 @@
+
+SQLConnectionString = "Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;";
+SQLConnectionString(SQLConnectionString);
+
+// parameterized query
+sqlString = "SELECT database_id, name FROM [master].[sys].[databases] ORDER BY database_id OFFSET @1 ROWS FETCH NEXT @2 ROWS ONLY";
+// sqlString = "SELECT * FROM [dbTest1].[dbo].[Customers] ORDER BY ID OFFSET @1 ROWS FETCH NEXT @2 ROWS ONLY";
+
+sqlParams = {};
+sqlParams.Add({"@1", 15});
+sqlParams.Add({"@2", 2});
+
+sqlResult = sqlQuery(sqlString, sqlParams);
+
+print(sqlResult);
+
+
+

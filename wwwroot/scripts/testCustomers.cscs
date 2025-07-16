@@ -1,0 +1,35 @@
+SQLConnectionString = "Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;";
+SQLConnectionString(SQLConnectionString);
+
+
+// // 1.1. simple SELECT
+print("\n\n1.1. Select + WHERE without parameters:");
+sqlString = "SELECT * FROM Customers WHERE ID BETWEEN 3 AND 4";
+result = sqlQuery(sqlString);
+print("result:" + result);
+
+// 1.2. simple SELECT with parameters
+print("\n\n1.2. Select + WHERE with parameters:");
+sqlString = "SELECT * FROM Customers WHERE ID BETWEEN @0 AND @1";
+sqlParams = {};
+sqlParams.Add({"@0", 3});
+sqlParams.Add({"@1", 4});
+result = sqlQuery(sqlString, sqlParams);
+print("result:" + result);
+
+print("---------------------");
+
+// 2.1. Query with OFFSET AND FETCH NEXT without parameters
+print("\n\n2.1. Select + OFFSET AND FETCH NEXT without parameters:");
+sqlString = "SELECT * FROM Customers ORDER BY ID OFFSET 2 ROWS FETCH NEXT 2 ROWS ONLY";
+result = sqlQuery(sqlString);
+print("result:" + result);
+
+// 2.2. Query with OFFSET AND FETCH NEXT with parameters
+print("\n\n2.2. Select + OFFSET AND FETCH NEXT with parameters:");
+sqlString = "SELECT * FROM Customers ORDER BY ID OFFSET @0 ROWS FETCH NEXT @1 ROWS ONLY";
+sqlParams = {};
+sqlParams.Add({"@0", 2});
+sqlParams.Add({"@1", 2});
+result = sqlQuery(sqlString, sqlParams);
+print("result:" + result);

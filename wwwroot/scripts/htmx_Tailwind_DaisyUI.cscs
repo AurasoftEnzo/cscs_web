@@ -1,0 +1,239 @@
+SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+
+CreateEndpoint("GET", "/", "getRoot");
+function getRoot(){
+    return RenderHtml(LoadTemplate(TemplatesPath() + "htmx_Tailwind_DaisyUI.html"));
+}
+
+CreateEndpoint("GET", "/parts", "getParts");
+function getParts(args){
+    
+    if(Contains(args["QueryParams"], "page")){
+        page = int(args["QueryParams"]["page"]);
+        if(page < 1){
+            return "Error: 'page' query parameter must be a positive integer.";
+        }
+    }
+    else{
+        page = 1; // default page
+    }
+
+
+    if(Contains(args["QueryParams"], "sort")){
+        sort = args["QueryParams"]["sort"];
+    }
+    else{
+        sort = "nksc_partcode"; // default sort column
+    }
+
+    // print("args[\"QueryParams\"][\"order\"] = " + args["QueryParams"]["order"]);
+
+    if(Contains(args["QueryParams"], "order")){
+        order = args["QueryParams"]["order"];
+    }
+    else{
+        order = "asc"; // default sort order
+    }
+
+    // for(i = 0; i < Size(args["QueryParams"]); i++){
+    //     if()
+    // }
+
+    // if(args["QueryParams"]["search"] != null ){
+    //     search = args["QueryParams"]["search"];
+    // }
+    // else{
+    //     search = ""; // default search term
+    // }
+    
+    if(Contains(args["QueryParams"], "search")){
+        search = args["QueryParams"]["search"];
+    }
+    else{
+        search = ""; // default search term
+    }
+
+
+    pageSize = 10;
+    skip = (page - 1) * pageSize;
+    
+    if(sort == "partcode"){
+        orderBy = "nksc_partcode";
+    }elif(sort == "partname"){
+        orderBy = "nksc_partname";
+    }elif(sort == "partcity"){
+        orderBy = "nksc_city";
+    }else{
+        orderBy = "nksc_partcode"; // default order by
+    }
+
+    sort = orderBy;
+
+
+
+    if(order == "asc"){
+        orderBy += " ASC";
+    }else{
+        orderBy += " DESC";
+    }
+    
+    
+    if(search == ""){
+        whereClause = "";
+    }else{
+        whereClause = " WHERE nksc_partcode LIKE @search OR nksc_partname LIKE @search OR nksc_city LIKE @search";
+    }
+    
+    query = "SELECT nksc_partcode, nksc_partname, nksc_city" +
+                  " FROM NKSCPART " + whereClause +
+                  " ORDER BY " + orderBy +
+                  " OFFSET @skip ROWS FETCH NEXT @pageSize ROWS ONLY"
+                  ;
+
+    countQuery = "SELECT COUNT(*) FROM NKSCPART " + whereClause;
+
+
+    sqlParams = {};
+    sqlParams.Add({"@skip", skip});
+    sqlParams.Add({"@pageSize", pageSize});
+    sqlParams.Add({"@search", "%" + search + "%"});
+    
+    
+    parts = {};
+
+    sqlResults = sqlQuery(query, sqlParams);
+
+    // print(sqlResults[1][0]);
+
+    if(sqlResults != null && Size(sqlResults) > 1){
+        for(i = 1; i < Size(sqlResults); i++){
+            
+            pCode = strTrim(sqlResults[i][0]);
+            pName = strTrim(sqlResults[i][1]);
+            pCity = strTrim(sqlResults[i][2]);
+
+            line = {
+                "partCode" : pCode,
+                "PartName" : pName,
+                "PartCity" : pCity
+            };
+
+            parts.Add(line);
+        }
+    }
+
+
+    
+
+    countResult = sqlQuery(countQuery, sqlParams);
+    totalRecords = countResult[1][0];
+
+    totalPages = Math.Ceil(totalRecords / pageSize);
+
+    html = "<div id='parts-table'>";
+    html += "<table class='table w-full'>";
+    html += "<thead><tr>";
+
+    if(sort == "nksc_partcode" && order == "asc"){
+        varCode = "desc";
+    }
+    else{
+        varCode = "asc";
+    }
+    html += "<th><a class='link' hx-get='/parts?page=1&sort=partcode&order=" + varCode + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>Part Code</a></th>";
+    
+    if(sort == "nksc_partname" && order == "asc"){
+        varName = "desc";
+    }
+    else{
+        varName = "asc";
+    }
+    html += "<th><a class='link' hx-get='/parts?page=1&sort=partname&order=" + varName + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>Part Name</a></th>";
+    
+    if(sort == "nksc_city" && order == "asc"){
+        varCity = "desc";
+    }
+    else{
+        varCity = "asc";
+    }
+    html += "<th><a class='link' hx-get='/parts?page=1&sort=partcity&order=" + varCity + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>City</a></th>";
+    
+    html += "</tr></thead><tbody>";
+    
+    for(part : parts){
+        // print(part);
+
+        html += "<tr>";
+        html += "<td>" + part["partCode"] + "</td>";
+        html += "<td>" + part["PartName"] + "</td>";
+        html += "<td>" + part["PartCity"] + "</td>";
+        html += "</tr>";
+    }
+    html += "</tbody>";
+    html += "<tfoot><tr>";
+    html += "<td colspan='3'>Total Amount</td>";
+    html += "</tr></tfoot>";
+    html += "</table>";
+
+    html += "<div class='join mt-4'>";
+
+    if(page > 1){
+        html += "<a class='join-item btn' hx-get='/parts?page=" + (page - 1) + "&sort=" + sort + "&order=" + order + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>Previous</a>";
+    }
+    html += "<button class='join-item btn btn-disabled'>" + page + " of " + totalPages + "</button>";
+    if (page < totalPages){
+        html += "<a class='join-item btn' hx-get='/parts?page=" + (page + 1) + "&sort=" + sort + "&order=" + order + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>Next</a>";
+    }
+
+    html += "</div>";
+
+    html += "</div>";
+
+    return html;
+
+
+
+    // // --- GET RECORDS ----------------------------------------------------------------------------
+    // sqlString = 
+    // "SELECT NKSC_PARTCODE, NKSC_PARTNAME, NKSC_ADD1, NKSC_CITY, NKSC_ZIP FROM" + 
+    // " NKSCPART ORDER BY nksc_partcode" + 
+    // " OFFSET " + args["QueryParams"]["start"] + " ROWS FETCH NEXT " + args["QueryParams"]["num"] + " ROWS ONLY";
+    
+    // sqlResult = sqlQuery(sqlString);
+    
+    // if(sqlResult == null){
+    //     return "Error: No records found.";
+    // }
+
+    // return RenderHtml(LoadTemplate(TemplatesPath() + "parts.html", {"parts": sqlResult}));
+}
+
+
+CreateEndpoint("POST", "/search", "postSearch");
+function postSearch(args){
+    
+    searchTerm1String = GetValueFromForm(args["Body"], "search1"); // search1=12345&search2=67890
+    searchTerm2String = GetValueFromForm(args["Body"], "search2");
+
+
+
+    qryPrms = {};
+    // sqlParams.Add({"search", skip});
+    // sqlParams.Add({"page", 1});
+    // sqlParams.Add({"sort", "partcode"});
+    // sqlParams.Add({"order", "asc"});
+    qryPrms["search"] = searchTerm1String + " " + searchTerm2String;
+    qryPrms["page"] = 1; // reset to first page
+    qryPrms["sort"] = "partcode"; // default sort column
+    qryPrms["order"] = "asc"; // default sort order
+
+    args2["QueryParams"] = qryPrms;
+
+    var1 = getParts(args2);
+
+    return var1;
+
+    // listaSvega = GetValuesFromForm(args["Body"]); // ["sifraPartnera" : "123 123", "nazivaPartnera" : "Partner 2"]
+
+    // testFunc(args["Body"]);
+}

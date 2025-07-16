@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VTable test Enzo 1</title>
+</head>
+
+<body>
+    <div id="tableContainer" style="position: absolute; width: 100%; height: 100%;"></div>
+</body>
+
+
+<script src="https://unpkg.com/@visactor/vtable/dist/vtable.min.js"></script>
+<script>
+
+    const port = "3000";
+
+    // function sleep(ms) {
+    //     return new Promise(
+    //         resolve => setTimeout(resolve, ms)
+    //     );
+    // }
+
+    async function getPromise(start, num) {
+        // await sleep(2000);
+        return fetch("http://localhost:" + port + "/getJsonPartneri?start=" + start + "&num=" + num)
+            .then(JsonString => JsonString.json())
+            .then(JsonObject => {
+                //console.log(JsonObject);
+                return JsonObject;
+            })
+            .catch(error => {
+                console.error('Error fetching data via LAZYloading:', error);
+                return [];
+            });
+    }
+
+
+
+
+    const cacheAmount = 100;
+
+    const NKSCPART_length = 10000;
+
+    // create DataSourc
+    const loadedData = {};
+    const dataSource = new VTable.data.CachedDataSource({
+        get(index) {
+            // console.log("index = " + index);
+
+            const loadStartIndex = Math.floor(index / cacheAmount) * cacheAmount;
+
+            if (!loadedData[loadStartIndex]) {
+                console.log("getting data block(" + cacheAmount + " pieces) starting from index: " + loadStartIndex);
+                const promiseObject = getPromise(loadStartIndex, cacheAmount);// getRecordsWithAjax(loadStartIndex, cacheAmount); // return Promise Object
+                // const promiseObject = getRecordsWithAjax(loadStartIndex, cacheAmount); // return Promise Object
+                loadedData[loadStartIndex] = promiseObject;
+            }
+
+            // if (index == 77) {
+            //     console.log("loadedData[" + loadStartIndex + "] = ", loadedData[loadStartIndex]);
+            // }
+
+            return loadedData[loadStartIndex].then(JsonObject => {
+                // if (index == 77) {
+                //     console.log("loadedData[" + loadStartIndex + "].then(JsonObject => ", JsonObject);
+                // }
+                return JsonObject[index - loadStartIndex];
+            });
+        },
+        length: NKSCPART_length //all records count
+    });
+
+    const columns = [
+        {
+            field: 'NKSC_PARTCODE',
+            title: 'Šifra partnera',
+            width: "auto"
+            // sort: true
+        },
+        {
+            field: 'NKSC_PARTNAME',
+            title: 'Naziv partnera',
+            width: "auto",
+        },
+        {
+            field: 'NKSC_ADD1',
+            title: 'Adresa',
+            width: "auto",
+        },
+        {
+            field: 'NKSC_CITY',
+            title: 'Grad',
+            width: "auto",
+        },
+        {
+            field: 'NKSC_ZIP',
+            title: 'Poštanski broj',
+            width: "auto",
+        },
+    ];
+
+    const option = {
+        columns
+    };
+
+    const tableInstance = new VTable.ListTable(document.getElementById("tableContainer"), option);
+    tableInstance.dataSource = dataSource;
+    window['tableInstance'] = tableInstance;
+
+</script>
+
+</html>

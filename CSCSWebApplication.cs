@@ -12,7 +12,7 @@ namespace CSCS_Web_Enzo_1
 {
     public static class CSCSWebApplication
     {
-        static CSCSConfig CSCSConfig { get; set; }
+        public static CSCSConfig CSCSConfig { get; set; }
         
         public static WebApplication WebApplication { get; set; }
         public static Interpreter Interpreter { get; set; } = new Interpreter();
@@ -75,9 +75,17 @@ namespace CSCS_Web_Enzo_1
 
 
             //skriptu izvršit
-            Console.WriteLine(
-                RunStartScript(Path.Combine(CSCSConfig.ScriptsDirectory, CSCSConfig.StartScript))
+            try
+            {
+                Console.WriteLine(
+                    RunStartScript(Path.Combine(CSCSConfig.ScriptsDirectory, CSCSConfig.StartScript))
                 );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            
 
 
             //start server

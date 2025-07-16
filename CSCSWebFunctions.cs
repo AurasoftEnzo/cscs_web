@@ -1,6 +1,7 @@
 ﻿using CSCS.InterpreterManager;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.Extensions.Primitives;
 using SplitAndMerge;
 using System;
@@ -12,6 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace CSCS_Web_Enzo_1
@@ -26,16 +28,22 @@ namespace CSCS_Web_Enzo_1
         internal void Init(Interpreter interpreter)
         {
             interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction());
-            
-            
+
+            //--
+
+            interpreter.RegisterFunction("TemplatesPath", new TemplatesPathFunction());
+            interpreter.RegisterFunction("ScriptsPath", new ScriptsPathFunction());
+
+            //--
+
             interpreter.RegisterFunction("DeserializeJson", new DeserializeJsonFunction());
             interpreter.RegisterFunction("SerializeJson", new SerializeJsonFunction());
 
             interpreter.RegisterFunction("Sql2Json", new Sql2JsonFunction());
 
+            //--
 
-
-            interpreter.RegisterFunction("LoadHtmlTemplate", new LoadHtmlTemplateFunction());
+            interpreter.RegisterFunction("LoadTemplate", new LoadTemplateFunction());
 
             interpreter.RegisterFunction("FillTemplateFromDictionary", new FillTemplateFromDictionaryFunction());
             interpreter.RegisterFunction("FillTemplatePlaceholder", new FillTemplatePlaceholderFunction());
@@ -44,12 +52,138 @@ namespace CSCS_Web_Enzo_1
             interpreter.RegisterFunction("RenderCondition", new RenderConditionFunction());
 
             interpreter.RegisterFunction("RenderHtml", new RenderHtmlFunction());
+
+            //--
+
+            interpreter.RegisterFunction("testFunc", new testFuncFunction());
+            interpreter.RegisterFunction("GetValueFromForm", new GetValueFromFormFunction());
         }
     }
 
+    
+
+    class testFuncFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            var var1 = Utils.GetSafeVariable(args, 0);
+
+            //Uri.UnescapeDataString(var1.String);
+
+            return Variable.EmptyInstance;
+        }   
+    }
+
+
+    class GetValueFromFormFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 2, m_name);
+
+            var formString = Utils.GetSafeString(args, 0);
+            var keyName = Utils.GetSafeString(args, 1);
+
+            var formParts = formString.Split("&");
+
+            string keyValue = "";
+            foreach (var pair in formParts)
+            {
+                var pairSplitted = pair.Split("=");
+                if (pairSplitted[0] == keyName)
+                {
+                    keyValue = pairSplitted[1];
+                    return new Variable(Uri.UnescapeDataString(keyValue));
+                }
+            }
+
+            return Variable.EmptyInstance;
+        }
+    }
+
+
     class CreateEndpointFunction : ParserFunction
     {
-        private async Task<Variable> ExecScriptFunction(HttpContext context,
+        private Variable ExecScriptFunction(HttpContext context,
+            string scriptFunctionName, string httpMethod)
+        {
+            // Prepare arguments for the CSCS script function
+            //var args = new List<Variable>();
+
+            // Create a request object containing all parts of the request
+            var requestData = new Variable(Variable.VarType.ARRAY);
+
+            //requestData.AddVariable(new Variable(httpMethod));
+            requestData.SetHashVariable("HttpMethod", new Variable(context.Request.Method));
+            requestData.SetHashVariable("RequestPath", new Variable(context.Request.Path));
+            // ???
+
+            // Add route parameters
+            var routeParams = new Variable(Variable.VarType.ARRAY);
+            foreach (var (key, value) in context.Request.RouteValues)
+            {
+                routeParams.SetHashVariable(key, new Variable(value?.ToString()));
+            }
+            requestData.SetHashVariable("RouteValues", routeParams);
+
+            // Add query parameters
+            var queryParams = new Variable(Variable.VarType.ARRAY);
+            foreach (var (key, value) in context.Request.Query)
+            {
+                queryParams.SetHashVariable(key, new Variable(value.ToString()));
+            }
+            requestData.SetHashVariable("QueryParams", queryParams);
+
+            // Add headers
+            var headers = new Variable(Variable.VarType.ARRAY);
+            foreach (var (key, value) in context.Request.Headers)
+            {
+                headers.SetHashVariable(key, new Variable(value.ToString()));
+            }
+            requestData.SetHashVariable("Headers", headers);
+
+            // Add body (for POST/PUT)
+            var body = Variable.EmptyInstance;
+            if (context.Request.ContentLength > 0)
+            {
+                try
+                {
+                    var bodyContent = new StreamReader(context.Request.Body).ReadToEnd();
+                    
+                    requestData.SetHashVariable("Body", body = new Variable(bodyContent));
+                }
+                catch
+                {
+                    // /* Handle error */ !!!!!!!
+                }
+            }
+            else
+            {
+                requestData.SetHashVariable("Body", body = Variable.EmptyInstance);
+            }
+
+
+            //requestData.AddVariable(body);
+
+            // Execute the CSCS script function with all request data
+            //return CSCSWebApplication.Interpreter.Run(scriptFunctionName, new List<Variable> { requestData });
+            try
+            {
+                return CSCSWebApplication.Interpreter.Run(scriptFunctionName, requestData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return new Variable("Server error.");
+            }
+            
+        }
+        
+        private async Task<Variable> ExecScriptFunctionAsync(HttpContext context,
             string scriptFunctionName, string httpMethod)
         {
             // Prepare arguments for the CSCS script function
@@ -113,7 +247,16 @@ namespace CSCS_Web_Enzo_1
 
             // Execute the CSCS script function with all request data
             //return CSCSWebApplication.Interpreter.Run(scriptFunctionName, new List<Variable> { requestData });
-            return CSCSWebApplication.Interpreter.Run(scriptFunctionName, requestData);
+            try
+            {
+                return CSCSWebApplication.Interpreter.Run(scriptFunctionName, requestData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return new Variable("Server error.");
+            }
+            
         }
 
         protected override Variable Evaluate(ParsingScript script)
@@ -130,28 +273,28 @@ namespace CSCS_Web_Enzo_1
                 case "GET":
                     CSCSWebApplication.WebApplication.MapGet(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod);
                             await ProcessResponse(context, result);
                         });
                     break;
                 case "POST":
                     CSCSWebApplication.WebApplication.MapPost(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod);
                             await ProcessResponse(context, result);
                         });
                     break;
                 case "PUT":
                     CSCSWebApplication.WebApplication.MapPut(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod);
                             await ProcessResponse(context, result);
                         });
                     break;
                 case "DELETE":
                     CSCSWebApplication.WebApplication.MapDelete(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunction(context, scriptFunctionName, httpMethod);
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod);
                             await ProcessResponse(context, result);
                         });
                     break;
@@ -520,10 +663,10 @@ namespace CSCS_Web_Enzo_1
             {
                 jsonBuilder.Append("\t{");
 
-                for (int i = 0; i < rowVariable.Tuple.Count; i++)
+                for (int itemIndex = 0; itemIndex < rowVariable.Tuple.Count; itemIndex++)
                 {
-                    Variable itemVariable = rowVariable.Tuple[i];
-                    string itemHeader = headers[i];
+                    Variable itemVariable = rowVariable.Tuple[itemIndex];
+                    string itemHeader = headers[itemIndex];
                     
                     string itemValue = null;
                     switch (itemVariable.Type)
@@ -569,9 +712,12 @@ namespace CSCS_Web_Enzo_1
                     
                     jsonBuilder.Append($"\t\t\"{itemHeader}\" : {itemValue},\n");
                 }
+                jsonBuilder.Remove(jsonBuilder.Length - 2, 1);
+
                 
                 jsonBuilder.Append("\t},\n");
             }
+            jsonBuilder.Remove(jsonBuilder.Length - 2, 1);
 
             jsonBuilder.Append("]");
             return jsonBuilder.ToString();
@@ -868,7 +1014,7 @@ namespace CSCS_Web_Enzo_1
         public static Dictionary<int, List<string>> TemplatesDictionary = new Dictionary<int, List<string>>();
     }
 
-    class LoadHtmlTemplateFunction : ParserFunction
+    class LoadTemplateFunction : ParserFunction
     {
         protected override Variable Evaluate(ParsingScript script)
         {
@@ -1102,7 +1248,35 @@ namespace CSCS_Web_Enzo_1
     #endregion
 
 
+    #region PATH functions
 
+    class TemplatesPathFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 0, m_name);
+
+            string htmlTemplatesPath = CSCSWebApplication.CSCSConfig.TemplatesDirectory;
+
+            return new Variable(htmlTemplatesPath);
+        }
+    }
+    
+    class ScriptsPathFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 0, m_name);
+
+            string cscsScriptsDirectoryPath = CSCSWebApplication.CSCSConfig.ScriptsDirectory;
+
+            return new Variable(cscsScriptsDirectoryPath);
+        }
+    }
+
+    #endregion
 
 
 

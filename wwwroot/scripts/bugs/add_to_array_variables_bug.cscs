@@ -1,0 +1,36 @@
+parts = {};
+
+sqlResults = sqlQuery(query);
+
+
+// this works
+if(sqlResults != null && Size(sqlResults) > 1){
+    for(i = 1; i < Size(sqlResults); i++){
+        pCode = strTrim(sqlResults[i][0]);
+        pName = strTrim(sqlResults[i][1]);
+        pCity = strTrim(sqlResults[i][2]);
+
+        line = {
+            "partCode" : pCode,
+            "PartName" : pName,
+            "PartCity" : pCity
+        };
+        
+        parts.Add(line);
+    }
+}
+
+
+// this should work, but it doesn't. It is more convenient and simple to write. What do you think?
+if(sqlResults != null && Size(sqlResults) > 1){
+    for(i = 1; i < Size(sqlResults); i++){
+        
+        line = {
+            "partCode" : strTrim(sqlResults[i][0]),
+            "PartName" : strTrim(sqlResults[i][1]),
+            "PartCity" : strTrim(sqlResults[i][2])
+        };
+
+        parts.Add(line);
+    }
+}

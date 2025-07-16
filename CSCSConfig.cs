@@ -8,5 +8,7 @@
         public string PreprocessSripts { get; set; }
 
         public string PreprocessTokens { get; set; }
+
+        public string TemplatesDirectory { get; set; }
     }
 }

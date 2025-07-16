@@ -5,20 +5,20 @@ CreateEndpoint("POST", "/", "func1");
 
 function func1(args){
 
-    method = args[0]; // HTTP method -> string
-    requestPath = args[1]; // request path(route) -> string
-    routeParams = args[2]; // Route parameters -> hash table / dictionary
-    queryParams = args[3]; // Query string -> string
-    headers = args[4]; // Request headers -> hash table / dictionary
-    body = args[5]; // Request body -> string
+    Method = args["HttpMethod"]; // HTTP method -> string
+    RequestPath = args["RequestPath"]; // request path(route) -> string
+    RouteValues = args["RouteValues"]; // Route parameters -> hash table / dictionary
+    QueryParams = args["QueryParams"]; // Query string -> string
+    Headers = args["Headers"]; // Request headers -> hash table / dictionary
+    Body = args["Body"]; // Request body -> string
 
-    argsString = "method:\n" + method + "\n" +
-                 "requestPath:\n" + requestPath + "\n" +
-                 "routeParams:\n" + routeParams + "\n" +
-                 "queryParams:\n" + queryParams + "\n" +
-                 "headers:\n" + headers + "\n" +
-                 "body:\n" + body;
-    print("argsString:\n\n" + argsString);
+    argsString = "Method:" + Method + "\n" +
+                 "RequestPath:" + RequestPath + "\n" +
+                 "RouteValues:" + RouteValues + "\n" +
+                 "QueryParams:" + QueryParams + "\n" +
+                 "Headers:" + Headers + "\n" +
+                 "Body:" + Body;
+    print("argsString:\n" + argsString);
     print("\n--------------------\n");
 
 

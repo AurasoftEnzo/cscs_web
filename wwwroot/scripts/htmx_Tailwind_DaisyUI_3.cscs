@@ -1,0 +1,410 @@
+SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+
+CreateEndpoint("GET", "/", "getRoot");
+function getRoot(){
+    return RenderHtml(LoadTemplate(TemplatesPath() + "htmx_tailwind_daisyUI\\" + "htmx_Tailwind_DaisyUI_3.html"));
+}
+
+CreateEndpoint("GET", "/parts", "getParts");
+function getParts(args){
+    
+    if(Contains(args["QueryParams"], "page")){
+        page = int(args["QueryParams"]["page"]);
+        if(page < 1){
+            return "Error: 'page' query parameter must be a positive integer.";
+        }
+    }
+    else{
+        page = 1; // default page
+    }
+
+
+    if(Contains(args["QueryParams"], "sort")){
+        sort = args["QueryParams"]["sort"];
+    }
+    else{
+        sort = "nksc_partcode"; // default sort column
+    }
+
+    // print("args[\"QueryParams\"][\"order\"] = " + args["QueryParams"]["order"]);
+
+    if(Contains(args["QueryParams"], "order")){
+        order = args["QueryParams"]["order"];
+    }
+    else{
+        order = "asc"; // default sort order
+    }
+
+    // for(i = 0; i < Size(args["QueryParams"]); i++){
+    //     if()
+    // }
+
+    // if(args["QueryParams"]["search"] != null ){
+    //     search = args["QueryParams"]["search"];
+    // }
+    // else{
+    //     search = ""; // default search term
+    // }
+    
+    if(Contains(args["QueryParams"], "search")){
+        search = args["QueryParams"]["search"];
+    }
+    else{
+        search = ""; // default search term
+    }
+
+
+    pageSize = 10;
+    skip = (page - 1) * pageSize;
+    
+    if(sort == "partcode"){
+        orderBy = "nksc_partcode";
+    }elif(sort == "partname"){
+        orderBy = "nksc_partname";
+    }elif(sort == "partcity"){
+        orderBy = "nksc_city";
+    }else{
+        orderBy = "nksc_partcode"; // default order by
+    }
+
+    sort = orderBy;
+
+
+
+    if(order == "asc"){
+        orderBy += " ASC";
+    }else{
+        orderBy += " DESC";
+    }
+    
+    
+    if(search == ""){
+        whereClause = "";
+    }else{
+        whereClause = " WHERE nksc_partcode LIKE @search OR nksc_partname LIKE @search OR nksc_city LIKE @search";
+    }
+    
+    query = "SELECT nksc_partcode, nksc_partname, nksc_city" +
+                  " FROM NKSCPART " + whereClause +
+                  " ORDER BY " + orderBy +
+                  " OFFSET @skip ROWS FETCH NEXT @pageSize ROWS ONLY"
+                  ;
+
+    countQuery = "SELECT COUNT(*) FROM NKSCPART " + whereClause;
+
+
+    sqlParams = {};
+    sqlParams.Add({"@skip", skip});
+    sqlParams.Add({"@pageSize", pageSize});
+    sqlParams.Add({"@search", "%" + search + "%"});
+    
+    
+    parts = {};
+
+    sqlResults = sqlQuery(query, sqlParams);
+
+    // print(sqlResults[1][0]);
+
+    if(sqlResults != null && Size(sqlResults) > 1){
+        for(i = 1; i < Size(sqlResults); i++){
+            
+            pCode = strTrim(sqlResults[i][0]);
+            pName = strTrim(sqlResults[i][1]);
+            pCity = strTrim(sqlResults[i][2]);
+
+            line = {
+                "partCode" : pCode,
+                "PartName" : pName,
+                "PartCity" : pCity
+            };
+
+            parts.Add(line);
+
+            // if(i == 3){
+            //     print("First part: " + pCode + ", " + pName + ", " + pCity);
+            // }
+        }
+    }
+
+
+    
+
+    countResult = sqlQuery(countQuery, sqlParams);
+    totalRecords = countResult[1][0];
+
+    totalPages = Math.Ceil(totalRecords / pageSize);
+
+    
+    html = "<div id='parts-table'>";
+    html += "<table class='table w-full'>";
+    html += "<thead><tr>";
+
+    if(sort == "nksc_partcode" && order == "asc"){
+        varCode = "desc";
+    }
+    else{
+        varCode = "asc";
+    }
+    html += "<th><a class='link' hx-get='/parts?page=1&sort=partcode&order=" + varCode + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>Part Code</a></th>";
+    
+    if(sort == "nksc_partname" && order == "asc"){
+        varName = "desc";
+    }
+    else{
+        varName = "asc";
+    }
+    html += "<th><a class='link' hx-get='/parts?page=1&sort=partname&order=" + varName + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>Part Name</a></th>";
+    
+    if(sort == "nksc_city" && order == "asc"){
+        varCity = "desc";
+    }
+    else{
+        varCity = "asc";
+    }
+    html += "<th><a class='link' hx-get='/parts?page=1&sort=partcity&order=" + varCity + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>City</a></th>";
+    
+    html += "</tr></thead><tbody>";
+    
+    // for(part : parts){
+    //     // print(part);
+
+    //     html += "<tr>";
+    //     html += "<td>" + part["partCode"] + "</td>";
+    //     html += "<td>" + part["PartName"] + "</td>";
+    //     html += "<td>" + part["PartCity"] + "</td>";
+    //     html += "</tr>";
+    // }
+
+    for(part : parts){
+        html += "<tr data-id='" + part["partCode"] + "' data-original='" +
+                "{\"partCode\" : \"" + part["partCode"] + "\", \"PartName\": \"" + part["PartName"] + "\", \"PartCity\": \"" + part["PartCity"] + "\"}'>";
+        html += "<td data-field='partCode'>" + part["partCode"] + "</td>";
+        html += "<td data-field='partName'>" + part["PartName"] + "</td>";
+        html += "<td data-field='city'>" + part["PartCity"] + "</td>";
+        html += "<td>";
+        html += "<button class='btn btn-info btn-sm' onclick='enableEditMode(this.closest(\"tr\"))'>Edit</button>";
+        html += "<button class='btn btn-error btn-sm ml-2' hx-delete='/parts/" + part["partCode"] + "' hx-target='#parts-table' hx-swap='outerHTML'>Delete</button>";
+        html += "</td>";
+        html += "</tr>";
+    }
+
+    html += "</tbody>";
+    html += "<tfoot><tr>";
+    html += "<td colspan='3'>Total Amount</td>";
+    html += "</tr></tfoot>";
+    html += "</table>";
+
+    html += "<div class='join mt-4'>";
+
+    if(page > 1){
+        html += "<a class='join-item btn' hx-get='/parts?page=" + (page - 1) + "&sort=" + sort + "&order=" + order + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>Previous</a>";
+    }
+    html += "<button class='join-item btn btn-disabled'>" + page + " of " + totalPages + "</button>";
+    if (page < totalPages){
+        html += "<a class='join-item btn' hx-get='/parts?page=" + (page + 1) + "&sort=" + sort + "&order=" + order + "&search=" + search + "' hx-target='#parts-table' hx-swap='outerHTML'>Next</a>";
+    }
+
+    html += "</div>";
+
+    html += "</div>";
+
+    return html;
+
+
+
+    // // --- GET RECORDS ----------------------------------------------------------------------------
+    // sqlString = 
+    // "SELECT NKSC_PARTCODE, NKSC_PARTNAME, NKSC_ADD1, NKSC_CITY, NKSC_ZIP FROM" + 
+    // " NKSCPART ORDER BY nksc_partcode" + 
+    // " OFFSET " + args["QueryParams"]["start"] + " ROWS FETCH NEXT " + args["QueryParams"]["num"] + " ROWS ONLY";
+    
+    // sqlResult = sqlQuery(sqlString);
+    
+    // if(sqlResult == null){
+    //     return "Error: No records found.";
+    // }
+
+    // return RenderHtml(LoadTemplate(TemplatesPath() + "parts.html", {"parts": sqlResult}));
+}
+
+
+CreateEndpoint("POST", "/search", "postSearch");
+function postSearch(args){
+    searchTerm1String = GetValueFromForm(args["Body"], "search1"); // search1=12345&search2=67890
+    searchTerm2String = GetValueFromForm(args["Body"], "search2");
+
+    qryPrms = {};
+    // sqlParams.Add({"search", skip});
+    // sqlParams.Add({"page", 1});
+    // sqlParams.Add({"sort", "partcode"});
+    // sqlParams.Add({"order", "asc"});
+    qryPrms["search"] = searchTerm1String + " " + searchTerm2String;
+    qryPrms["page"] = 1; // reset to first page
+    qryPrms["sort"] = "partcode"; // default sort column
+    qryPrms["order"] = "asc"; // default sort order
+
+    args2["QueryParams"] = qryPrms;
+
+    res2 = getParts(args2);
+
+    return res2;
+}
+
+
+
+
+
+
+
+
+
+
+CreateEndpoint("GET", "/parts/new", "getNewPartForm");
+function getNewPartForm(args) {
+    html = "<div id='parts-table'>";
+    html += "<table class='table w-full'>";
+    html += "<thead><tr>";
+    html += "<th>Part Code</th>";
+    html += "<th>Part Name</th>";
+    html += "<th>City</th>";
+    html += "<th>Actions</th>";
+    html += "</tr></thead><tbody>";
+
+    // New row form
+    html += "<tr>";
+    html += "<td><input class='input input-bordered input-sm w-full' name='partCode'></td>";
+    html += "<td><input class='input input-bordered input-sm w-full' name='partName'></td>";
+    html += "<td><input class='input input-bordered input-sm w-full' name='city'></td>";
+    html += "<td>";
+    html += "<button class='btn btn-success btn-sm' hx-post='/parts' hx-include='closest tr' hx-target='#parts-table' hx-swap='outerHTML'>Save</button>";
+    html += "<button class='btn btn-error btn-sm ml-2' hx-get='/parts?page=1&sort=partcode&order=asc' hx-target='#parts-table' hx-swap='outerHTML'>Cancel</button>";
+    html += "</td>";
+    html += "</tr>";
+
+    html += "</tbody></table>";
+    html += "</div>";
+
+    return html;
+}
+
+
+
+
+
+CreateEndpoint("POST", "/parts", "createPart");
+function createPart(args) {
+    partCode = GetValueFromForm(args["Body"], "partCode");
+    partName = GetValueFromForm(args["Body"], "partName");
+    city = GetValueFromForm(args["Body"], "city");
+
+
+    // Validate input
+    if(partCode == "" || partName == "" || city == "") {
+        html = "<div id='parts-table' class='alert alert-error'>Error: Part Code, Part Name, and City are required.</div>";
+        return html;
+    }
+
+    query = "INSERT INTO NKSCPART (nksc_partcode, nksc_partname, nksc_city) " +
+            "VALUES (@partCode, @partName, @city)";
+
+    sqlParams = {};
+    sqlParams.Add({"@partCode", partCode});
+    sqlParams.Add({"@partName", partName});
+    sqlParams.Add({"@city", city});
+
+    sqlResult = sqlNonQuery(query, sqlParams);
+
+    print("sqlResult = " + sqlResult);
+
+    // if(sqlResult == null || sqlResult[0][0] != "OK") {
+    //     return "Error creating part";
+    // }
+
+    // Return to the first page after creation
+
+    args3 = {};
+    args3["QueryParams"] = {};
+    args3["QueryParams"]["page"] = 1; // reset to first page
+    args3["QueryParams"]["sort"] = "partcode"; // default sort column
+    args3["QueryParams"]["order"] = "asc"; // default sort order
+
+    res3 = getParts(args3);
+
+    return res3;
+}
+
+
+
+
+
+
+CreateEndpoint("PUT", "/parts/{id}", "updatePart");
+function updatePart(args) {
+    
+    // partCode = GetValueFromForm(args["Body"], "partCode");
+    
+
+    partName = GetValueFromForm(args["Body"], "partName");
+    city = GetValueFromForm(args["Body"], "city");
+
+    query = "UPDATE NKSCPART SET " +
+            "nksc_partname = @partName, " +
+            "nksc_city = @city " +
+            "WHERE nksc_partcode = @partCode";
+
+    sqlParams = {};
+    sqlParams.Add({"@partCode", partCode});
+    sqlParams.Add({"@partName", partName});
+    sqlParams.Add({"@city", city});
+
+    sqlResult = sqlNonQuery(query, sqlParams);
+
+    // if(sqlResult == null || sqlResult[0][0] != "OK") {
+    //     return "Error updating part";
+    // }
+
+    // Return to the current page
+
+    args4 = {};
+    args4["QueryParams"] = {};
+    args4["QueryParams"]["page"] = 1; // reset to first page
+    args4["QueryParams"]["sort"] = "partcode"; // default sort column
+    args4["QueryParams"]["order"] = "asc"; // default sort order
+
+    res4 = getParts(args4);
+
+    return res4;
+}
+
+
+
+CreateEndpoint("DELETE", "/parts/{id}", "deletePart");
+function deletePart(args) {
+    partCode = args["RouteValues"]["id"];
+
+    query = "DELETE FROM NKSCPART WHERE nksc_partcode = @partCode";
+    sqlParams = {};
+    sqlParams.Add({"@partCode", partCode});
+
+    sqlResult = sqlNonQuery(query, sqlParams);
+
+    print("sqlResult = " + sqlResult);
+
+    // if(sqlResult == null || sqlResult[0][0] != "OK") {
+    //     return "Error deleting part";
+    // }
+
+
+    // Return to the current page
+
+    args5 = {};
+    args5["QueryParams"] = {};
+    args5["QueryParams"]["page"] = 1; // reset to first page
+    args5["QueryParams"]["sort"] = "partcode"; // default sort column
+    args5["QueryParams"]["order"] = "asc"; // default sort order
+
+    res5 = getParts(args5);
+
+    return res5;
+
+}

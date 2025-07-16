@@ -1,0 +1,28 @@
+CreateEndpoint("GET", "/1", "func1");
+CreateEndpoint("GET", "/2", "func2");
+CreateEndpoint("GET", "/3", "func3");
+
+function func1(){
+    DefineLocal("localVar", "Hello");
+    print("sleep 10 seconds");
+    sleep(10000);
+    DefineLocal("localVar", "Hello Changend");
+    return 201;
+}
+
+function func2(){
+    globalVar = "Global Hello";
+    print("sleep 10 seconds");
+    sleep(10000);
+    globalVar = "Global Hello Changed";
+    return 202;
+}
+
+function func3(){
+    print("globalVar: " + globalVar);
+    print("localVar: " + localVar);
+    return 203;
+}
+
+
+
