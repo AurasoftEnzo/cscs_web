@@ -183,7 +183,7 @@ function getParts(args){
         html += "<td data-field='city'>" + part["PartCity"] + "</td>";
         html += "<td>";
         html += "<button class='btn btn-info btn-sm' onclick='enableEditMode(this.closest(\"tr\"))'>Edit</button>";
-        html += "<button class='btn btn-error btn-sm ml-2' hx-delete='/parts/" + part["partCode"] + "' hx-target='#parts-table' hx-swap='outerHTML'>Delete</button>";
+        html += "<button class='btn btn-error btn-sm ml-2' hx-delete='/parts/" + part["partCode"] + "' hx-target='#parts-table' hx-swap='outerHTML' hx-confirm='Are you sure you want to delete this part?'>Delete</button>";
         html += "</td>";
         html += "</tr>";
     }
@@ -337,15 +337,17 @@ function createPart(args) {
 
 
 
-
 CreateEndpoint("PUT", "/parts/{id}", "updatePart");
 function updatePart(args) {
-    
-    // partCode = GetValueFromForm(args["Body"], "partCode");
-    
-
+    partCode = args["RouteValues"]["id"]; // Get partCode from route
     partName = GetValueFromForm(args["Body"], "partName");
     city = GetValueFromForm(args["Body"], "city");
+
+    // Validate input
+    if(partName == "" || city == "") {
+        html = "<div id='parts-table' class='alert alert-error'>Error: Part Name and City are required.</div>";
+        return html;
+    }
 
     query = "UPDATE NKSCPART SET " +
             "nksc_partname = @partName, " +
@@ -359,22 +361,56 @@ function updatePart(args) {
 
     sqlResult = sqlNonQuery(query, sqlParams);
 
-    // if(sqlResult == null || sqlResult[0][0] != "OK") {
-    //     return "Error updating part";
-    // }
-
-    // Return to the current page
-
+    // Return to the current page with current sorting/filtering
     args4 = {};
     args4["QueryParams"] = {};
-    args4["QueryParams"]["page"] = 1; // reset to first page
-    args4["QueryParams"]["sort"] = "partcode"; // default sort column
-    args4["QueryParams"]["order"] = "asc"; // default sort order
+    args4["QueryParams"]["page"] = 1;
+    args4["QueryParams"]["sort"] = "partcode";
+    args4["QueryParams"]["order"] = "asc";
+    args4["QueryParams"]["search"] = "";
 
     res4 = getParts(args4);
-
     return res4;
 }
+
+
+// CreateEndpoint("PUT", "/parts/{id}", "updatePart");
+// function updatePart(args) {
+    
+//     // partCode = GetValueFromForm(args["Body"], "partCode");
+    
+
+//     partName = GetValueFromForm(args["Body"], "partName");
+//     city = GetValueFromForm(args["Body"], "city");
+
+//     query = "UPDATE NKSCPART SET " +
+//             "nksc_partname = @partName, " +
+//             "nksc_city = @city " +
+//             "WHERE nksc_partcode = @partCode";
+
+//     sqlParams = {};
+//     sqlParams.Add({"@partCode", partCode});
+//     sqlParams.Add({"@partName", partName});
+//     sqlParams.Add({"@city", city});
+
+//     sqlResult = sqlNonQuery(query, sqlParams);
+
+//     // if(sqlResult == null || sqlResult[0][0] != "OK") {
+//     //     return "Error updating part";
+//     // }
+
+//     // Return to the current page
+
+//     args4 = {};
+//     args4["QueryParams"] = {};
+//     args4["QueryParams"]["page"] = 1; // reset to first page
+//     args4["QueryParams"]["sort"] = "partcode"; // default sort column
+//     args4["QueryParams"]["order"] = "asc"; // default sort order
+
+//     res4 = getParts(args4);
+
+//     return res4;
+// }
 
 
 
@@ -388,23 +424,46 @@ function deletePart(args) {
 
     sqlResult = sqlNonQuery(query, sqlParams);
 
-    print("sqlResult = " + sqlResult);
-
-    // if(sqlResult == null || sqlResult[0][0] != "OK") {
-    //     return "Error deleting part";
-    // }
-
-
-    // Return to the current page
-
+    // Return to the current page with current sorting/filtering
     args5 = {};
     args5["QueryParams"] = {};
-    args5["QueryParams"]["page"] = 1; // reset to first page
-    args5["QueryParams"]["sort"] = "partcode"; // default sort column
-    args5["QueryParams"]["order"] = "asc"; // default sort order
+    args5["QueryParams"]["page"] = 1;
+    args5["QueryParams"]["sort"] = "partcode";
+    args5["QueryParams"]["order"] = "asc";
+    args5["QueryParams"]["search"] = "";
 
     res5 = getParts(args5);
-
     return res5;
-
 }
+
+
+// CreateEndpoint("DELETE", "/parts/{id}", "deletePart");
+// function deletePart(args) {
+//     partCode = args["RouteValues"]["id"];
+
+//     query = "DELETE FROM NKSCPART WHERE nksc_partcode = @partCode";
+//     sqlParams = {};
+//     sqlParams.Add({"@partCode", partCode});
+
+//     sqlResult = sqlNonQuery(query, sqlParams);
+
+//     print("sqlResult = " + sqlResult);
+
+//     // if(sqlResult == null || sqlResult[0][0] != "OK") {
+//     //     return "Error deleting part";
+//     // }
+
+
+//     // Return to the current page
+
+//     args5 = {};
+//     args5["QueryParams"] = {};
+//     args5["QueryParams"]["page"] = 1; // reset to first page
+//     args5["QueryParams"]["sort"] = "partcode"; // default sort column
+//     args5["QueryParams"]["order"] = "asc"; // default sort order
+
+//     res5 = getParts(args5);
+
+//     return res5;
+
+// }

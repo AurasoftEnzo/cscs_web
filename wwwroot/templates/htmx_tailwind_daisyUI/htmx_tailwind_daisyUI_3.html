@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html data-theme='light'>
+
 <head>
     <title>Parts Management</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
@@ -38,53 +39,56 @@
             });
         }
 
-
-
-
+        
 
         function enableEditMode(row) {
             const cells = row.querySelectorAll('td:not(:last-child)');
             cells.forEach(cell => {
                 const value = cell.textContent;
                 cell.innerHTML = `<input class="input input-bordered input-sm w-full"
-                                    value="${value}"
-                                    name="${cell.getAttribute('data-field')}">`;
+                                value="${value}"
+                                name="${cell.getAttribute('data-field')}">`;
             });
 
             const actionCell = row.querySelector('td:last-child');
             actionCell.innerHTML = `
-                <button class="btn btn-success btn-sm"
-                        hx-put="/parts/${row.getAttribute('data-id')}"
-                        hx-include="closest tr"
-                        hx-target="#parts-table"
-                        hx-swap="outerHTML">Save</button>
-                <button class="btn btn-error btn-sm ml-2"
-                        onclick="cancelEdit(this)">Cancel</button>
-            `;
+        <button class="btn btn-success btn-sm"
+                hx-put="/parts/${row.getAttribute('data-id')}"
+                hx-include="closest tr"
+                hx-target="#parts-table"
+                hx-swap="outerHTML">Save</button>
+        <button class="btn btn-error btn-sm ml-2"
+                onclick="cancelEdit(this)">Cancel</button>
+    `;
+
+            // Re-process HTMX attributes
+            htmx.process(actionCell);
         }
 
         function cancelEdit(button) {
             const row = button.closest('tr');
             const originalData = JSON.parse(row.getAttribute('data-original'));
 
-            console.log('Restoring original data:', originalData);
-            
+            // Restore original content
+            row.querySelector('td[data-field="partCode"]').textContent = originalData.partCode;
+            row.querySelector('td[data-field="partName"]').textContent = originalData.PartName;
+            row.querySelector('td[data-field="city"]').textContent = originalData.PartCity;
 
-            row.querySelectorAll('td').forEach((cell, index) => {
-                if (index === 0) cell.textContent = originalData.partCode;
-                else if (index === 1) cell.textContent = originalData.PartName;
-                else if (index === 2) cell.textContent = originalData.PartCity;
-                else if (index === 3) {
-                    cell.innerHTML = `
-                        <button class="btn btn-info btn-sm" onclick="enableEditMode(this.closest('tr'))">Edit</button>
-                        <button class="btn btn-error btn-sm ml-8"
-                                hx-delete="/parts/${originalData.partCode}"
-                                hx-target="#parts-table"
-                                hx-swap="outerHTML">Delete</button>
-                    `;
-                }
-            });
+            // Rebuild action buttons with proper HTMX attributes
+            const actionCell = row.querySelector('td:last-child');
+            actionCell.innerHTML = `
+        <button class="btn btn-info btn-sm" onclick="enableEditMode(this.closest('tr'))">Edit</button>
+        <button class="btn btn-error btn-sm ml-2"
+                hx-delete="/parts/${originalData.partCode}"
+                hx-target="#parts-table"
+                hx-swap="outerHTML"
+                hx-confirm="Are you sure you want to delete this part?">Delete</button>
+    `;
+
+            // Re-process HTMX attributes
+            htmx.process(actionCell);
         }
+        
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', () => {
@@ -98,15 +102,20 @@
             document.getElementById('zebra-toggle').checked = zebraEnabled;
 
             // Apply zebra when table loads or updates
-            htmx.on('htmx:afterSwap', function(evt) {
+            // Ensure HTMX processes any dynamically added content
+            htmx.on('htmx:afterSwap', function (evt) {
                 if (evt.target && evt.target.id === 'parts-table') {
-                    // Small delay to ensure DOM is ready
                     setTimeout(applyZebraStripe, 50);
+                    htmx.process(evt.target); // Reprocess HTMX attributes
                 }
             });
+
+            // Also process the initial content
+            htmx.process(document.body);
         });
     </script>
 </head>
+
 <body class='bg-base-100 text-base-content min-h-screen'>
     <div class='container mx-auto p-4'>
         <div class='flex justify-between items-center mb-4'>
@@ -114,7 +123,7 @@
             <div class='flex gap-4'>
                 <label class='label cursor-pointer gap-2'>
                     <span class='label-text'>Zebra Stripe</span>
-                    <input id='zebra-toggle' type='checkbox' class='toggle toggle-primary' onchange='toggleZebra()'/>
+                    <input id='zebra-toggle' type='checkbox' class='toggle toggle-primary' onchange='toggleZebra()' />
                 </label>
                 <button class='btn btn-primary' onclick='toggleTheme()'>Toggle Theme</button>
             </div>
@@ -124,22 +133,23 @@
                 <div class='flex gap-4 mb-4'>
                     <form class='flex gap-2'>
                         <input type='text' placeholder='pretraživanje 1' name='search1'
-                            class='input input-bordered w-full max-w-xs'/>
+                            class='input input-bordered w-full max-w-xs' />
                         <input type='text' placeholder='pretraživanje 2' name='search2'
-                            class='input input-bordered w-full max-w-xs'/>
-                        <button type="submit" class='btn btn-secondary' hx-post='/search'
-                                hx-target='#parts-table' hx-swap='outerHTML'>Search</button>
+                            class='input input-bordered w-full max-w-xs' />
+                        <button type="submit" class='btn btn-secondary' hx-post='/search' hx-target='#parts-table'
+                            hx-swap='outerHTML'>Search</button>
                     </form>
-                    <button class='btn btn-accent' hx-get='/parts/new'
-                            hx-target='#parts-table' hx-swap='outerHTML'>Add New Part</button>
+                    <button class='btn btn-accent' hx-get='/parts/new' hx-target='#parts-table' hx-swap='outerHTML'>Add
+                        New Part</button>
                 </div>
-                <div id='parts-table' hx-get='/parts?page=1&sort=partcode&order=asc'
-                     hx-trigger='load' hx-swap='outerHTML'>
+                <div id='parts-table' hx-get='/parts?page=1&sort=partcode&order=asc' hx-trigger='load'
+                    hx-swap='outerHTML'>
                 </div>
             </div>
         </div>
     </div>
 </body>
+
 </html>
 
 
