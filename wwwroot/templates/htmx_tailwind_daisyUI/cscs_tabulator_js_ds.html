@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html data-theme='light'>
+<head>
+    <title>GK Transactions Management</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta charset="utf-8">
+    <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
+    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+    <style>
+        #gkTransactionsTable {
+            width: 100%;
+            height: 800px;
+        }
+        .tabulator-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .tabulator-cell.tabulator-frozen {
+            background-color: var(--fallback-b1,oklch(var(--b1)/1));
+        }
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class='bg-base-100 text-base-content min-h-screen'>
+    <div class='container mx-auto p-4'>
+        <div class='flex justify-between items-center mb-4'>
+            <h1 class='text-2xl font-bold'>GK Transactions</h1>
+            <div class='flex gap-4'>
+                <button class='btn btn-primary' onclick='toggleTheme()'>Toggle Theme</button>
+                <button class='btn btn-accent' onclick='showAddForm()'>Add Transaction</button>
+            </div>
+        </div>
+        
+        <div class='card bg-base-200 shadow-xl'>
+            <div class='card-body'>
+                <div class='flex gap-4 mb-4'>
+                    <input type='text' id='searchInput' placeholder='Search...' 
+                           class='input input-bordered w-full max-w-xs' onkeyup='searchTable()'/>
+                    <button class='btn btn-secondary' onclick='refreshTable()'>Refresh</button>
+                </div>
+                
+                <div id="gkTransactionsTable"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Form Modal -->
+    <dialog id="transactionFormModal" class="modal">
+        <div class="modal-box w-11/12 max-w-5xl">
+            <h3 class="font-bold text-lg" id="formTitle">Add New Transaction</h3>
+            <div class="form-container">
+                <div class="form-grid" id="formFields">
+                    <!-- Form fields will be generated here -->
+                </div>
+            </div>
+            <div class="modal-action">
+                <button class="btn btn-success" onclick="saveTransaction()">Save</button>
+                <button class="btn btn-error" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        let table;
+        let currentId = null;
+        const fields = [
+            { field: "GK_GL_BR_TEM", title: "ID", editor: "input", frozen: true },
+            { field: "GK_GL_DATUM", title: "Date", editor: "input" },
+            { field: "GK_GL_POSTED", title: "Posted", editor: "input" },
+            { field: "GK_GL_OPIS", title: "Description", editor: "input" },
+            { field: "GK_GL_GOD", title: "Year", editor: "input" },
+            { field: "GK_GL_TIP", title: "Type", editor: "input" },
+            { field: "GK_GL_OZNAKA", title: "Mark", editor: "input" },
+            { field: "GK_GL_ZNAK", title: "Sign", editor: "number" },
+            { field: "GK_GL_IZNL", title: "Amount NL", editor: "number" },
+            { field: "GK_GL_IZNP", title: "Amount NP", editor: "number" },
+            { field: "GK_GL_ZATV_KLAS", title: "Closed", editor: "input" },
+            { field: "GK_GL_POC_STANJ", title: "Status", editor: "input" },
+            { field: "GK_GL_BRDOK", title: "Doc Num", editor: "number" },
+            { field: "GK_GL_DATDOK", title: "Doc Date", editor: "input" },
+            { field: "GK_GL_PARTNER", title: "Partner", editor: "input" },
+            { field: "GK_GL_BR_LIN", title: "Line", editor: "number" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTable();
+            initializeTheme();
+        });
+
+        function initializeTable() {
+            table = new Tabulator("#gkTransactionsTable", {
+                ajaxURL: "http://localhost:5058/api/gk-transactions",
+                ajaxParams: { size: 20 },
+                pagination: true,
+                paginationMode: "remote",
+                paginationSize: 20,
+                layout: "fitColumns",
+                columns: [
+                    { formatter: "rowSelection", titleFormatter: "rowSelection", hozAlign: "center", headerSort: false, frozen: true },
+                    ...fields,
+                    { 
+                        formatter: formatActions, 
+                        hozAlign: "center", 
+                        frozen: true,
+                        headerSort: false,
+                        cellClick: function(e, cell) {
+                            const btn = e.target.closest("button");
+                            if (!btn) return;
+                            
+                            const row = cell.getRow();
+                            const data = row.getData();
+                            
+                            if (btn.classList.contains("edit-btn")) {
+                                showEditForm(data);
+                            } else if (btn.classList.contains("delete-btn")) {
+                                if (confirm("Are you sure you want to delete this transaction?")) {
+                                    deleteTransaction(data.GK_GL_BR_TEM);
+                                }
+                            }
+                        }
+                    }
+                ],
+                rowFormatter: function(row) {
+                    const data = row.getData();
+                    if (data.GK_GL_DATDOK === "1900-01-01") {
+                        row.getCell("GK_GL_DATDOK").setValue("");
+                    }
+                }
+            });
+        }
+
+        function formatActions(cell) {
+            const data = cell.getRow().getData();
+            return `
+                <button class="btn btn-info btn-sm edit-btn">Edit</button>
+                <button class="btn btn-error btn-sm delete-btn">Delete</button>
+            `;
+        }
+
+        function refreshTable() {
+            table.setData();
+        }
+
+        function searchTable() {
+            const searchValue = document.getElementById('searchInput').value;
+            table.setData("/api/gk-transactions", { search: searchValue });
+        }
+
+        function showAddForm() {
+            currentId = null;
+            document.getElementById('formTitle').textContent = 'Add New Transaction';
+            generateFormFields();
+            document.getElementById('transactionFormModal').showModal();
+        }
+
+        function showEditForm(data) {
+            currentId = data.GK_GL_BR_TEM;
+            document.getElementById('formTitle').textContent = 'Edit Transaction';
+            generateFormFields(data);
+            document.getElementById('transactionFormModal').showModal();
+        }
+
+        function generateFormFields(data = {}) {
+            const formContainer = document.getElementById('formFields');
+            formContainer.innerHTML = '';
+            
+            fields.forEach(field => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'form-control';
+                
+                const label = document.createElement('label');
+                label.className = 'label';
+                label.innerHTML = `<span class="label-text">${field.title}</span>`;
+                
+                let input;
+                if (field.editor === 'number') {
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    if (field.title.includes('Amount')) {
+                        input.step = '0.01';
+                    }
+                } else if (field.field === 'GK_GL_DATUM' || field.field === 'GK_GL_DATDOK') {
+                    input = document.createElement('input');
+                    input.type = 'date';
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                }
+                
+                input.className = 'input input-bordered w-full';
+                input.id = field.field;
+                input.name = field.field;
+                input.value = data[field.field] || '';
+                
+                if (field.field === 'GK_GL_BR_TEM' && currentId) {
+                    input.readOnly = true;
+                }
+                
+                fieldDiv.appendChild(label);
+                fieldDiv.appendChild(input);
+                formContainer.appendChild(fieldDiv);
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('transactionFormModal').close();
+        }
+
+        function saveTransaction() {
+            const formData = {};
+            fields.forEach(field => {
+                const input = document.getElementById(field.field);
+                formData[field.field] = input.value;
+            });
+            
+            const url = currentId ? `/api/gk-transactions/${currentId}` : '/api/gk-transactions';
+            const method = currentId ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    refreshTable();
+                    closeModal();
+                } else {
+                    alert(data.message || 'Error saving transaction');
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        }
+
+        function deleteTransaction(id) {
+            fetch(`/api/gk-transactions/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    refreshTable();
+                } else {
+                    alert(data.message || 'Error deleting transaction');
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+        }
+
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+</body>
+</html>

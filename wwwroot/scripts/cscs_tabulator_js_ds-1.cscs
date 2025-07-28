@@ -1,0 +1,323 @@
+SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+//MASTER TABLE
+
+CreateEndpoint("GET", "/", "getRoot");
+function getRoot(){
+    return RenderHtml(LoadTemplate(TemplatesPath() + "htmx_tailwind_daisyUI\\" + "cscs_tabulator_js_ds.html"));
+}
+
+// GET: api/gk-transactions
+CreateEndpoint("GET", "/api/gk-transactions", "getGKTransactions");
+function getGKTransactions(args) {
+    page = 1;
+    if (Contains(args["QueryParams"], "page")) {
+        page = int(args["QueryParams"]["page"]);
+    }
+    
+    size = 20;
+    if (Contains(args["QueryParams"], "size")) {
+        size = int(args["QueryParams"]["size"]);
+    }
+    
+    sort = "GK_GL_BR_TEM";
+    if (Contains(args["QueryParams"], "sort")) {
+        sort = args["QueryParams"]["sort"];
+    }
+    
+    order = "asc";
+    if (Contains(args["QueryParams"], "order")) {
+        order = args["QueryParams"]["order"];
+    }
+    
+    search = "";
+    if (Contains(args["QueryParams"], "search")) {
+        search = args["QueryParams"]["search"];
+    }
+    
+    skip = (page - 1) * size;
+    
+    // Build query
+    whereClause = "";
+    if (search != "") {
+        whereClause = " WHERE GK_GL_BR_TEM LIKE @search OR GK_GL_OPIS LIKE @search OR GK_GL_OZNAKA LIKE @search";
+    }
+    
+    query = "SELECT " +
+            // " TOP 10 " +
+            "GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS, " +
+            "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK, " +
+            "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ, " +
+            "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'yyyy-MM-dd') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN " +
+            "FROM NKGKGLTM" + whereClause + " " +
+            "ORDER BY " + sort + " " + order + " " +
+            "OFFSET @skip ROWS FETCH NEXT @size ROWS ONLY";
+            // "OFFSET @skip ROWS FETCH NEXT 3 ROWS ONLY";
+    
+    countQuery = "SELECT COUNT(*) FROM NKGKGLTM" + whereClause;
+    
+    // Execute data query
+    sqlParams = {};
+    sqlParams.Add({"@skip", skip});
+    sqlParams.Add({"@size", size});
+    if (search != "") {
+        sqlParams.Add({"@search", "%" + search + "%"});
+    }
+    print("SQL Params: " + sqlParams);
+    print("SQL Query: " + query);
+    print("Count Query: " + countQuery);
+    transactions = sqlQuery(query, sqlParams);
+    data = [];
+    if (transactions != null && Size(transactions) > 1) {
+        for (i = 1; i < Size(transactions); i++) {
+            
+            row = {};
+            row = transactions[i];
+
+
+            item = {};
+            
+            tempVar = row[0];
+            item["GK_GL_BR_TEM"] = tempVar;
+
+            item["GK_GL_DATUM"] = row[1];
+            item["GK_GL_POSTED"] = row[2];
+            item["GK_GL_OPIS"] = row[3];
+            item["GK_GL_GOD"] = row[4];
+            item["GK_GL_TIP"] = row[5];
+            item["GK_GL_OZNAKA"] = row[6];
+            item["GK_GL_ZNAK"] = row[7];
+            item["GK_GL_IZNL"] = row[8];
+            item["GK_GL_IZNP"] = row[9];
+            item["GK_GL_ZATV_KLAS"] = row[10];
+            item["GK_GL_POC_STANJ"] = row[11];
+            item["GK_GL_BRDOK"] = row[12];
+            item["GK_GL_DATDOK"] = row[13] == "1900-01-01" ? "" : row[13];
+            item["GK_GL_PARTNER"] = row[14];
+            item["GK_GL_BR_LIN"] = row[15];
+            data.Add(item);
+        }
+    }
+//s = 'He said: "Hello" and then left.';
+//print(strReplace(s, '"', '""'));    
+    // Get total count
+    countResult = sqlQuery(countQuery, sqlParams);
+    totalRecords = countResult[1][0];
+    lastPage = Math.Ceil(totalRecords / size);
+print("Total Records: " + totalRecords);
+print("Last Page: " + lastPage);
+print("Count Result: " + countResult); 
+
+//testData = { "key": "value", "nums": [1, 2, 3] };
+//Print("Test JSON: " + JsonEncode(testData));
+    // Manually build JSON response
+    // json = "{";
+    // json += '"data": ' + JsonEncode(data) + ",";
+    // json += '"last_page": ' + lastPage;
+    // json += "}";
+
+// print(data);
+
+resultString = SerializeJson(data);
+
+print("Result String:\n" + resultString);
+
+    // jsonObject = {};
+    // jsonObject["data"] = data;
+    // jsonObject["last_page"] = lastPage;
+
+    // json = SerializeJson(jsonObject);
+
+
+
+    //  print(substring(json, 0, 100));
+
+
+    // returnJson = {};
+    // returnJson["Content"] = json;
+    // returnJson["ContentType"] = "application/json"; 
+    // returnJson["StatusCode"] = 200;
+
+    return "returnJson";
+
+
+    return ;
+
+    //print(json);
+    //return json;
+
+/*
+    return JsonResult({
+        "data": data,
+        "last_page": lastPage
+    });
+    */
+}
+/*
+function JsonEncode(data) {
+    //type = InferType(data);
+    type= "string"; // Default to string
+        // Check for numbers
+    if (data> 99999999999999 && data < 9999999999999999) 
+    { type = "Number"; 
+    }
+    else if (Size(data) > 1) 
+    { type = "List"; 
+    }
+    
+    if (Type(data) == "List") {
+        // Handle arrays/lists
+        json = "[";
+        for (i = 0; i < Size(data); i++) {
+            if (i > 0) { json += ","; }
+            json += JsonEncode(data[i]);
+        }
+        json += "]";
+    } else if (Type(data) == "Map") {
+        // Handle dictionaries/maps
+        json = "{";
+        first = true;
+        keys = Keys(data);
+        for (i = 0; i < Size(keys); i++) {
+            key = keys[i];
+            if (!first) { json += ","; }
+            json += "\"" + key + "\":" + JsonEncode(data[key]);
+            first = false;
+        }
+        json += "}";
+    } else if (Type(data) == "Number") {
+        // Handle numbers
+        json = ToString(data);
+    } else if (data == true || data == false) {
+        // Handle booleans
+        json = data ? "true" : "false";
+    } else {
+        // Handle strings (escape quotes)
+        json = ""; //'"' + strReplace(data, '"', '\\\"') + '"';
+    }
+    return json;
+}
+/*
+function InferType(value) {
+    // Check for numbers
+    if (IsNumeric(value)) { return "Number"; }
+    // Check for lists (if Tokenize creates lists)
+    if (Size(Tokenize(value, ",")) > 1) { return "List"; }
+    // Default to string
+    return "String";
+}
+*/
+
+function EscapeJsonString(str) {
+    str = strReplace(str, '\\', '\\\\'); // Escape backslashes
+    str = strReplace(str, '\"', '\\\"');   // Escape double quotes
+    str = strReplace(str, "\n", "\\n");    // Escape newlines
+    str = strReplace(str, "\r", "\\r");    // Escape carriage returns
+    str = strReplace(str, "\t", "\\t");    // Escape tabs
+    return str;
+}
+// POST: api/gk-transactions
+CreateEndpoint("POST", "/api/gk-transactions", "createGKTransaction");
+function createGKTransaction(args) {
+    try {
+        fields = [
+            "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
+            "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
+            "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
+            "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
+        ];
+        
+        values = {};
+        for (i = 0; i < Size(fields); i++) {
+            field = fields[i];
+            values[field] = GetValueFromForm(args["Body"], field);
+        }
+        
+        // Build insert query
+        query = "INSERT INTO NKGKGLTM (" + Join(fields, ", ") + ") VALUES (";
+        params = [];
+        for (i = 0; i < Size(fields); i++) {
+            params.Add("@" + fields[i]);
+        }
+        query += Join(params, ", ") + ")";
+        
+        // Execute query
+        sqlParams = {};
+        for (i = 0; i < Size(fields); i++) {
+            sqlParams.Add({fields[i], values[fields[i]]});
+        }
+        
+        sqlNonQuery(query, sqlParams);
+        
+        return JsonResult({"success": true});
+    } catch (ex) {
+        return JsonResult({"success": false, "message": ex.Message});
+    }
+}
+
+// PUT: api/gk-transactions/{id}
+CreateEndpoint("PUT", "/api/gk-transactions/{id}", "updateGKTransaction");
+function updateGKTransaction(args) {
+    try {
+        id = args["RouteValues"]["id"];
+        
+        fields = [
+            "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
+            "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
+            "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
+            "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
+        ];
+        
+        values = {};
+        for (i = 0; i < Size(fields); i++) {
+            field = fields[i];
+            values[field] = GetValueFromForm(args["Body"], field);
+        }
+        
+        // Build update query
+        setClauses = [];
+        for (i = 0; i < Size(fields); i++) {
+            setClauses.Add(fields[i] + " = @" + fields[i]);
+        }
+        query = "UPDATE NKGKGLTM SET " + Join(setClauses, ", ") + " WHERE GK_GL_BR_TEM = @id";
+        
+        // Execute query
+        sqlParams = {};
+        for (i = 0; i < Size(fields); i++) {
+            sqlParams.Add({fields[i], values[fields[i]]});
+        }
+        sqlParams.Add({"id", id});
+        
+        sqlNonQuery(query, sqlParams);
+        
+        return JsonResult({"success": true});
+    } catch (ex) {
+        return JsonResult({"success": false, "message": ex.Message});
+    }
+}
+
+// DELETE: api/gk-transactions/{id}
+CreateEndpoint("DELETE", "/api/gk-transactions/{id}", "deleteGKTransaction");
+function deleteGKTransaction(args) {
+    try {
+        id = args["RouteValues"]["id"];
+        
+        query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+        sqlParams = {};
+        sqlParams.Add({"id", id});
+        
+        sqlNonQuery(query, sqlParams);
+        
+        return JsonResult({"success": true});
+    } catch (ex) {
+        return JsonResult({"success": false, "message": ex.Message});
+    }
+}
+
+// Helper function to return JSON responses
+function JsonResult(data) {
+    return {
+        "Content": SerializeJson(data),
+        "ContentType": "application/json",
+        "StatusCode": 200
+    };
+}

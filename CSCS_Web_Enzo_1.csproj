@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSCS.Core" Version="1.0.8" />
+    <PackageReference Include="CSCS.Core" Version="1.0.9" />
     <PackageReference Include="CSCS.InterpreterManager" Version="1.0.7" />
     <PackageReference Include="CSCS.Math" Version="1.0.6" />
     <PackageReference Include="CSCS.SqlClient" Version="1.0.7" />

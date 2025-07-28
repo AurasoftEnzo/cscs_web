@@ -6,6 +6,7 @@ using Microsoft.Extensions.Primitives;
 using SplitAndMerge;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Runtime.InteropServices;
@@ -346,274 +347,135 @@ namespace CSCS_Web_Enzo_1
             Variable jsonVariable = Utils.GetSafeVariable(args, 0);
 
             // Deserialize the JSON string into a variable
-            string serializedJson = SerializeJson(jsonVariable);    
+            string serializedJson = SerializeJson(jsonVariable, 0);    
 
             // Return the deserialized variable
             return new Variable(serializedJson);
         }
 
-        private string SerializeJson(Variable jsonVariable)
+        private string SerializeJson(Variable jsonVariable, int indent)
         {
-            return @"""SERIALIZED JSON"""; // <<<-----      //  ParseJSON(jsonString.Trim());
-        }
-
-        private Variable ParseJSON(string json)
-        {
-            json = json.Trim();
-
-            if (string.IsNullOrEmpty(json))
+            if (jsonVariable.Type != Variable.VarType.ARRAY)
             {
-                return new Variable(Variable.VarType.UNDEFINED);
+                throw new Exception("parameter must be an array/hash table");
             }
 
-            // Handle null
-            if (json == "null")
+            StringBuilder jsonStringBuilder = new StringBuilder("");
+
+            if(jsonVariable.Tuple.FirstOrDefault() == null)
             {
-                return new Variable(Variable.VarType.UNDEFINED);
+                return Indent(indent) + "[]";
             }
-
-            // Handle boolean
-            if (json == "true")
+            else
             {
-                return new Variable(true);
-            }
-            if (json == "false")
-            {
-                return new Variable(false);
-            }
+                var keysStrings = jsonVariable.GetKeys();
 
-            // Handle string
-            if (json.StartsWith("\"") && json.EndsWith("\""))
-            {
-                string stringValue = json.Substring(1, json.Length - 2);
-                // Unescape JSON string
-                stringValue = stringValue.Replace("\\\"", "\"")
-                                        .Replace("\\\\", "\\")
-                                        .Replace("\\n", "\n")
-                                        .Replace("\\r", "\r")
-                                        .Replace("\\t", "\t");
-                return new Variable(stringValue);
-            }
+                bool isList = keysStrings.Count == 0;
 
-            // Handle number
-            // decimal point must be "."
-            if (double.TryParse(json /*.Replace(".", ",")*/ , CultureInfo.InvariantCulture, out double numValue))
-            {
-                return new Variable(numValue);
-            }
-
-            // Handle array
-            if (json.StartsWith("[") && json.EndsWith("]"))
-            {
-                return ParseJSONArray(json);
-            }
-
-            // Handle object
-            if (json.StartsWith("{") && json.EndsWith("}"))
-            {
-                return ParseJSONObject(json);
-            }
-
-            // If we can't parse it, return as string
-            return new Variable(json);
-        }
-
-        private Variable ParseJSONArray(string json)
-        {
-            Variable arrayVar = new Variable(Variable.VarType.ARRAY);
-
-            // Remove brackets
-            string content = json.Substring(1, json.Length - 2).Trim();
-
-            if (string.IsNullOrEmpty(content))
-            {
-                return arrayVar;
-            }
-
-            List<string> elements = SplitJSONArray(content);
-
-            foreach (string element in elements)
-            {
-                Variable elementVar = ParseJSON(element.Trim());
-                arrayVar.AddVariable(elementVar);
-            }
-
-            return arrayVar;
-        }
-
-        private Variable ParseJSONObject(string json)
-        {
-            Variable objectVar = new Variable(Variable.VarType.ARRAY);
-
-            // Remove braces
-            string content = json.Substring(1, json.Length - 2).Trim();
-
-            if (string.IsNullOrEmpty(content))
-            {
-                return objectVar;
-            }
-
-            List<string> pairs = SplitJSONObject(content);
-
-            foreach (string pair in pairs)
-            {
-                int colonIndex = FindColonIndex(pair);
-                if (colonIndex > 0)
+                //if tuple is array -> opening json list
+                if (isList)
                 {
-                    string key = pair.Substring(0, colonIndex).Trim();
-                    string value = pair.Substring(colonIndex + 1).Trim();
+                    jsonStringBuilder.Append(Indent(indent));
+                    jsonStringBuilder.Append("[");
+                }
+                //if tuple is hash table -> opening json object
+                else //isObject
+                {
+                    jsonStringBuilder.Append(Indent(indent));
+                    jsonStringBuilder.Append("{");
+                }
 
-                    // Remove quotes from key
-                    if (key.StartsWith("\"") && key.EndsWith("\""))
+
+
+                for (int itemIndex = 0; itemIndex < jsonVariable.Tuple.Count; itemIndex++)
+                {
+                    Variable itemVariable = jsonVariable.Tuple[itemIndex];
+
+                    string itemValue = "";
+
+                    if (itemVariable.Type == Variable.VarType.ARRAY)
                     {
-                        key = key.Substring(1, key.Length - 2);
+                        jsonStringBuilder.Append($"\n" + Indent(indent));
+                        jsonStringBuilder.Append($"{(isList ? "" : $"\t\"{keysStrings.ElementAt(itemIndex)}\" : ") + SerializeJson(itemVariable, indent + 1)},");
+
+                    }
+                    else
+                    {
+                        switch (itemVariable.Type)
+                        {
+                            case Variable.VarType.NUMBER:
+                            case Variable.VarType.INT:
+                                itemValue = itemVariable.Value.ToString();
+                                break;
+
+                            case Variable.VarType.STRING:
+                                itemValue = $"\"{itemVariable.String.Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\t", "\\t")}\"";
+                                break;
+
+                            case Variable.VarType.DATETIME:
+                                itemValue = $"\"{itemVariable.DateTime.ToString("yyyy-MM-dd")}\"";
+                                break;
+
+                            case Variable.VarType.NONE:
+                            case Variable.VarType.UNDEFINED:
+                            case Variable.VarType.OBJECT:
+                                itemValue = "\"\"";
+                                break;
+
+                            case Variable.VarType.ARRAY_NUM:
+                            case Variable.VarType.ARRAY_STR:
+                            case Variable.VarType.ARRAY_INT:
+                            case Variable.VarType.MAP_INT:
+                            case Variable.VarType.MAP_NUM:
+                            case Variable.VarType.MAP_STR:
+                            case Variable.VarType.BYTE_ARRAY:
+                            case Variable.VarType.QUIT:
+                            case Variable.VarType.BREAK:
+                            case Variable.VarType.CONTINUE:
+                            case Variable.VarType.ENUM:
+                            case Variable.VarType.VARIABLE:
+                            case Variable.VarType.CUSTOM:
+                            case Variable.VarType.POINTER:
+                            default:
+                                itemValue = "\"\"";
+                                break;
+                        }
+
+                        //jsonStringBuilder.Append(Indent(indent));
+
+                        jsonStringBuilder.Append("\n" + Indent(indent + 1) + $"{(isList ? "" : $"\"{keysStrings.ElementAt(itemIndex).Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\t", "\\t")}\" : ") + itemValue},");
                     }
 
-                    Variable valueVar = ParseJSON(value);
-                    objectVar.SetHashVariable(key, valueVar);
+                    
+                }
+
+
+                //if tuple is array -> closing json list
+                if (isList)
+                {
+                    jsonStringBuilder.Remove(jsonStringBuilder.Length - 1, 1);
+                    jsonStringBuilder.Append("\n" + Indent(indent) + "]");
+                }
+                //if tuple is hash table -> closing json object
+                else //isObject
+                {
+                    jsonStringBuilder.Remove(jsonStringBuilder.Length - 1, 1);
+                    jsonStringBuilder.Append("\n" + Indent(indent) + "}");
                 }
             }
 
-            return objectVar;
+            return jsonStringBuilder.ToString();
         }
 
-        private List<string> SplitJSONArray(string content)
+        private string Indent(int amount)
         {
-            List<string> elements = new List<string>();
-            int bracketCount = 0;
-            int braceCount = 0;
-            int startIndex = 0;
-            bool inString = false;
-            bool escaped = false;
-
-            for (int i = 0; i < content.Length; i++)
+            string indent = "";
+            for(int i = 0; i < amount; i++)
             {
-                char c = content[i];
-
-                if (escaped)
-                {
-                    escaped = false;
-                    continue;
-                }
-
-                if (c == '\\' && inString)
-                {
-                    escaped = true;
-                    continue;
-                }
-
-                if (c == '"')
-                {
-                    inString = !inString;
-                }
-
-                if (!inString)
-                {
-                    if (c == '[') bracketCount++;
-                    else if (c == ']') bracketCount--;
-                    else if (c == '{') braceCount++;
-                    else if (c == '}') braceCount--;
-                    else if (c == ',' && bracketCount == 0 && braceCount == 0)
-                    {
-                        elements.Add(content.Substring(startIndex, i - startIndex));
-                        startIndex = i + 1;
-                    }
-                }
+                indent += "\t";
             }
 
-            if (startIndex < content.Length)
-            {
-                elements.Add(content.Substring(startIndex));
-            }
-
-            return elements;
-        }
-
-        private List<string> SplitJSONObject(string content)
-        {
-            List<string> pairs = new List<string>();
-            int bracketCount = 0;
-            int braceCount = 0;
-            int startIndex = 0;
-            bool inString = false;
-            bool escaped = false;
-
-            for (int i = 0; i < content.Length; i++)
-            {
-                char c = content[i];
-
-                if (escaped)
-                {
-                    escaped = false;
-                    continue;
-                }
-
-                if (c == '\\' && inString)
-                {
-                    escaped = true;
-                    continue;
-                }
-
-                if (c == '"')
-                {
-                    inString = !inString;
-                }
-
-                if (!inString)
-                {
-                    if (c == '[') bracketCount++;
-                    else if (c == ']') bracketCount--;
-                    else if (c == '{') braceCount++;
-                    else if (c == '}') braceCount--;
-                    else if (c == ',' && bracketCount == 0 && braceCount == 0)
-                    {
-                        pairs.Add(content.Substring(startIndex, i - startIndex));
-                        startIndex = i + 1;
-                    }
-                }
-            }
-
-            if (startIndex < content.Length)
-            {
-                pairs.Add(content.Substring(startIndex));
-            }
-
-            return pairs;
-        }
-
-        private int FindColonIndex(string pair)
-        {
-            bool inString = false;
-            bool escaped = false;
-
-            for (int i = 0; i < pair.Length; i++)
-            {
-                char c = pair[i];
-
-                if (escaped)
-                {
-                    escaped = false;
-                    continue;
-                }
-
-                if (c == '\\' && inString)
-                {
-                    escaped = true;
-                    continue;
-                }
-
-                if (c == '"')
-                {
-                    inString = !inString;
-                }
-
-                if (!inString && c == ':')
-                {
-                    return i;
-                }
-            }
-
-            return -1;
+            return indent;
         }
     }
     
