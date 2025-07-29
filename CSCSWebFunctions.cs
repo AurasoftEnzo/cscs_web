@@ -29,6 +29,7 @@ namespace CSCS_Web_Enzo_1
         internal void Init(Interpreter interpreter)
         {
             interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction());
+            interpreter.RegisterFunction("Response", new ResponseFunction());
 
             //--
 
@@ -58,6 +59,10 @@ namespace CSCS_Web_Enzo_1
 
             interpreter.RegisterFunction("testFunc", new testFuncFunction());
             interpreter.RegisterFunction("GetValueFromForm", new GetValueFromFormFunction());
+
+            //--
+
+
         }
     }
 
@@ -318,21 +323,99 @@ namespace CSCS_Web_Enzo_1
             //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
             if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
             {
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(result.Tuple));
+                List<string> keys = result.GetKeys();
+                List<string> lowerKeys = keys.Select(p => p.ToLower()).ToList();
+
+                if (lowerKeys.Contains("headers"))
+                {
+                    Variable headersVariable = result.GetVariable("headers");
+
+                    //List<string> headersKeys = headersVariable.GetKeys();
+                    //List<string> lowerHeadersKeys = headersKeys.Select(p => p.ToLower()).ToList();
+
+
+                    // Set content type
+                    Variable contentType = headersVariable.GetVariable("content-type");
+                    if (contentType != null && contentType.Type == Variable.VarType.STRING)
+                    {
+                        context.Response.ContentType = contentType.AsString();
+                    }
+                    else
+                    {
+                        context.Response.ContentType = "text/plain"; // Default content type
+                    }
+
+
+                    // status code
+                    Variable statusCode = result.GetVariable("statusCode");
+                    if (statusCode != null && statusCode.Type == Variable.VarType.NUMBER)
+                    {
+                        context.Response.StatusCode = (int)Math.Floor(statusCode.Value);
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 200; // Default status code
+                    }
+
+
+                    //// add body and send to client
+                    //if (keys.Contains("body"))
+                    //{
+                    //    var bodyString = result.GetVariable("body").AsString();
+                    //    await context.Response.WriteAsync(bodyString);
+                    //}
+
+
+                    // body
+                    Variable body = result.GetVariable("body");
+                    if (body != null && body.Type == Variable.VarType.STRING)
+                    {
+                        var bodyString = body.AsString();
+                        await context.Response.WriteAsync(bodyString);
+                    }
+                    else
+                    {
+                        await context.Response.WriteAsync("");
+                    }
+                }
             }
-            else if (result.Type == Variable.VarType.NUMBER)
+            else // Default to string handling
             {
                 context.Response.ContentType = "text/plain";
                 await context.Response.WriteAsync(result.AsString());
             }
-            else // Default to string handling
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.WriteAsync(result.AsString());
-            }
         }
     }
+    
+    
+    class ResponseFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 3, m_name);
+
+
+
+            var headers = Utils.GetSafeVariable(args, 0);
+            var body = Utils.GetSafeVariable(args, 1);
+            var statusCode = Utils.GetSafeVariable(args, 2);
+
+
+            //var headers = args.FirstOrDefault(p => p.ParamName.ToLower() == "headers");
+            //var body = args.LastOrDefault(p => p.CurrentAssign.ToLower() == "body");
+            //var statusCode = args.LastOrDefault(p => p.CurrentAssign.ToLower() == "statuscode");
+
+            var finalObject = new Variable(Variable.VarType.ARRAY);
+
+            finalObject.SetHashVariable("headers", headers);
+            finalObject.SetHashVariable("body", body);
+            finalObject.SetHashVariable("statusCode", statusCode);
+
+            return finalObject;
+        }
+    }
+
 
 
     #region JSON (De)Serialization
