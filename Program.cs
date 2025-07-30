@@ -157,11 +157,30 @@ using System.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//--CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+//--CORS
+
+
 var cscsConfig = builder.Configuration.GetSection("CSCSConfig").Get<CSCSConfig>();
 
 
 
 var serverApp = builder.Build();
+serverApp.UseStaticFiles();
+
+//--CORS
+serverApp.UseCors();
+//--CORS
 
 //// global cors policy
 //serverApp.UseCors(x => x
@@ -173,3 +192,4 @@ var serverApp = builder.Build();
 
 
 CSCSWebApplication.Initialize(serverApp, cscsConfig);
+
