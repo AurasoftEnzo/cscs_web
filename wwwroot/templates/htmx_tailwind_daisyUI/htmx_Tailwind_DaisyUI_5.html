@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html data-theme='light'>
+<head>
+  <title>GK Transactions Management</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta charset="utf-8">
+  <script src='https://unpkg.com/htmx.org@1.9.10'></script>
+  <script src='https://cdn.tailwindcss.com'></script>
+  <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
+  <style>
+    html, body { height: 100%; margin: 0; padding: 16px; }
+
+    .master-detail-layout {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 32px); /* Full viewport height minus padding */
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    /* 1. Master Table: Fixed small height */
+    .master-table {
+      height: 200px; /* ~3-4 rows */
+      overflow-y: auto;
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* 2. Detail Table: Takes remaining space above form */
+    .detail-table {
+      flex: 1; /* Takes available space */
+      min-height: 0;
+      overflow-y: auto;
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* 3. Bottom Form: Compact */
+    .bottom-form {
+      height: 180px; /* Fixed height for 2-row form */
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow-y: auto;
+    }
+
+    /* Compact form grid: 4 columns on large, 2 on small */
+    #line-entry-form {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      #line-entry-form {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Shrink input fields */
+    #line-entry-form input,
+    #line-entry-form select {
+      padding: 4px 8px !important;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    /* Label above input, small font */
+    #line-entry-form > div {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4b5563;
+    }
+
+    /* Table styles */
+    .datagrid-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    .datagrid-table th, .datagrid-table td {
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    .pagination {
+      padding: 8px 0;
+      font-size: 14px;
+    }
+
+.datagrid-table tr:hover,
+.datatable tr:hover {
+    background-color: #e3f2fd; /* Light blue */
+}    
+  </style>
+</head>
+<body>
+
+  <div class="master-detail-layout">
+
+    <!-- 1. MASTER TABLE (3-4 rows) -->
+    <div class="master-table">
+      <h2 class="text-lg font-bold mb-2">Master Transactions</h2>
+      <div class="datagrid-container-master" hx-get="/gk-transactions" hx-trigger="load" hx-swap="innerHTML"></div>
+    </div>
+
+    <!-- 2. DETAIL TABLE (fills space) -->
+    <div class="detail-table">
+      <h2 class="text-lg font-bold mb-2">Transaction Lines</h2>
+      <div class="datagrid-container-detail"></div>
+    </div>
+
+    <!-- 3. BOTTOM FORM (compact 2-row) -->
+    <div class="bottom-form">
+      <h2 class="text-lg font-bold mb-2">New Line Entry</h2>
+      <div id="line-entry-form">
+        <div><label>Account</label><input type="text" class="input input-bordered w-full" placeholder="11100"></div>
+        <div><label>Amount</label><input type="number" step="0.01" class="input input-bordered w-full" placeholder="100.00"></div>
+        <div><label>DP</label><select class="select select-bordered w-full"><option>D</option><option>P</option></select></div>
+        <div><label>Cost Center</label><input type="text" class="input input-bordered w-full" placeholder="601"></div>
+        <div><label>Partner</label><input type="text" class="input input-bordered w-full" placeholder="P001"></div>
+        <div><label>Currency</label><input type="text" class="input input-bordered w-full" placeholder="EUR"></div>
+        <div><label>Description</label><input type="text" class="input input-bordered w-full" placeholder="Payment"></div>
+        <div><label>Doc Date</label><input type="date" class="input input-bordered w-full"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Re-process HTMX after dynamic content loads
+    document.addEventListener('htmx:afterSwap', function(evt) {
+      if (evt.target.classList.contains('datagrid-container-master') ||
+          evt.target.classList.contains('datagrid-container-detail')) {
+        htmx.process(evt.target);
+      }
+    });
+  </script>
+<script>
+  // Auto-load details for first master row
+  /*
+  htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
+    const firstRow = document.querySelector('.master-table tr[data-id]');
+    if (firstRow) {
+      const id = firstRow.getAttribute('data-id');
+      htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+    }
+  });
+  */
+htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
+  const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
+  if (firstRow) {
+    const id = firstRow.getAttribute('data-id');
+    htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+  }
+});
+
+
+</script>
+<script>
+    // In your HTML, or via endpoint
+    document.getElementById("line-entry-form").innerHTML = `
+    <div><label>Account</label><input type="text" class="input input-bordered w-full" name="acc"></div>
+    <div><label>Amount</label><input type="number" step="0.01" class="input input-bordered w-full" name="amt"></div>
+    <div><label>DP</label><input type="text" class="input input-bordered w-full" name="DP"></div>
+    <div><label>CostCenter</label><input type="text" class="input input-bordered w-full" name="CostCenter"></div>
+    <div><label>Partner</label><input type="text" class="input input-bordered w-full" name="Partner"></div>
+    <div><label>Currency</label><input type="text" class="input input-bordered w-full" name="Currency"></div>
+    <div><label>Description</label><input type="text" class="input input-bordered w-full" name="Description"></div>
+    <div><label>DocDate</label><input type="text" class="input input-bordered w-full" name="Docdate"></div>
+    `;
+
+</script>
+</body>
+</html>

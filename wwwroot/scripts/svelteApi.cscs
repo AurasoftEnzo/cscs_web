@@ -1,15 +1,16 @@
 SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
 //MASTER TABLE
 
-CreateEndpoint("GET", "/", "getRoot");
-function getRoot(){
-    headers = {"Content-Type": "text/html"};
-    return Response(headers, RenderHtml(LoadTemplate(TemplatesPath() + "htmx_tailwind_daisyUI\\" + "cscs_tabulator_js_ds.html")), 200);
-}
+// CreateEndpoint("GET", "/", "getRoot");
+// function getRoot(){
+//     headers = {"Content-Type": "text/html"};
+//     return Response(headers, RenderHtml(LoadTemplate(TemplatesPath() + "htmx_tailwind_daisyUI\\" + "cscs_tabulator_js_ds.html")), 200);
+// }
 
 // GET: api/gk-transactions
 CreateEndpoint("GET", "/api/gk-transactions", "getGKTransactions");
-function getGKTransactions(args) {
+function getGKTransactions(args) 
+{
     page = 1;
     if (Contains(args["QueryParams"], "page")) {
         page = int(args["QueryParams"]["page"]);
@@ -98,123 +99,29 @@ function getGKTransactions(args) {
             data.Add(item);
         }
     }
-//s = 'He said: "Hello" and then left.';
-//print(strReplace(s, '"', '""'));    
+
+
     // Get total count
     countResult = sqlQuery(countQuery, sqlParams);
     totalRecords = countResult[1][0];
     lastPage = Math.Ceil(totalRecords / size);
-print("Total Records: " + totalRecords);
-print("Last Page: " + lastPage);
-print("Count Result: " + countResult); 
 
-//testData = { "key": "value", "nums": [1, 2, 3] };
-//Print("Test JSON: " + JsonEncode(testData));
-    // Manually build JSON response
-    // json = "{";
-    // json += '"data": ' + JsonEncode(data) + ",";
-    // json += '"last_page": ' + lastPage;
-    // json += "}";
+    print("Total Records: " + totalRecords);
+    print("Last Page: " + lastPage);
+    print("Count Result: " + countResult); 
 
-// print(data);
+    jsonString = SerializeJson(data);
 
-resultString = SerializeJson(data);
-
-print("Result String:\n" + resultString);
-
-    // jsonObject = {};
-    // jsonObject["data"] = data;
-    // jsonObject["last_page"] = lastPage;
-
-    // json = SerializeJson(jsonObject);
-
-
-
-    //  print(substring(json, 0, 100));
-
-
-    // returnJson = {};
-    // returnJson["Content"] = json;
-    // returnJson["ContentType"] = "application/json"; 
-    // returnJson["StatusCode"] = 200;
-
-    return "returnJson";
+    headers = {"Content-Type": "application/json"};
+    return Response(headers, jsonString, 200);
 
     
+}
 
-    //print(json);
-    //return json;
 
-/*
-    return JsonResult({
-        "data": data,
-        "last_page": lastPage
-    });
-    */
-}
-/*
-function JsonEncode(data) {
-    //type = InferType(data);
-    type= "string"; // Default to string
-        // Check for numbers
-    if (data> 99999999999999 && data < 9999999999999999) 
-    { type = "Number"; 
-    }
-    else if (Size(data) > 1) 
-    { type = "List"; 
-    }
-    
-    if (Type(data) == "List") {
-        // Handle arrays/lists
-        json = "[";
-        for (i = 0; i < Size(data); i++) {
-            if (i > 0) { json += ","; }
-            json += JsonEncode(data[i]);
-        }
-        json += "]";
-    } else if (Type(data) == "Map") {
-        // Handle dictionaries/maps
-        json = "{";
-        first = true;
-        keys = Keys(data);
-        for (i = 0; i < Size(keys); i++) {
-            key = keys[i];
-            if (!first) { json += ","; }
-            json += "\"" + key + "\":" + JsonEncode(data[key]);
-            first = false;
-        }
-        json += "}";
-    } else if (Type(data) == "Number") {
-        // Handle numbers
-        json = ToString(data);
-    } else if (data == true || data == false) {
-        // Handle booleans
-        json = data ? "true" : "false";
-    } else {
-        // Handle strings (escape quotes)
-        json = ""; //'"' + strReplace(data, '"', '\\\"') + '"';
-    }
-    return json;
-}
-/*
-function InferType(value) {
-    // Check for numbers
-    if (IsNumeric(value)) { return "Number"; }
-    // Check for lists (if Tokenize creates lists)
-    if (Size(Tokenize(value, ",")) > 1) { return "List"; }
-    // Default to string
-    return "String";
-}
-*/
 
-function EscapeJsonString(str) {
-    str = strReplace(str, '\\', '\\\\'); // Escape backslashes
-    str = strReplace(str, '\"', '\\\"');   // Escape double quotes
-    str = strReplace(str, "\n", "\\n");    // Escape newlines
-    str = strReplace(str, "\r", "\\r");    // Escape carriage returns
-    str = strReplace(str, "\t", "\\t");    // Escape tabs
-    return str;
-}
+
+
 // POST: api/gk-transactions
 CreateEndpoint("POST", "/api/gk-transactions", "createGKTransaction");
 function createGKTransaction(args) {
@@ -248,9 +155,22 @@ function createGKTransaction(args) {
         
         sqlNonQuery(query, sqlParams);
         
-        return JsonResult({"success": true});
+
+        // Return success response
+        object = {"success": true}
+        jsonString = SerializeJson(object);
+
+        headers = {"Content-Type": "application/json"};
+        return Response(headers, jsonString, 200);
+
+
     } catch (ex) {
-        return JsonResult({"success": false, "message": ex.Message});
+        // Return error response
+        object = {"success": false, "message": ex.Message};
+        jsonString = SerializeJson(object);
+
+        headers = {"Content-Type": "application/json"};
+        return Response(headers, jsonString, 200);
     }
 }
 
@@ -289,9 +209,20 @@ function updateGKTransaction(args) {
         
         sqlNonQuery(query, sqlParams);
         
-        return JsonResult({"success": true});
+
+        // Return success response
+        object = {"success": true}
+        jsonString = SerializeJson(object);
+
+        headers = {"Content-Type": "application/json"};
+        return Response(headers, jsonString, 200);
     } catch (ex) {
-        return JsonResult({"success": false, "message": ex.Message});
+        // Return error response
+        object = {"success": false, "message": ex.Message};
+        jsonString = SerializeJson(object);
+
+        headers = {"Content-Type": "application/json"};
+        return Response(headers, jsonString, 200);
     }
 }
 
@@ -307,17 +238,19 @@ function deleteGKTransaction(args) {
         
         sqlNonQuery(query, sqlParams);
         
-        return JsonResult({"success": true});
-    } catch (ex) {
-        return JsonResult({"success": false, "message": ex.Message});
-    }
-}
 
-// Helper function to return JSON responses
-function JsonResult(data) {
-    return {
-        "Content": SerializeJson(data),
-        "ContentType": "application/json",
-        "StatusCode": 200
-    };
+        // Return success response
+        object = {"success": true}
+        jsonString = SerializeJson(object);
+
+        headers = {"Content-Type": "application/json"};
+        return Response(headers, jsonString, 200);
+    } catch (ex) {
+        // Return error response
+        object = {"success": false, "message": ex.Message};
+        jsonString = SerializeJson(object);
+
+        headers = {"Content-Type": "application/json"};
+        return Response(headers, jsonString, 200);
+    }
 }
