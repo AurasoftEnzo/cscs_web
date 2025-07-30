@@ -1,0 +1,153 @@
+<!-- <h1>Welcome to SvelteKit</h1>
+<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p> -->
+
+
+<script>
+//   import { Table } from 'svar';
+
+  // Reactive state
+  let search = $state('');
+  let data = $state([]);
+  let loading = $state(false);
+
+  // Fetch data from CSCS API
+  async function fetchData() {
+    loading = true;
+    const params = new URLSearchParams({ search });
+    const response = await fetch(`http://localhost:5058/data`);
+    // console.log(response);
+
+    
+    data = await response.json();
+    
+    // console.log(data);
+    
+    loading = false;
+  }
+
+  // Initial load
+  fetchData();
+
+  // Edit transaction function
+  function editTransaction(id) {
+    console.log('Edit transaction:', id);
+    // Add your edit logic here
+  }
+
+  // Delete transaction function
+  function deleteTransaction(id) {
+    console.log('Delete transaction:', id);
+    // Add your delete logic here
+  }
+</script>
+
+<main>
+  <h1>GK Transactions</h1>
+  
+  <div class="controls">
+    <!-- <input 
+      type="text" 
+      bind:value={search} 
+      placeholder="Search..." 
+      oninput={fetchData}
+    /> -->
+  </div>
+
+  {#if loading}
+    <p>Loading...</p>
+  {:else}
+    <div>
+      <h2>Results for asd asd asd asd asd asd asd </h2>
+      
+      {#if data && data.length > 0}
+
+        <!-- <p>{JSON.stringify(data)}</p>
+        <br/>
+        <br/>
+        <hr/>
+        <p>{data}</p> -->
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Number</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each data as row}
+              <tr>
+                <td>{row.GK_GL_BR_TEM || 'N/A'}</td>
+                <td>{row.GK_GL_DATUM || 'N/A'}</td>
+                <td>{row.GK_GL_BR_TEM || 'N/A'}</td>
+                <td>{row.GK_GL_OPIS || 'N/A'}</td>
+                <td>
+                  <button onclick={() => editTransaction(row.GK_GL_BR_TEM)}>Edit</button>
+                  <button onclick={() => deleteTransaction(row.GK_GL_BR_TEM)}>Delete</button>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {:else}
+        <p>No data available</p>
+      {/if}
+    </div>
+
+
+
+    <!-- <Table
+      {data}
+      columns={[
+        { key: 'GK_GL_BR_TEM', header: 'ID', frozen: true },
+        { key: 'GK_GL_DATUM', header: 'Date' },
+        // ... other columns
+        {
+          key: 'actions',
+          header: 'Actions',
+          cell: (row) => (
+            `<button onClick="editTransaction('${row.GK_GL_BR_TEM}')">Edit</button>
+             <button onClick="deleteTransaction('${row.GK_GL_BR_TEM}')">Delete</button>`
+          )
+        }
+      ]}
+    /> -->
+  {/if}
+</main>
+
+<style>
+  .controls { margin: 1rem 0; }
+  
+  /* table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  button {
+    margin-right: 5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #f9f9f9;
+  }
+  
+  button:hover {
+    background-color: #e9e9e9;
+  } */
+</style>
