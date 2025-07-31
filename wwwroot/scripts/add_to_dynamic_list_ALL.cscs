@@ -1,0 +1,118 @@
+
+console.log("************ADD TO DYNAMIC LIST***********************");
+
+
+SQLConnectionString = "Data Source=localhost,1433;Initial Catalog=master;User Id=sa;password=aura;TrustServerCertificate=True;";
+SQLConnectionString(SQLConnectionString);
+
+sqlString = "SELECT TOP 5 convert(varchar, database_id) as ID, name, coalesce(collation_name, '') as COLLATION from master.sys.databases; ";
+console.log(sqlString);
+
+sqlResults = SQLQuery(sqlString);
+//console.log(Size(sqlResults)); //header row + data rows
+
+console.log("******************************************************");
+console.log("******************************************************");
+console.log("************EXAMPLE1 This one works*******************");
+
+myDatabases = {};
+
+// THIS EXAMPLE WORKS!!!
+if(sqlResults != null && Size(sqlResults) > 1){
+    for(i = 1; i < Size(sqlResults); i++){
+        ID = strTrim(sqlResults[i][0]);
+        name = strTrim(sqlResults[i][1]);
+        COLLATION = strTrim(sqlResults[i][2]);
+
+        line = {
+            "ID" : ID,
+            "Name" : name,
+            "COLLATION" : COLLATION
+        };
+        
+        myDatabases.Add(line);
+    }
+}
+
+
+
+console.log("myDatabases.size=" + myDatabases.size);
+
+for(i = 0; i < myDatabases.size; i++)
+{
+    console.log(myDatabases[i]["ID"]);
+    console.log(myDatabases[i]["Name"]);
+    console.log(myDatabases[i]["COLLATION"]);
+    console.log("");
+}
+
+console.log("******************************************************");
+console.log("******************************************************");
+console.log("************EXAMPLE2 - BUG****************************");
+
+myDatabases = {};
+
+// this should work, but it doesn't. It is more convenient and simple to write. What do you think?
+if(sqlResults != null && Size(sqlResults) > 1){
+    for(i = 1; i < Size(sqlResults); i++){
+        
+        line = {
+            "ID" : strTrim(sqlResults[i][0]),
+            "Name" : strTrim(sqlResults[i][1]),
+            "COLLATION" : strTrim(sqlResults[i][2])
+        };
+
+        myDatabases.Add(line);
+    }
+}
+
+console.log("myDatabases.size=" + myDatabases.size);
+
+for(i = 0; i < myDatabases.size; i++)
+{
+    console.log(myDatabases[i]["ID"]);
+    console.log(myDatabases[i]["Name"]);
+    console.log(myDatabases[i]["COLLATION"]);
+    console.log("");
+}
+
+
+console.log("******************************************************");
+console.log("******************************************************");
+console.log("************EXAMPLE3 - BUG****************************");
+
+myDatabases = {};
+
+if(sqlResults != null && Size(sqlResults) > 1){
+    for(i = 1; i < Size(sqlResults); i++){
+        // this also doesn't work, but it is more convenient and simple to write. What do you think?
+        myDatabases.add(
+            {
+                "ID" : strTrim(sqlResults[i][0]),
+                "Name" : strTrim(sqlResults[i][1]),
+                "COLLATION" : strTrim(sqlResults[i][2])
+            }
+        );
+    }
+}
+
+console.log("myDatabases.size=" + myDatabases.size);
+
+try
+{
+    console.log(myDatabases[0]);
+    console.log(myDatabases[0][0]);
+    
+    for(i = 0; i < myDatabases.size; i++)
+    {        
+        console.log(myDatabases[i]["ID"]);
+        console.log(myDatabases[i]["Name"]);
+        console.log(myDatabases[i]["COLLATION"]);
+        console.log("");        
+    }
+    
+}
+catch(ex)
+{
+    console.log("ERROR\n" + ex);
+}
