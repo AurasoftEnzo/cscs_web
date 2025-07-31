@@ -1,0 +1,89 @@
+parts = {};
+
+// sqlResults = sqlQuery(query);
+sqlResults = {};
+sqlResults.add(["header1", "header2", "header3"]);
+sqlResults.add([1, 2, 3]);
+sqlResults.add([4, 5, 6]);
+sqlResults.add([7, 8, 9]);
+
+// print(sqlResults);
+
+print("--- 1. works -------------");
+try{
+
+    // this works
+    if(sqlResults != null && Size(sqlResults) > 1){
+        for(i = 1; i < Size(sqlResults); i++){
+            pCode = strTrim(sqlResults[i][0]);
+            pName = strTrim(sqlResults[i][1]);
+            pCity = strTrim(sqlResults[i][2]);
+
+            line = {
+                "header1" : pCode,
+                "header2" : pName,
+                "header3" : pCity
+            };
+            
+            parts.Add(line);
+        }
+    }
+
+    print("Parts: " + parts);
+
+}catch(ex){
+    print("Error:  " + ex);
+}
+
+print("-----------------------------");
+
+//-----------------------------------------------
+
+print("--- 2. doesn't crash but has wrong values -------------");
+try{
+
+    if(sqlResults != null && Size(sqlResults) > 1){
+        for(i = 1; i < Size(sqlResults); i++){
+            
+            line = {
+                "header1" : strTrim(sqlResults[i][0]),
+                "header2" : strTrim(sqlResults[i][1]),
+                "header3" : strTrim(sqlResults[i][2])
+            };
+
+            parts.Add(line);
+        }
+    }
+
+    print("Parts: " + parts);
+
+}catch(ex){
+    print("Error:  " + ex);
+}
+
+print("-----------------------------");
+
+//-----------------------------------------------
+
+print("--- 3. -------------");
+try{
+
+    for(i = 1; i < Size(sqlResults); i++){ 
+        parts.add(
+        {
+            "header1" : strTrim(sqlResults[i][0]),
+            "header2" : strTrim(sqlResults[i][1]),
+            "header3" : strTrim(sqlResults[i][2])
+        }
+    ); 
+    }
+    
+
+    print("Parts: " + parts);
+
+}catch(ex){
+    print("Error:  " + ex);
+}
+
+print("-----------------------------");
+

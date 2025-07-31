@@ -1,0 +1,105 @@
+
+//// OVO JE TESTNO I DELA ....
+
+
+SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+
+
+
+CreateEndpoint("GET", "/data", "getData");
+function getData(args) {
+    page = 1;
+    
+    size = 15;
+    
+    sort = "GK_GL_BR_TEM";
+    
+    order = "asc";
+    
+    search = "";
+    
+    skip = (page - 1) * size;
+    
+    // Build query
+    whereClause = "";
+    if (search != "") {
+        whereClause = " WHERE GK_GL_BR_TEM LIKE @search OR GK_GL_OPIS LIKE @search OR GK_GL_OZNAKA LIKE @search";
+    }
+    
+    query = "SELECT " +
+            // " TOP 10 " +
+            "GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS, " +
+            "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK, " +
+            "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ, " +
+            "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'yyyy-MM-dd') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN " +
+            "FROM NKGKGLTM" + whereClause + " " +
+            "ORDER BY " + sort + " " + order + " " +
+            "OFFSET @skip ROWS FETCH NEXT @size ROWS ONLY";
+            // "OFFSET @skip ROWS FETCH NEXT 3 ROWS ONLY";
+    
+
+
+    countQuery = "SELECT COUNT(*) FROM NKGKGLTM" + whereClause;
+    
+    // Execute data query
+    sqlParams = {};
+    sqlParams.Add({"@skip", skip});
+    sqlParams.Add({"@size", size});
+
+
+    if (search != "") {
+        sqlParams.Add({"@search", "%" + search + "%"});
+    }
+
+    transactions = sqlQuery(query, sqlParams);
+    data = [];
+    
+    if (transactions != null && Size(transactions) > 1) {
+        for (i = 1; i < Size(transactions); i++) {
+            
+            row = {};
+            row = transactions[i];
+
+
+            item = {};
+            
+            tempVar = row[0];
+            item["GK_GL_BR_TEM"] = tempVar;
+
+            item["GK_GL_DATUM"] = row[1];
+            item["GK_GL_POSTED"] = row[2];
+            item["GK_GL_OPIS"] = row[3];
+            item["GK_GL_GOD"] = row[4];
+            item["GK_GL_TIP"] = row[5];
+            item["GK_GL_OZNAKA"] = row[6];
+            item["GK_GL_ZNAK"] = row[7];
+            item["GK_GL_IZNL"] = row[8];
+            item["GK_GL_IZNP"] = row[9];
+            item["GK_GL_ZATV_KLAS"] = row[10];
+            item["GK_GL_POC_STANJ"] = row[11];
+            item["GK_GL_BRDOK"] = row[12];
+            item["GK_GL_DATDOK"] = row[13] == "1900-01-01" ? "" : row[13];
+            item["GK_GL_PARTNER"] = row[14];
+            item["GK_GL_BR_LIN"] = row[15];
+            data.Add(item);
+        }
+    }
+
+
+
+    countResult = sqlQuery(countQuery, sqlParams);
+    totalRecords = countResult[1][0];
+    lastPage = Math.Ceil(totalRecords / size);
+
+
+    jsonString = SerializeJson(data);
+
+    print("Result String:\n" + jsonString);
+
+
+    headers = {"Content-Type": "application/json"};
+    return Response(headers, jsonString, 200);
+
+
+}
+
