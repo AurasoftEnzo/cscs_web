@@ -1,11 +1,108 @@
 SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
-//MASTER TABLE
 
-// CreateEndpoint("GET", "/", "getRoot");
-// function getRoot(){
-//     headers = {"Content-Type": "text/html"};
-//     return Response(headers, RenderHtml(LoadTemplate(TemplatesPath() + "htmx_tailwind_daisyUI\\" + "cscs_tabulator_js_ds.html")), 200);
-// }
+
+
+
+CreateEndpoint("POST", "/api/auth/login", "handleLogin");
+function handleLogin(request)
+{
+
+    // Method = request["HttpMethod"]; // HTTP method -> string
+    // RequestPath = request["RequestPath"]; // request path(route) -> string
+    // RouteValues = request["RouteValues"]; // Route parameters -> hash table / dictionary
+    // QueryParams = request["QueryParams"]; // Query string -> string
+    // Headers = request["Headers"]; // Request headers -> hash table / dictionary
+    // Body = request["Body"]; // Request body -> string
+
+    // requestString = "Method:" + Method + "\n" +
+    //              "RequestPath:" + RequestPath + "\n" +
+    //              "RouteValues:" + RouteValues + "\n" +
+    //              "QueryParams:" + QueryParams + "\n" +
+    //              "Headers:" + Headers + "\n" +
+    //              "Body:" + Body;
+    // print("requestString:\n" + requestString);
+    // print("\n--------------------\n");
+
+
+    bodyObject = DeserializeJson(request["Body"]);
+    // print("bodyObject:\n" + bodyObject);
+
+    username = bodyObject["username"];
+    password = bodyObject["password"];
+
+
+    // sql upit za provjeru kredencijala
+    // ...
+
+    sqlParams = {};
+    sqlParams.Add({"@Username", username});
+    sqlParams.Add({"@Password", password});
+
+    sqlResult = sqlQuery("SELECT ID, KPSY_USER_NAZIV FROM KPSYUSER WHERE KPSY_USER_CODE = @Username AND KPSY_USER_PSWD = @Password", sqlParams);
+
+    //print("sqlResult:\n" + sqlResult);
+
+    if(sqlResult == null || Size(sqlResult) < 2) {
+        // Invalid credentials
+        return Response({"Content-Type": "application/json"}, SerializeJson({"error": "Invalid credentials"}), 401);
+    }
+    else{
+        // Valid credentials
+        // Generate JWT token
+
+        userId = sqlResult[1][0];
+        userNaziv = sqlResult[1][1];
+        
+        // token = GenerateJwtToken({"username": username});
+        token = "aaaaaaaaaaaaaaaaaaaaaaa";
+
+        returnObject = {};
+        returnObject["token"] = token;
+        returnObject["user"] = {};
+        returnObject["user"]["username"] = userNaziv;
+        returnObject["user"]["id"] = userId;
+
+        return Response({"Content-Type": "application/json"}, SerializeJson(returnObject), 200);
+    }
+}
+
+
+CreateEndpoint("GET", "/api/listUsers", "getAllUsers");
+function getAllUsers(request)
+{
+    // sqlParams = {};
+    // sqlParams.Add({"@Username", username});
+    // sqlParams.Add({"@Password", password});
+
+    sqlResult = sqlQuery("SELECT ID, KPSY_USER_CODE, KPSY_USER_NAZIV FROM KPSYUSER");
+
+    //print("sqlResult:\n" + sqlResult);
+
+    if(sqlResult == null || Size(sqlResult) < 1) {
+        // sql query failed or no users found
+        return Response({"Content-Type": "application/json"}, SerializeJson({"error": "No users found"}), 404);
+    }
+    else{
+        
+        returnObject = {};
+
+        for(i = 1; i < Size(sqlResult); i++) {
+            row = sqlResult[i];
+            user = {};
+            user["id"] = row[0];
+            user["username"] = row[1];
+            user["fullName"] = row[2];
+
+            returnObject.add(user);
+        }
+
+        return Response({"Content-Type": "application/json"}, SerializeJson(returnObject), 200);
+    }
+}
+
+
+
+
 
 // GET: api/gk-transactions
 CreateEndpoint("GET", "/api/gk-transactions", "getGKTransactions");

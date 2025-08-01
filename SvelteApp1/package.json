@@ -43,6 +43,7 @@
 		"svelte"
 	],
 	"dependencies": {
+		"localStorage": "^1.0.4",
 		"wx-svelte-grid": "^2.2.0"
 	}
 }
