@@ -1,6 +1,16 @@
 
-// var1 = "\\\"";
+
+string1 = "    ...My name is \"Enzo\" and my surname is \"Grubiša\"... that's all.     ";
+
+print(string1);
 
 
+//// uncomment this to get the error
+// string1 = strReplace(instring1utStr, "\"", "\\\"");
 
-var1 = '\\"';
+print(string1);
+
+//--------------------------------------------
+
+//// uncomment this to get the second error
+//var1 = '\\"';    // -->>      \"
