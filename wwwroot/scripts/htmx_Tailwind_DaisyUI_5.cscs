@@ -15,14 +15,12 @@ function getRoot(){
 
 // Main endpoint for GK transactions grid
 CreateEndpoint("GET", "/gk-transactions", "getGKTransactions");
-// ... (keep previous code until getGKTransactions function) ...
-
-function getGKTransactions(args) {
+function getGKTransactions(requestGlave) {
     // ... (keep existing pagination/sorting/search logic) ...
     // Pagination
     page = 1;
-    if (Contains(args["QueryParams"], "page")) {
-        page = int(args["QueryParams"]["page"]);
+    if (Contains(requestGlave["QueryParams"], "page")) {
+        page = int(requestGlave["QueryParams"]["page"]);
     }
     if (page < 1) {
         headers = {"Content-Type": "text/html"};
@@ -31,19 +29,19 @@ function getGKTransactions(args) {
     
     // Sorting
     sort = "GK_GL_BR_TEM";
-    if (Contains(args["QueryParams"], "sort")) {
-        sort = args["QueryParams"]["sort"];
+    if (Contains(requestGlave["QueryParams"], "sort")) {
+        sort = requestGlave["QueryParams"]["sort"];
     }
     
     order = "asc";
-    if (Contains(args["QueryParams"], "order")) {
-        order = args["QueryParams"]["order"];
+    if (Contains(requestGlave["QueryParams"], "order")) {
+        order = requestGlave["QueryParams"]["order"];
     }
     
     // Search
     search = "";
-    if (Contains(args["QueryParams"], "search")) {
-        search = args["QueryParams"]["search"];
+    if (Contains(requestGlave["QueryParams"], "search")) {
+        search = requestGlave["QueryParams"]["search"];
     }
     
     // Fixed page size
@@ -221,16 +219,16 @@ function getGKTransactions(args) {
         html += "</div>";  
     html += "</div>";  
     
-    headers = {"Content-Type": "text/html"};
-    return Response(headers, html, 200);
+    headers1 = {"Content-Type": "text/html"};
+    return Response(headers1, html, 200);
 }
 
 // New transaction form
 CreateEndpoint("GET", "/gk-transactions/new", "getNewGKTransactionForm");
 function getNewGKTransactionForm(args) {
-html = "<div class='datagrid-container-master'>" +
-       "  <form class='vertical-form two-column-form'>" +
-       "    <div class='grid grid-cols-2 gap-4'>" +
+    html = "<div class='datagrid-container-master'>" +
+       "  <form class='vertical-form eight-column-form'>" +
+       "    <div class='grid grid-cols-8 gap-4'>" +
        "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM'></div>" +
        "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM'></div>" +
        "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' maxlength='1'></div>" +
@@ -313,6 +311,7 @@ html = "<div class='datagrid-container-master'>" +
     headers = {"Content-Type": "text/html"};
     return Response(headers, html, 200);
 }
+
 // Create new transaction
 CreateEndpoint("POST", "/gk-transactions", "createGKTransaction");
 function createGKTransaction(args) {
@@ -394,58 +393,34 @@ function getEditGKTransactionForm(args) {
     }
     row = transaction[1];
 
-    html = "<div class='datagrid-container-master'>" +
-           "  <div class='vertical-form'>" +
-           "    <div class='two-column-form'>" +
-           "      <table>" +
-           "        <tr><th>ID:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + row[0] + "' readonly></td></tr>"; 
-
     // Format date for display
     displaydate= "1900-01-01";
-displayDate = formatForDisplay(row[1]);
-/*
-html += "<tr><th>Date:</th><td>" +
-        "  <div style='position:relative;'>" +
-        "    <input type='text' class='input input-bordered input-sm w-full datepicker-input' value='" + displayDate + "' autocomplete='off'>" +
-        "    <input type='hidden' name='GK_GL_DATUM' value='" + row[1] + "'>" +
-        "  </div>" +
-        "</td></tr>";
-        */
-    html += "        <tr><th>Datum:</th><td><input type='date' class='input input-bordered input-sm w-full datepicker-input' name='GK_GL_DATUM' value='" + displayDate + "'></td></tr>"+
-           "        <tr><th>Posted:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + row[2] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Description:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + row[3] + "' maxlength='50'></td></tr>" +
-           "        <tr><th>Year:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + row[4] + "' maxlength='2'></td></tr>" +
-           "        <tr><th>Type:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + row[5] + "' maxlength='2'></td></tr>" +
-           "        <tr><th>Mark:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + row[6] + "' maxlength='10'></td></tr>" +
-           "        <tr><th>Sign:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + row[7] + "'></td></tr>" +
-           "        <tr><th>Amount NL:</th><td><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + row[8] + "'></td></tr>" +
-           "        <tr><th>Amount NP:</th><td><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + row[9] + "'></td></tr>" +
-           "        <tr><th>Closed:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + row[10] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Status:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + row[11] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Doc Num:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + row[12] + "'></td></tr>"; 
-
-            // Doc Date
-/*
-    displayDocDate= "1900-01-01";
-
-displayDocDate = formatForDisplay(row[13]);
-html += "<tr><th>Doc Date:</th><td>" +
-        "  <div style='position:relative;'>" +
-        "    <input type='text' class='input input-bordered input-sm w-full datepicker-input' value='" + displayDocDate + "' autocomplete='off'>" +
-        "    <input type='hidden' name='GK_GL_DATDOK' value='" + row[13] + "'>" +
-        "  </div>" +
-        "</td></tr>";
-*/
-    //html += "        <tr><th>DatumDok:</th><td><input type='date' class='input input-bordered input-sm w-full datepicker-input' name='GK_GL_DATDOK' value='" + displayDocDate + "'></td></tr>"+
-    html += "        <tr><th>Doc Date:</th><td><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + row[13] + "'></td></tr>" +
-            "        <tr><th>Partner:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + row[14] + "' maxlength='10'></td></tr>" +
-           "        <tr><th>Line:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + row[15] + "'></td></tr>" +
-           "      </table>" +
+    displayDate = formatForDisplay(row[1]);
+    
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>" +
+           "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + row[0] + "' readonly></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + displayDate + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + row[2] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + row[3] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + row[4] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + row[5] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + row[6] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + row[7] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + row[8] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + row[9] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + row[10] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + row[11] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + row[12] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + row[13] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + row[14] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + row[15] + "'></div>" +
            "    </div>" +
-           "    <div class='form-actions'>" +
+           "    <div class='form-actions mt-4'>" +
            "      <button class='btn btn-success btn-sm' " +
            "              hx-put='/gk-transactions/" + id + "' " +
-           "              hx-include='closest .vertical-form' " +
+           "              hx-include='closest form' " +
            "              hx-target='.datagrid-container-master' " +
            "              hx-swap='outerHTML'>Save</button>" +
            "      <button class='btn btn-error btn-sm' " +
@@ -453,7 +428,7 @@ html += "<tr><th>Doc Date:</th><td>" +
            "              hx-target='.datagrid-container-master' " +
            "              hx-swap='outerHTML'>Cancel</button>" +
            "    </div>" +
-           "  </div>" +
+           "  </form>" +
            "</div>";
 
     headers = {"Content-Type": "text/html"};
@@ -472,7 +447,7 @@ function updateGKTransaction(args) {
         "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
     ];
     values = {};
-  print("sizefields: " + Size(fields));  
+    print("sizefields: " + Size(fields));  
     for(i = 0; i < Size(fields); i++) {
         field = fields[i];
         values[field] = GetValueFromForm(args["Body"], field);
@@ -505,7 +480,7 @@ function updateGKTransaction(args) {
     for(i = 0; i < Size(fields); i++) {
         sqlParams.Add({"@"+fields[i], values[i]});
     }
-print("Update query: " + query);
+    print("Update query: " + query);
     sqlParams.Add({"@id", int(id)});
 
     sqlNonQuery(query, sqlParams);
@@ -519,6 +494,7 @@ print("Update query: " + query);
     //htmx.trigger('body', 'refreshTable'); //it does not work in cdcd language, this is javascript
     return getGKTransactions(args2);
 }
+
 
 //new helper functions
 function getNewGKTransactionFormWithValues(values, errorHtml) {
@@ -550,67 +526,30 @@ function getNewGKTransactionFormWithValues(values, errorHtml) {
     }
 
     html = "<div class='datagrid-container-master'>" +
-           "  <div class='vertical-form'>" +
+           "  <form class='vertical-form eight-column-form'>" +
            "    " + (errorHtml ? errorHtml : "") +
-           "    <div class='two-column-form'>" +
-           "      <table>" +
-           "        <tr><th>ID:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + defaults["GK_GL_BR_TEM"] + "'></td></tr>"; 
-// For GK_GL_DATUM
-/*
-display= "1900-01-01";
-dt = values["GK_GL_DATUM"];
-if (dt == null || dt == "") {
-    display = "";
-} else {
-    display = formatForDisplay(dt);  // Convert YYYY-MM-DD → DD.MM.YYYY
-}
-
-html += "<tr><th>Date:</th><td>" +
-        "  <div style='position:relative;'>" +
-        "    <input type='text' class='input input-bordered input-sm w-full datepicker-input' value='" + display + "' placeholder='DD.MM.YYYY' autocomplete='off'>" +
-        "    <input type='hidden' name='GK_GL_DATUM' value='" + (dt || "") + "'>" +
-        "  </div>" +
-        "</td></tr>";
-*/
-        html +=   "        <tr><th>Date:</th><td><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + defaults["GK_GL_DATUM"] + "'></td></tr>" +
-           "        <tr><th>Posted:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + defaults["GK_GL_POSTED"] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Description:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + defaults["GK_GL_OPIS"] + "' maxlength='50'></td></tr>" +
-           "        <tr><th>Year:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + defaults["GK_GL_GOD"] + "' maxlength='2'></td></tr>" +
-           "        <tr><th>Type:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + defaults["GK_GL_TIP"] + "' maxlength='2'></td></tr>" +
-           "        <tr><th>Mark:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + defaults["GK_GL_OZNAKA"] + "' maxlength='10'></td></tr>" +
-           "        <tr><th>Sign:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + defaults["GK_GL_ZNAK"] + "'></td></tr>" +
-           "        <tr><th>Amount NL:</th><td><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + defaults["GK_GL_IZNL"] + "'></td></tr>" +
-           "        <tr><th>Amount NP:</th><td><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + defaults["GK_GL_IZNP"] + "'></td></tr>" +
-           "        <tr><th>Closed:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + defaults["GK_GL_ZATV_KLAS"] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Status:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + defaults["GK_GL_POC_STANJ"] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Doc Num:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + defaults["GK_GL_BRDOK"] + "'></td></tr>"; 
-
-// For GK_GL_DATUM
-/*
-display= "1900-01-01";
-dt = values["GK_GL_DATDOK"];
-if (dt == null || dt == "") {
-    display = "";
-} else {
-    display = formatForDisplay(dt);  // Convert YYYY-MM-DD → DD.MM.YYYY
-}
-
-html += "<tr><th>Date:</th><td>" +
-        "  <div style='position:relative;'>" +
-        "    <input type='text' class='input input-bordered input-sm w-full datepicker-input' value='" + display + "' placeholder='DD.MM.YYYY' autocomplete='off'>" +
-        "    <input type='hidden' name='GK_GL_DATDOK' value='" + (dt || "") + "'>" +
-        "  </div>" +
-        "</td></tr>";
-*/
-        html += "        <tr><th>Doc Date:</th><td><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + defaults["GK_GL_DATDOK"] + "'></td></tr>" +
-            "        <tr><th>Partner:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + defaults["GK_GL_PARTNER"] + "' maxlength='10'></td></tr>" +
-           "        <tr><th>Line:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + defaults["GK_GL_BR_LIN"] + "'></td></tr>" +
-           "      </table>" +
+           "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + defaults["GK_GL_BR_TEM"] + "'></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + defaults["GK_GL_DATUM"] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + defaults["GK_GL_POSTED"] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + defaults["GK_GL_OPIS"] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + defaults["GK_GL_GOD"] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + defaults["GK_GL_TIP"] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + defaults["GK_GL_OZNAKA"] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + defaults["GK_GL_ZNAK"] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + defaults["GK_GL_IZNL"] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + defaults["GK_GL_IZNP"] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + defaults["GK_GL_ZATV_KLAS"] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + defaults["GK_GL_POC_STANJ"] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + defaults["GK_GL_BRDOK"] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + defaults["GK_GL_DATDOK"] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + defaults["GK_GL_PARTNER"] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + defaults["GK_GL_BR_LIN"] + "'></div>" +
            "    </div>" +
-           "    <div class='form-actions'>" +
+           "    <div class='form-actions mt-4'>" +
            "      <button class='btn btn-success btn-sm' " +
            "              hx-post='/gk-transactions' " +
-           "              hx-include='closest .vertical-form' " +
+           "              hx-include='closest form' " +
            "              hx-target='.datagrid-container-master' " +
            "              hx-swap='outerHTML'>Save</button>" +
            "      <button class='btn btn-error btn-sm' " +
@@ -618,7 +557,7 @@ html += "<tr><th>Date:</th><td>" +
            "              hx-target='.datagrid-container-master' " +
            "              hx-swap='outerHTML'>Cancel</button>" +
            "    </div>" +
-           "  </div>" +
+           "  </form>" +
            "</div>";
 
 
@@ -642,70 +581,32 @@ function getEditGKTransactionFormWithValues(id, values, errorHtml) {
     }
     row = transaction[1];
     html = "<div class='datagrid-container-master'>" +
-           "  <div class='vertical-form'>";
+           "  <form class='vertical-form eight-column-form'>";
            if(errorHtml != ""){
               html += errorHtml;
            }
-           html += "    <div class='two-column-form'>" +
-           "      <table>" +
-           "        <tr><th>ID:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + row[0] + "' readonly></td></tr>"; 
- // Use submitted date if present
- /*
-    dt = values["GK_GL_DATUM"];
-    if (dt == "" || dt == null) dt = row[1];
-    if (dt != "") {
-        parts = Tokenize(dt, "-");
-        display = parts[2] + "." + parts[1] + "." + parts[0];
-    } else {
-        display = "";
-    }
-    html += "<tr><th>Date:</th><td>" +
-            "  <div style='position:relative;'>" +
-            "    <input type='text' class='input input-bordered input-sm w-full datepicker-input' value='" + display + "' autocomplete='off'>" 
-            "    <input type='hidden' name='GK_GL_DATUM' value='" + dt + "'>" +
-            "  </div>" +
-            "</td></tr>";
-*/
-    html += "        <tr><th>Date:</th><td><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + row[1] + "'></td></tr>" +
-           "        <tr><th>Posted:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + row[2] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Description:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + row[3] + "' maxlength='50'></td></tr>" +
-           "        <tr><th>Year:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + row[4] + "' maxlength='2'></td></tr>" +
-           "        <tr><th>Type:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + row[5] + "' maxlength='2'></td></tr>" +
-           "        <tr><th>Mark:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + row[6] + "' maxlength='10'></td></tr>" +
-           "        <tr><th>Sign:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + row[7] + "'></td></tr>" +
-           "        <tr><th>Amount NL:</th><td><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + row[8] + "'></td></tr>" +
-           "        <tr><th>Amount NP:</th><td><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + row[9] + "'></td></tr>" +
-           "        <tr><th>Closed:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + row[10] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Status:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + row[11] + "' maxlength='1'></td></tr>" +
-           "        <tr><th>Doc Num:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + row[12] + "'></td></tr>"; 
-
- // Doc Date
- /*
-    doc = values["GK_GL_DATDOK"]; if (doc == "" || doc == null) doc = row[13];
-    if (doc != "") {
-        p = Tokenize(doc, "-");
-        d = p[2] + "." + p[1] + "." + p[0];
-    } else {
-        d = "";
-    }
-    html += "<tr><th>Doc Date:</th><td>" +
-            "  <div style='position:relative;'>" +
-            "    <input type='text' class='input input-bordered input-sm w-full datepicker-input' value='" + d + "' autocomplete='off'>" +
-            "    <input type='hidden' name='GK_GL_DATDOK' value='" + doc + "'>" +
-            "  </div>" +
-            "</td></tr>";
-
-*/
-
-        html += "   <tr><th>Doc Date:</th><td><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + row[13] + "'></td></tr>" +
-           "        <tr><th>Partner:</th><td><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + row[14] + "' maxlength='10'></td></tr>" +
-           "        <tr><th>Line:</th><td><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + row[15] + "'></td></tr>" +
-           "      </table>" +
+           html += "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + row[0] + "' readonly></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + row[1] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + row[2] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + row[3] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + row[4] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + row[5] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + row[6] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + row[7] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + row[8] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + row[9] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + row[10] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + row[11] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + row[12] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + row[13] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + row[14] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + row[15] + "'></div>" +
            "    </div>" +
-           "    <div class='form-actions'>" +
+           "    <div class='form-actions mt-4'>" +
            "      <button class='btn btn-success btn-sm' " +
            "              hx-put='/gk-transactions/" + id + "' " +
-           "              hx-include='closest .vertical-form' " +
+           "              hx-include='closest form' " +
            "              hx-target='.datagrid-container-master' " +
            "              hx-swap='outerHTML'>Save</button>" +
            "      <button class='btn btn-error btn-sm' " +
@@ -713,7 +614,7 @@ function getEditGKTransactionFormWithValues(id, values, errorHtml) {
            "              hx-target='.datagrid-container-master' " +
            "              hx-swap='outerHTML'>Cancel</button>" +
            "    </div>" +
-           "  </div>" +
+           "  </form>" +
            "</div>";
 
 
@@ -721,18 +622,21 @@ function getEditGKTransactionFormWithValues(id, values, errorHtml) {
     return Response(headers, html, 200);
 }
 
-    // Use submitted values if present, otherwise original
-    function vrfy(field, fallback) {
+
+// Use submitted values if present, otherwise original
+function vrfy(field, fallback) {
     if (Contains(values, field) && values[field] != null){
         return values[field];
     } else {
         return fallback;
     } 
-    }  
+} 
+
+
 
 // Delete endpoint (already exists, keep as is)
 // Delete endpoint
-CreateEndpoint("DELETE", "/gk-transactions/{id}", "deleteGKTransaction");
+// CreateEndpoint("DELETE", "/gk-transactions/{id}", "deleteGKTransaction");
 function deleteGKTransaction(args) {
     id = args["RouteValues"]["id"];
     
@@ -769,13 +673,15 @@ function formatForDisplay(dateStr) {
     }
     return dateStr;
 }
+
+
 //=============================================================================================================
 //DETAIL table endpoints
 //=======================================================================================
 CreateEndpoint("GET", "/gk-lines/{id}", "getGKLines");
-function getGKLines(args) {
-    id = args["RouteValues"]["id"];
-print("Fetching lines for GK transaction ID: " + id);
+function getGKLines(requestLinije) {
+    id = requestLinije["RouteValues"]["id"];
+    print("Fetching lines for GK transaction ID: " + id);
     queryd = "SELECT " +
             "GK_LN_BR_TEM, GK_LN_KONTO, GK_LN_OBJED, GK_LN_OPIS, " +
             "GK_LN_DP, GK_LN_IZNOS, GK_LN_BRDOK, FORMAT(GK_LN_DATDOK, 'yyyy-MM-dd') AS GK_LN_DATDOK, " +
@@ -786,7 +692,8 @@ print("Fetching lines for GK transaction ID: " + id);
     
     lines = sqlQuery(queryd, sqlParamsd);
 
-    htmld = "<div class='overflow-x-auto'>";
+    htmld = "<h2 class='text-lg font-bold mb-2'>Transaction Lines (Transaction ID: " + id + ")</h2>";
+    htmld += "<div class='overflow-x-auto'>";
     htmld += "<table class='datatable w-full text-sm'>";
     htmld += "<thead>";
     htmld += "<tr class='bg-base-200'>";
@@ -811,9 +718,9 @@ print("Fetching lines for GK transaction ID: " + id);
             lineId = rowx[9]; // GK_LN_BR_LIN
             // 🔴 Zebra striping
             if (idet % 2 == 0) {
-                html += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-300'  class='hover:bg-base-300 >";
+                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-300 hover:bg-base-300'>";
             } else {
-                html += "<tr data-id='" + id + "' data-line='" + lineId + "' class='hover:bl-300'>";
+                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-300 hover:bg-base-300'>";
             }
 
             htmld += "<tr data-id='" + id + "' data-line='" + lineId + "'>";
@@ -875,8 +782,8 @@ print("Fetching lines for GK transaction ID: " + id);
 
     // return htmld;
 
-    headers = {"Content-Type": "text/html"};
-    return Response(headers, htmld, 200);
+    headers2 = {"Content-Type": "text/html"};
+    return Response(headers2, htmld, 200);
 }
 
 function formatNumber(vali) {

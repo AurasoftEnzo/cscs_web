@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html data-theme='light'>
+
 <head>
   <title>GK Transactions Management</title>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
@@ -8,44 +9,69 @@
   <script src='https://cdn.tailwindcss.com'></script>
   <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
   <style>
-    html, body { height: 100%; margin: 0; padding: 16px; }
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 16px;
+    }
 
     .master-detail-layout {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 32px); /* Full viewport height minus padding */
+      height: calc(100vh - 32px);
+      /* Full viewport height minus padding */
       gap: 16px;
       overflow: hidden;
     }
 
-    /* 1. Master Table: Fixed small height */
+    /* 1. Master Table: Expanded height for 8 rows */
     .master-table {
-      height: 200px; /* ~3-4 rows */
-      overflow-y: auto;
+      height: 400px;
+      /* ~8 rows with headers and pagination */
       background: white;
       border-radius: 8px;
       padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
     }
 
-    /* 2. Detail Table: Takes remaining space above form */
+    .master-table h2 {
+      flex-shrink: 0;
+      /* Don't shrink the title */
+    }
+
+    .master-table .datagrid-container-master {
+      flex: 1;
+      /* Take remaining space */
+      overflow: auto;
+      /* Allow both horizontal and vertical scrolling for table body */
+    }
+
+    /* 2. Detail Table: Reduced to fit with expanded master */
     .detail-table {
-      flex: 1; /* Takes available space */
-      min-height: 0;
+      flex: 1;
+      /* Takes remaining available space */
+      min-height: 150px;
+      /* Minimum height to ensure visibility */
+      max-height: 300px;
+      /* Maximum height to prevent overflow */
       overflow-y: auto;
       background: white;
       border-radius: 8px;
       padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     /* 3. Bottom Form: Compact */
     .bottom-form {
-      height: 180px; /* Fixed height for 2-row form */
+      height: 180px;
+      /* Fixed height for 2-row form */
       background: white;
       border-radius: 8px;
       padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       overflow-y: auto;
     }
 
@@ -71,7 +97,7 @@
     }
 
     /* Label above input, small font */
-    #line-entry-form > div {
+    #line-entry-form>div {
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -89,11 +115,61 @@
       border-collapse: separate;
       border-spacing: 0;
       table-layout: fixed;
+      min-width: 1200px; /* Ensure table is wide enough for all columns */
     }
 
-    .datagrid-table th, .datagrid-table td {
+    .datagrid-table th,
+    .datagrid-table td {
       padding: 6px;
       font-size: 14px;
+      white-space: nowrap;
+      /* Prevent text wrapping in cells */
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Specific column widths to prevent wrapping */
+    .datagrid-table th:nth-child(1), .datagrid-table td:nth-child(1) { width: 60px; }  /* Select */
+    .datagrid-table th:nth-child(2), .datagrid-table td:nth-child(2) { width: 80px; }  /* ID */
+    .datagrid-table th:nth-child(3), .datagrid-table td:nth-child(3) { width: 100px; } /* Date */
+    .datagrid-table th:nth-child(4), .datagrid-table td:nth-child(4) { width: 70px; }  /* Posted */
+    .datagrid-table th:nth-child(5), .datagrid-table td:nth-child(5) { width: 200px; } /* Description */
+    .datagrid-table th:nth-child(6), .datagrid-table td:nth-child(6) { width: 60px; }  /* Year */
+    .datagrid-table th:nth-child(7), .datagrid-table td:nth-child(7) { width: 60px; }  /* Type */
+    .datagrid-table th:nth-child(8), .datagrid-table td:nth-child(8) { width: 80px; }  /* Mark */
+    .datagrid-table th:nth-child(9), .datagrid-table td:nth-child(9) { width: 60px; }  /* Sign */
+    .datagrid-table th:nth-child(10), .datagrid-table td:nth-child(10) { width: 100px; } /* Amount NL */
+    .datagrid-table th:nth-child(11), .datagrid-table td:nth-child(11) { width: 100px; } /* Amount NP */
+    .datagrid-table th:nth-child(12), .datagrid-table td:nth-child(12) { width: 70px; } /* Closed */
+    .datagrid-table th:nth-child(13), .datagrid-table td:nth-child(13) { width: 70px; } /* Status */
+    .datagrid-table th:nth-child(14), .datagrid-table td:nth-child(14) { width: 80px; } /* Doc Num */
+    .datagrid-table th:nth-child(15), .datagrid-table td:nth-child(15) { width: 100px; } /* Doc Date */
+    .datagrid-table th:nth-child(16), .datagrid-table td:nth-child(16) { width: 80px; } /* Partner */
+    .datagrid-table th:nth-child(17), .datagrid-table td:nth-child(17) { width: 60px; } /* Line */
+    .datagrid-table th:nth-child(18), .datagrid-table td:nth-child(18) { width: 160px; } /* Actions */
+
+    /* Fixed header that doesn't scroll vertically */
+    .datagrid-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #f8fafc;
+    }
+
+    .datagrid-table thead th {
+      background: #f8fafc;
+      font-weight: 600;
+      border-bottom: 2px solid #e5e7eb;
+      white-space: nowrap;
+      /* Keep headers in single line */
+      min-width: 120px;
+      /* Minimum width for each column */
+    }
+
+    /* Ensure table renders properly on initial load */
+    .datagrid-container-master {
+      min-height: 200px;
+      /* Ensure container has height even when empty */
     }
 
     .pagination {
@@ -101,12 +177,128 @@
       font-size: 14px;
     }
 
-.datagrid-table tr:hover,
-.datatable tr:hover {
-    background-color: #e3f2fd; /* Light blue */
-}    
+    .datagrid-table tr:hover,
+    .datatable tr:hover {
+      background-color: #e3f2fd;
+      /* Light blue */
+    }
+
+    /* Horizontal scrollable table with fixed columns */
+    .datagrid-container-master {
+      position: relative;
+      overflow-x: auto;
+      overflow-y: auto;
+      min-height: 200px;
+      /* Ensure container has height even when empty */
+      /* Add custom scrollbar styling */
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+
+    .datagrid-container-master::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+
+    .datagrid-container-master::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    .datagrid-container-master::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .datagrid-container-master::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .datagrid-container-master .datagrid-table {
+      min-width: 1200px;
+      /* Ensure table is wide enough to scroll */
+      width: max-content;
+      /* Allow table to expand based on content */
+    }
+
+    /* Fixed left columns (Select and ID) */
+    .frozen-column-select,
+    .frozen-column-id {
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 15;
+      border-right: 2px solid #e5e7eb;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .frozen-column-id {
+      left: 60px;
+      /* Position after select column */
+    }
+
+    /* Fixed right column (Actions) */
+    .frozen-column-right {
+      position: sticky;
+      right: 0;
+      background: white;
+      z-index: 15;
+      border-left: 2px solid #e5e7eb;
+      box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+      min-width: 160px;
+    }
+
+    /* Ensure proper background for row hover with sticky columns */
+    .datagrid-table tr:hover .frozen-column-select,
+    .datagrid-table tr:hover .frozen-column-id,
+    .datagrid-table tr:hover .frozen-column-right {
+      background-color: #e3f2fd;
+    }
+
+    /* Current/Active row highlighting - light blue */
+    .datagrid-table tr.current-row {
+      background-color: #dbeafe !important; /* Light blue background */
+    }
+
+    .datagrid-table tr.current-row .frozen-column-select,
+    .datagrid-table tr.current-row .frozen-column-id,
+    .datagrid-table tr.current-row .frozen-column-right {
+      background-color: #dbeafe !important; /* Light blue for frozen columns */
+    }
+
+    /* Ensure current row highlighting is visible even on hover */
+    .datagrid-table tr.current-row:hover,
+    .datagrid-table tr.current-row:hover .frozen-column-select,
+    .datagrid-table tr.current-row:hover .frozen-column-id,
+    .datagrid-table tr.current-row:hover .frozen-column-right {
+      background-color: #bfdbfe !important; /* Slightly darker blue on hover */
+    }
+
+    /* Ensure header row styling for frozen columns - higher z-index for headers */
+    .datagrid-table thead th.frozen-column-select,
+    .datagrid-table thead th.frozen-column-id,
+    .datagrid-table thead th.frozen-column-right {
+      background: #f8fafc;
+      font-weight: 600;
+      z-index: 25;
+      /* Higher than sticky header z-index */
+    }
+
+    /* Set fixed widths for frozen columns */
+    .frozen-column-select {
+      width: 60px;
+      min-width: 60px;
+      max-width: 60px;
+    }
+
+    .frozen-column-id {
+      width: 80px;
+      min-width: 80px;
+      max-width: 80px;
+    }
   </style>
 </head>
+
 <body>
 
   <div class="master-detail-layout">
@@ -119,7 +311,6 @@
 
     <!-- 2. DETAIL TABLE (fills space) -->
     <div class="detail-table">
-      <h2 class="text-lg font-bold mb-2">Transaction Lines</h2>
       <div class="datagrid-container-detail"></div>
     </div>
 
@@ -128,12 +319,17 @@
       <h2 class="text-lg font-bold mb-2">New Line Entry</h2>
       <div id="line-entry-form">
         <div><label>Account</label><input type="text" class="input input-bordered w-full" placeholder="11100"></div>
-        <div><label>Amount</label><input type="number" step="0.01" class="input input-bordered w-full" placeholder="100.00"></div>
-        <div><label>DP</label><select class="select select-bordered w-full"><option>D</option><option>P</option></select></div>
+        <div><label>Amount</label><input type="number" step="0.01" class="input input-bordered w-full"
+            placeholder="100.00"></div>
+        <div><label>DP</label><select class="select select-bordered w-full">
+            <option>D</option>
+            <option>P</option>
+          </select></div>
         <div><label>Cost Center</label><input type="text" class="input input-bordered w-full" placeholder="601"></div>
         <div><label>Partner</label><input type="text" class="input input-bordered w-full" placeholder="P001"></div>
         <div><label>Currency</label><input type="text" class="input input-bordered w-full" placeholder="EUR"></div>
-        <div><label>Description</label><input type="text" class="input input-bordered w-full" placeholder="Payment"></div>
+        <div><label>Description</label><input type="text" class="input input-bordered w-full" placeholder="Payment">
+        </div>
         <div><label>Doc Date</label><input type="date" class="input input-bordered w-full"></div>
       </div>
     </div>
@@ -141,36 +337,110 @@
   </div>
 
   <script>
-    // Re-process HTMX after dynamic content loads
-    document.addEventListener('htmx:afterSwap', function(evt) {
+    // Re-process HTMX after dynamic content loads and fix table layout
+    document.addEventListener('htmx:afterSwap', function (evt) {
       if (evt.target.classList.contains('datagrid-container-master') ||
-          evt.target.classList.contains('datagrid-container-detail')) {
+        evt.target.classList.contains('datagrid-container-detail')) {
         htmx.process(evt.target);
+
+        // Fix table layout after content loads
+        setTimeout(function () {
+          const table = evt.target.querySelector('.datagrid-table');
+          if (table) {
+            // Force table layout recalculation to prevent column wrapping
+            table.style.tableLayout = 'auto';
+            // Force a reflow
+            table.offsetHeight;
+            // Switch back to fixed layout
+            table.style.tableLayout = 'fixed';
+            
+            // Ensure frozen columns have proper background
+            const frozenHeaders = table.querySelectorAll('thead th.frozen-column-select, thead th.frozen-column-id, thead th.frozen-column-right');
+            frozenHeaders.forEach(cell => {
+              cell.style.background = '#f8fafc';
+            });
+
+            const frozenCells = table.querySelectorAll('tbody td.frozen-column-select, tbody td.frozen-column-id, tbody td.frozen-column-right');
+            frozenCells.forEach(cell => {
+              cell.style.background = 'white';
+            });
+          }
+          
+          // Add row click handlers for highlighting if this is the master table
+          if (evt.target.classList.contains('datagrid-container-master')) {
+            addRowClickHandlers();
+          }
+        }, 10);
       }
     });
+    
+    // Additional fix for initial table load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wait a bit for HTMX to load the initial content
+      setTimeout(function() {
+        const table = document.querySelector('.datagrid-table');
+        if (table) {
+          // Force table layout recalculation
+          table.style.tableLayout = 'auto';
+          table.offsetHeight; // Force reflow
+          table.style.tableLayout = 'fixed';
+        }
+      }, 100);
+    });
   </script>
-<script>
-  // Auto-load details for first master row
-  /*
-  htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
-    const firstRow = document.querySelector('.master-table tr[data-id]');
-    if (firstRow) {
-      const id = firstRow.getAttribute('data-id');
-      htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+  <script>
+    // Auto-load details for first master row
+    /*
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
+      const firstRow = document.querySelector('.master-table tr[data-id]');
+      if (firstRow) {
+        const id = firstRow.getAttribute('data-id');
+        htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+      }
+    });
+    */
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
+      const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
+      if (firstRow) {
+        const id = firstRow.getAttribute('data-id');
+        htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+        
+        // Highlight the first row as current
+        highlightCurrentRow(firstRow);
+      }
+      
+      // Add click handlers to all rows for highlighting
+      addRowClickHandlers();
+    });
+
+    // Function to highlight current row
+    function highlightCurrentRow(row) {
+      // Remove current-row class from all rows
+      document.querySelectorAll('.datagrid-container-master tr.current-row').forEach(r => {
+        r.classList.remove('current-row');
+      });
+      
+      // Add current-row class to clicked row
+      if (row) {
+        row.classList.add('current-row');
+      }
     }
-  });
-  */
-htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
-  const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
-  if (firstRow) {
-    const id = firstRow.getAttribute('data-id');
-    htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
-  }
-});
+
+    // Function to add click handlers to rows
+    function addRowClickHandlers() {
+      document.querySelectorAll('.datagrid-container-master tr[data-id]').forEach(row => {
+        row.addEventListener('click', function(e) {
+          // Only highlight if not clicking on buttons or form elements
+          if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
+            highlightCurrentRow(this);
+          }
+        });
+      });
+    }
 
 
-</script>
-<script>
+  </script>
+  <script>
     // In your HTML, or via endpoint
     document.getElementById("line-entry-form").innerHTML = `
     <div><label>Account</label><input type="text" class="input input-bordered w-full" name="acc"></div>
@@ -183,6 +453,7 @@ htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
     <div><label>DocDate</label><input type="text" class="input input-bordered w-full" name="Docdate"></div>
     `;
 
-</script>
+  </script>
 </body>
+
 </html>
