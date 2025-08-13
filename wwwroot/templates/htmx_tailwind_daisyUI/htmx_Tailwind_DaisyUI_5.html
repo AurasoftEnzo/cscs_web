@@ -8,6 +8,7 @@
   <script src='https://unpkg.com/htmx.org@1.9.10'></script>
   <script src='https://cdn.tailwindcss.com'></script>
   <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     html,
     body {
@@ -115,7 +116,8 @@
       border-collapse: separate;
       border-spacing: 0;
       table-layout: fixed;
-      min-width: 1200px; /* Ensure table is wide enough for all columns */
+      min-width: 1200px;
+      /* Ensure table is wide enough for all columns */
     }
 
     .datagrid-table th,
@@ -129,24 +131,114 @@
     }
 
     /* Specific column widths to prevent wrapping */
-    .datagrid-table th:nth-child(1), .datagrid-table td:nth-child(1) { width: 60px; }  /* Select */
-    .datagrid-table th:nth-child(2), .datagrid-table td:nth-child(2) { width: 80px; }  /* ID */
-    .datagrid-table th:nth-child(3), .datagrid-table td:nth-child(3) { width: 100px; } /* Date */
-    .datagrid-table th:nth-child(4), .datagrid-table td:nth-child(4) { width: 70px; }  /* Posted */
-    .datagrid-table th:nth-child(5), .datagrid-table td:nth-child(5) { width: 200px; } /* Description */
-    .datagrid-table th:nth-child(6), .datagrid-table td:nth-child(6) { width: 60px; }  /* Year */
-    .datagrid-table th:nth-child(7), .datagrid-table td:nth-child(7) { width: 60px; }  /* Type */
-    .datagrid-table th:nth-child(8), .datagrid-table td:nth-child(8) { width: 80px; }  /* Mark */
-    .datagrid-table th:nth-child(9), .datagrid-table td:nth-child(9) { width: 60px; }  /* Sign */
-    .datagrid-table th:nth-child(10), .datagrid-table td:nth-child(10) { width: 100px; } /* Amount NL */
-    .datagrid-table th:nth-child(11), .datagrid-table td:nth-child(11) { width: 100px; } /* Amount NP */
-    .datagrid-table th:nth-child(12), .datagrid-table td:nth-child(12) { width: 70px; } /* Closed */
-    .datagrid-table th:nth-child(13), .datagrid-table td:nth-child(13) { width: 70px; } /* Status */
-    .datagrid-table th:nth-child(14), .datagrid-table td:nth-child(14) { width: 80px; } /* Doc Num */
-    .datagrid-table th:nth-child(15), .datagrid-table td:nth-child(15) { width: 100px; } /* Doc Date */
-    .datagrid-table th:nth-child(16), .datagrid-table td:nth-child(16) { width: 80px; } /* Partner */
-    .datagrid-table th:nth-child(17), .datagrid-table td:nth-child(17) { width: 60px; } /* Line */
-    .datagrid-table th:nth-child(18), .datagrid-table td:nth-child(18) { width: 160px; } /* Actions */
+    .datagrid-table th:nth-child(1),
+    .datagrid-table td:nth-child(1) {
+      width: 60px;
+    }
+
+    /* Select */
+    .datagrid-table th:nth-child(2),
+    .datagrid-table td:nth-child(2) {
+      width: 80px;
+    }
+
+    /* ID */
+    .datagrid-table th:nth-child(3),
+    .datagrid-table td:nth-child(3) {
+      width: 100px;
+    }
+
+    /* Date */
+    .datagrid-table th:nth-child(4),
+    .datagrid-table td:nth-child(4) {
+      width: 70px;
+    }
+
+    /* Posted */
+    .datagrid-table th:nth-child(5),
+    .datagrid-table td:nth-child(5) {
+      width: 200px;
+    }
+
+    /* Description */
+    .datagrid-table th:nth-child(6),
+    .datagrid-table td:nth-child(6) {
+      width: 60px;
+    }
+
+    /* Year */
+    .datagrid-table th:nth-child(7),
+    .datagrid-table td:nth-child(7) {
+      width: 60px;
+    }
+
+    /* Type */
+    .datagrid-table th:nth-child(8),
+    .datagrid-table td:nth-child(8) {
+      width: 80px;
+    }
+
+    /* Mark */
+    .datagrid-table th:nth-child(9),
+    .datagrid-table td:nth-child(9) {
+      width: 60px;
+    }
+
+    /* Sign */
+    .datagrid-table th:nth-child(10),
+    .datagrid-table td:nth-child(10) {
+      width: 100px;
+    }
+
+    /* Amount NL */
+    .datagrid-table th:nth-child(11),
+    .datagrid-table td:nth-child(11) {
+      width: 100px;
+    }
+
+    /* Amount NP */
+    .datagrid-table th:nth-child(12),
+    .datagrid-table td:nth-child(12) {
+      width: 70px;
+    }
+
+    /* Closed */
+    .datagrid-table th:nth-child(13),
+    .datagrid-table td:nth-child(13) {
+      width: 70px;
+    }
+
+    /* Status */
+    .datagrid-table th:nth-child(14),
+    .datagrid-table td:nth-child(14) {
+      width: 80px;
+    }
+
+    /* Doc Num */
+    .datagrid-table th:nth-child(15),
+    .datagrid-table td:nth-child(15) {
+      width: 100px;
+    }
+
+    /* Doc Date */
+    .datagrid-table th:nth-child(16),
+    .datagrid-table td:nth-child(16) {
+      width: 80px;
+    }
+
+    /* Partner */
+    .datagrid-table th:nth-child(17),
+    .datagrid-table td:nth-child(17) {
+      width: 60px;
+    }
+
+    /* Line */
+    .datagrid-table th:nth-child(18),
+    .datagrid-table td:nth-child(18) {
+      width: 160px;
+    }
+
+    /* Actions */
 
     /* Fixed header that doesn't scroll vertically */
     .datagrid-table thead {
@@ -257,13 +349,15 @@
 
     /* Current/Active row highlighting - light blue */
     .datagrid-table tr.current-row {
-      background-color: #dbeafe !important; /* Light blue background */
+      background-color: #dbeafe !important;
+      /* Light blue background */
     }
 
     .datagrid-table tr.current-row .frozen-column-select,
     .datagrid-table tr.current-row .frozen-column-id,
     .datagrid-table tr.current-row .frozen-column-right {
-      background-color: #dbeafe !important; /* Light blue for frozen columns */
+      background-color: #dbeafe !important;
+      /* Light blue for frozen columns */
     }
 
     /* Ensure current row highlighting is visible even on hover */
@@ -271,7 +365,8 @@
     .datagrid-table tr.current-row:hover .frozen-column-select,
     .datagrid-table tr.current-row:hover .frozen-column-id,
     .datagrid-table tr.current-row:hover .frozen-column-right {
-      background-color: #bfdbfe !important; /* Slightly darker blue on hover */
+      background-color: #bfdbfe !important;
+      /* Slightly darker blue on hover */
     }
 
     /* Ensure header row styling for frozen columns - higher z-index for headers */
@@ -353,7 +448,7 @@
             table.offsetHeight;
             // Switch back to fixed layout
             table.style.tableLayout = 'fixed';
-            
+
             // Ensure frozen columns have proper background
             const frozenHeaders = table.querySelectorAll('thead th.frozen-column-select, thead th.frozen-column-id, thead th.frozen-column-right');
             frozenHeaders.forEach(cell => {
@@ -365,7 +460,7 @@
               cell.style.background = 'white';
             });
           }
-          
+
           // Add row click handlers for highlighting if this is the master table
           if (evt.target.classList.contains('datagrid-container-master')) {
             addRowClickHandlers();
@@ -373,11 +468,11 @@
         }, 10);
       }
     });
-    
+
     // Additional fix for initial table load
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       // Wait a bit for HTMX to load the initial content
-      setTimeout(function() {
+      setTimeout(function () {
         const table = document.querySelector('.datagrid-table');
         if (table) {
           // Force table layout recalculation
@@ -404,11 +499,11 @@
       if (firstRow) {
         const id = firstRow.getAttribute('data-id');
         htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
-        
+
         // Highlight the first row as current
         highlightCurrentRow(firstRow);
       }
-      
+
       // Add click handlers to all rows for highlighting
       addRowClickHandlers();
     });
@@ -419,7 +514,7 @@
       document.querySelectorAll('.datagrid-container-master tr.current-row').forEach(r => {
         r.classList.remove('current-row');
       });
-      
+
       // Add current-row class to clicked row
       if (row) {
         row.classList.add('current-row');
@@ -429,7 +524,7 @@
     // Function to add click handlers to rows
     function addRowClickHandlers() {
       document.querySelectorAll('.datagrid-container-master tr[data-id]').forEach(row => {
-        row.addEventListener('click', function(e) {
+        row.addEventListener('click', function (e) {
           // Only highlight if not clicking on buttons or form elements
           if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
             highlightCurrentRow(this);
@@ -454,6 +549,81 @@
     `;
 
   </script>
+
+  <script>
+    // window.onload = function () {
+    //   Swal.fire({
+    //     title: 'Hello!',
+    //     text: 'This alert appears when the page is fully loaded.',
+    //     icon: 'success',
+    //     confirmButtonText: 'Cool'
+    //   });
+    // };
+  </script>
+
+  <script>
+    function confirmDeleteGlava(id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'No, keep it'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // // Proceed with the deletion
+          // htmx.ajax('DELETE', '/gk-transactions-norefresh/' + id,)
+          //   .catch((error) => {
+          //     Swal.fire({
+          //       title: 'Error!',
+          //       text: 'Failed to delete the transaction. Please try again.',
+          //       icon: 'error',
+          //       confirmButtonText: 'Close'
+          //     });
+          //     console.error('Error during deletion:', error);
+          //   });
+
+
+          fetch('/gk-transactions-norefresh/' + id, {
+            method: 'DELETE',
+            // headers: {
+            //   'Content-Type': 'application/json'
+            // }
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Success:', data);
+
+              //alert('CONFIRM DELETION OF ID: ' + id);
+              Swal.fire({
+                title: 'Successfully deleted!',
+                text: 'Deleted transaction with id ' + id + '.',
+                icon: 'success',
+                //timer: 3000,
+                confirmButtonText: 'Close'
+              }).then((result2) => {
+                // htmx.trigger(document.querySelector('#datagrid-container-master'), 'load');
+                htmx.ajax('GET', '/gk-transactions', {
+                  target: '.datagrid-container-master',
+                  swap: 'innerHTML'
+                });
+
+                //console.log('Zadnji sweet alert zatvoren');
+              });
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+
+
+
+
+        }
+      });
+    }
+  </script>
+
 </body>
 
 </html>

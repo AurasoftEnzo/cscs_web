@@ -1,5 +1,7 @@
 // ... (keep previous SQLConnectionString and getRoot function) ...
-SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+//SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+SQLConnectionString("Data Source=localhost,1433;Initial Catalog=C__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+
 
 // Add to the beginning of the file
 var currentlyEditingId = null;
@@ -197,8 +199,12 @@ function getGKTransactions(requestGlave) {
                 // Actions column
                 // Change the actions cell to use frozen-column-right
                 html += "<td class='flex gap-1 frozen-column-right'>";
+                
                 html += "<button class='btn btn-info btn-sm' hx-get='/gk-transactions/" + row[0] + "/edit' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Edit</button>";
-                html += "<button class='btn btn-error btn-sm' hx-delete='/gk-transactions/" + row[0] + "' hx-target='.datagrid-container-master' hx-swap='outerHTML' hx-confirm='Are you sure?'>Delete</button>";
+                
+                //html += "<button class='btn btn-error btn-sm' hx-delete='/gk-transactions/" + row[0] + "' hx-target='.datagrid-container-master' hx-swap='outerHTML' hx-confirm='Are you sure?'>Delete</button>";
+                html += "<button class='btn btn-error btn-sm' onclick='confirmDeleteGlava(" + row[0] + ")'>Delete</button>";
+                
                 html += "</td>";
                 html += "</tr>";
             }
@@ -220,6 +226,8 @@ function getGKTransactions(requestGlave) {
     html += "</div>";  
     
     headers1 = {"Content-Type": "text/html"};
+
+    
     return Response(headers1, html, 200);
 }
 
@@ -636,7 +644,7 @@ function vrfy(field, fallback) {
 
 // Delete endpoint (already exists, keep as is)
 // Delete endpoint
-// CreateEndpoint("DELETE", "/gk-transactions/{id}", "deleteGKTransaction");
+CreateEndpoint("DELETE", "/gk-transactions/{id}", "deleteGKTransaction");
 function deleteGKTransaction(args) {
     id = args["RouteValues"]["id"];
     
@@ -658,6 +666,32 @@ function deleteGKTransaction(args) {
     }
     */
     return getGKTransactions(args2);
+}
+
+CreateEndpoint("DELETE", "/gk-transactions-norefresh/{id}", "deleteGKTransactionNoRefresh");
+function deleteGKTransactionNoRefresh(args) {
+    id = args["RouteValues"]["id"];
+    
+    // Execute delete
+    query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", int(id)});
+    sqlNonQuery(query, sqlParams);
+    
+    // Return current view (preserve search/sort)
+    args2 = {};
+    args2["QueryParams"] = {"page": 1};
+    /*
+    args2["QueryParams"] = {};
+    if (Contains(args["QueryParams"], "page")) {
+        args2["QueryParams"]["page"] = args["QueryParams"]["page"];
+    } else {
+        args2["QueryParams"]["page"] = 1;
+    }
+    */
+    //return getGKTransactions(args2);
+    headers = {"Content-Type": "application/json"};
+    return Response(headers, '{"Result" : "Success"}', 200);
 }
 
 function formatForDisplay(dateStr) {
