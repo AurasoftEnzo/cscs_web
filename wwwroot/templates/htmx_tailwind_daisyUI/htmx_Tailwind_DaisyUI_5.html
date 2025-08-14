@@ -20,27 +20,43 @@
     .master-detail-layout {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 32px);
-      /* Full viewport height minus padding */
+      height: calc(100vh - 112px);
+      /* Full viewport height minus padding and fixed header */
       gap: 16px;
       overflow: hidden;
+    }
+
+    /* Fixed header styles */
+    .fixed-header {
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] .fixed-header {
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     /* 1. Master Table: Expanded height for 8 rows */
     .master-table {
       height: 400px;
       /* ~8 rows with headers and pagination */
-      background: white;
+      background: hsl(var(--b1));
       border-radius: 8px;
       padding: 16px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
+      border: 1px solid hsl(var(--b3));
+    }
+
+    [data-theme="dark"] .master-table {
+      box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
     }
 
     .master-table h2 {
       flex-shrink: 0;
       /* Don't shrink the title */
+      color: hsl(var(--bc));
     }
 
     .master-table .datagrid-container-master {
@@ -58,35 +74,68 @@
       /* Minimum height to ensure visibility */
       max-height: 300px;
       /* Maximum height to prevent overflow */
-      overflow-y: auto;
-      background: white;
+      background: hsl(var(--b1));
       border-radius: 8px;
       padding: 16px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid hsl(var(--b3));
+      display: flex;
+      flex-direction: column;
+    }
+
+    [data-theme="dark"] .detail-table {
+      box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+    }
+
+    /* Detail table container with scrolling body and fixed headers */
+    .datagrid-container-detail {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: auto;
+      /* Add custom scrollbar styling */
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--bc) / 0.3) hsl(var(--b3));
+    }
+
+    /* Detail table scrollbar webkit styling */
+    .datagrid-container-detail::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+
+    .datagrid-container-detail::-webkit-scrollbar-track {
+      background: hsl(var(--b3));
+      border-radius: 4px;
+    }
+
+    .datagrid-container-detail::-webkit-scrollbar-thumb {
+      background: hsl(var(--bc) / 0.3);
+      border-radius: 4px;
+    }
+
+    .datagrid-container-detail::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--bc) / 0.5);
     }
 
     /* 3. Bottom Form: Compact */
     .bottom-form {
-      height: 180px;
-      /* Fixed height for 2-row form */
-      background: white;
+      height: 220px;
+      /* Fixed height for 3-row form */
+      background: hsl(var(--b1));
       border-radius: 8px;
       padding: 16px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       overflow-y: auto;
+      border: 1px solid hsl(var(--b3));
     }
 
-    /* Compact form grid: 4 columns on large, 2 on small */
+    [data-theme="dark"] .bottom-form {
+      box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+    }
+
+    /* Compact form grid: 4 columns */
     #line-entry-form {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    @media (max-width: 768px) {
-      #line-entry-form {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      width: 100%;
     }
 
     /* Shrink input fields */
@@ -98,16 +147,16 @@
     }
 
     /* Label above input, small font */
-    #line-entry-form>div {
+    #line-entry-form>div>div {
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
 
-    label {
+    #line-entry-form label {
       font-size: 12px;
       font-weight: 600;
-      color: #4b5563;
+      color: hsl(var(--bc) / 0.7);
     }
 
     /* Table styles */
@@ -245,13 +294,14 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      background: #f8fafc;
+      background: hsl(var(--b2));
     }
 
     .datagrid-table thead th {
-      background: #f8fafc;
+      background: hsl(var(--b2));
+      color: hsl(var(--bc));
       font-weight: 600;
-      border-bottom: 2px solid #e5e7eb;
+      border-bottom: 2px solid hsl(var(--b3));
       white-space: nowrap;
       /* Keep headers in single line */
       min-width: 120px;
@@ -271,8 +321,7 @@
 
     .datagrid-table tr:hover,
     .datatable tr:hover {
-      background-color: #e3f2fd;
-      /* Light blue */
+      background-color: hsl(var(--n) / 0.1) !important;
     }
 
     /* Horizontal scrollable table with fixed columns */
@@ -284,7 +333,7 @@
       /* Ensure container has height even when empty */
       /* Add custom scrollbar styling */
       scrollbar-width: thin;
-      scrollbar-color: #cbd5e1 #f1f5f9;
+      scrollbar-color: hsl(var(--bc) / 0.3) hsl(var(--b3));
     }
 
     .datagrid-container-master::-webkit-scrollbar {
@@ -293,17 +342,17 @@
     }
 
     .datagrid-container-master::-webkit-scrollbar-track {
-      background: #f1f5f9;
+      background: hsl(var(--b3));
       border-radius: 4px;
     }
 
     .datagrid-container-master::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: hsl(var(--bc) / 0.3);
       border-radius: 4px;
     }
 
     .datagrid-container-master::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+      background: hsl(var(--bc) / 0.5);
     }
 
     .datagrid-container-master .datagrid-table {
@@ -318,10 +367,9 @@
     .frozen-column-id {
       position: sticky;
       left: 0;
-      background: white;
       z-index: 15;
-      border-right: 2px solid #e5e7eb;
-      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+      border-right: 2px solid hsl(var(--b3));
+      box-shadow: 2px 0 4px hsl(var(--bc) / 0.1);
     }
 
     .frozen-column-id {
@@ -333,31 +381,50 @@
     .frozen-column-right {
       position: sticky;
       right: 0;
-      background: white;
       z-index: 15;
-      border-left: 2px solid #e5e7eb;
-      box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+      border-left: 2px solid hsl(var(--b3));
+      box-shadow: -2px 0 4px hsl(var(--bc) / 0.1);
       min-width: 160px;
+    }
+
+    /* Zebra striping for table rows */
+    .datagrid-table tbody tr:nth-child(even) {
+      background-color: hsl(var(--b1));
+    }
+
+    .datagrid-table tbody tr:nth-child(odd) {
+      background-color: hsl(var(--b2) / 0.3);
+    }
+
+    /* Ensure frozen columns inherit row background */
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-select,
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-id,
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-right {
+      background-color: hsl(var(--b1));
+    }
+
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background-color: hsl(var(--b2) / 0.3);
     }
 
     /* Ensure proper background for row hover with sticky columns */
     .datagrid-table tr:hover .frozen-column-select,
     .datagrid-table tr:hover .frozen-column-id,
     .datagrid-table tr:hover .frozen-column-right {
-      background-color: #e3f2fd;
+      background-color: hsl(var(--n) / 0.1) !important;
     }
 
-    /* Current/Active row highlighting - light blue */
+    /* Current/Active row highlighting */
     .datagrid-table tr.current-row {
-      background-color: #dbeafe !important;
-      /* Light blue background */
+      background-color: hsl(var(--n) / 0.2) !important;
     }
 
     .datagrid-table tr.current-row .frozen-column-select,
     .datagrid-table tr.current-row .frozen-column-id,
     .datagrid-table tr.current-row .frozen-column-right {
-      background-color: #dbeafe !important;
-      /* Light blue for frozen columns */
+      background-color: hsl(var(--n) / 0.2) !important;
     }
 
     /* Ensure current row highlighting is visible even on hover */
@@ -365,15 +432,15 @@
     .datagrid-table tr.current-row:hover .frozen-column-select,
     .datagrid-table tr.current-row:hover .frozen-column-id,
     .datagrid-table tr.current-row:hover .frozen-column-right {
-      background-color: #bfdbfe !important;
-      /* Slightly darker blue on hover */
+      background-color: hsl(var(--n) / 0.3) !important;
     }
 
     /* Ensure header row styling for frozen columns - higher z-index for headers */
     .datagrid-table thead th.frozen-column-select,
     .datagrid-table thead th.frozen-column-id,
     .datagrid-table thead th.frozen-column-right {
-      background: #f8fafc;
+      background: hsl(var(--b2));
+      color: hsl(var(--bc));
       font-weight: 600;
       z-index: 25;
       /* Higher than sticky header z-index */
@@ -391,16 +458,64 @@
       min-width: 80px;
       max-width: 80px;
     }
+
+    /* Edit mode styling */
+    .bottom-form.edit-mode {
+      border: 2px solid hsl(var(--su));
+      box-shadow: 0 4px 6px hsl(var(--su) / 0.1);
+    }
+
+    .bottom-form.edit-mode h2::after {
+      content: " (Edit Mode)";
+      color: hsl(var(--su));
+      font-size: 0.8em;
+    }
+
+    /* Current line highlighting in detail table */
+    .datagrid-container-detail tr.current-line {
+      background-color: hsl(var(--n) / 0.15) !important;
+      border-left: 4px solid hsl(var(--n) / 0.7);
+    }
+
+    .datagrid-container-detail tr.current-line:hover {
+      background-color: hsl(var(--n) / 0.25) !important;
+    }
+
+    /* Make detail table rows clickable */
+    .datagrid-container-detail tr[data-line] {
+      cursor: pointer;
+    }
+
+    .datagrid-container-detail tr[data-line]:hover {
+      background-color: hsl(var(--n) / 0.1) !important;
+    }
   </style>
 </head>
 
 <body>
 
+  <!-- Fixed header with controls -->
+  <div class="fixed top-4 left-4 right-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg mb-4 fixed-header">
+    <div class="flex items-center gap-4">
+      <h1 class="text-xl font-bold">GK Transactions Management</h1>
+      <button class='btn btn-accent btn-sm' hx-get='/gk-transactions/new' hx-target='.datagrid-container-master' hx-swap='outerHTML'>
+        Add New Transaction
+      </button>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm">Theme:</span>
+      <input type="checkbox" id="theme-toggle" class="toggle toggle-sm" onchange="toggleTheme()">
+      <span class="text-sm">Dark</span>
+    </div>
+  </div>
+
+  <!-- Add top margin to compensate for fixed header -->
+  <div style="margin-top: 80px;"></div>
+
   <div class="master-detail-layout">
 
     <!-- 1. MASTER TABLE (3-4 rows) -->
     <div class="master-table">
-      <h2 class="text-lg font-bold mb-2">Master Transactions</h2>
       <div class="datagrid-container-master" hx-get="/gk-transactions" hx-trigger="load" hx-swap="innerHTML"></div>
     </div>
 
@@ -411,22 +526,37 @@
 
     <!-- 3. BOTTOM FORM (compact 2-row) -->
     <div class="bottom-form">
-      <h2 class="text-lg font-bold mb-2">New Line Entry</h2>
-      <div id="line-entry-form">
-        <div><label>Account</label><input type="text" class="input input-bordered w-full" placeholder="11100"></div>
-        <div><label>Amount</label><input type="number" step="0.01" class="input input-bordered w-full"
-            placeholder="100.00"></div>
-        <div><label>DP</label><select class="select select-bordered w-full">
-            <option>D</option>
-            <option>P</option>
+      <h2 class="text-lg font-bold mb-2">Line Entry</h2>
+      <form id="line-entry-form">
+        <input type="hidden" name="masterId" value="">
+        <input type="hidden" name="lineId" value="">
+        <div class="grid grid-cols-4 gap-2 mb-2">
+          <div><label>Account</label><input type="text" name="GK_LN_KONTO" class="input input-bordered input-sm w-full" placeholder="11100" maxlength="15"></div>
+          <div><label>Cost Center</label><input type="text" name="GK_LN_OBJED" class="input input-bordered input-sm w-full" placeholder="601" maxlength="6"></div>
+          <div><label>Description</label><input type="text" name="GK_LN_OPIS" class="input input-bordered input-sm w-full" placeholder="Payment" maxlength="50"></div>
+          <div><label>DP</label><select name="GK_LN_DP" class="select select-bordered select-sm w-full">
+            <option value="">Select</option>
+            <option value="D">D</option>
+            <option value="P">P</option>
           </select></div>
-        <div><label>Cost Center</label><input type="text" class="input input-bordered w-full" placeholder="601"></div>
-        <div><label>Partner</label><input type="text" class="input input-bordered w-full" placeholder="P001"></div>
-        <div><label>Currency</label><input type="text" class="input input-bordered w-full" placeholder="EUR"></div>
-        <div><label>Description</label><input type="text" class="input input-bordered w-full" placeholder="Payment">
         </div>
-        <div><label>Doc Date</label><input type="date" class="input input-bordered w-full"></div>
-      </div>
+        <div class="grid grid-cols-4 gap-2 mb-2">
+          <div><label>Amount</label><input type="number" step="0.01" name="GK_LN_IZNOS" class="input input-bordered input-sm w-full" placeholder="100.00"></div>
+          <div><label>Doc ID</label><input type="number" name="GK_LN_BRDOK" class="input input-bordered input-sm w-full" placeholder="12345"></div>
+          <div><label>Doc Date</label><input type="date" name="GK_LN_DATDOK" class="input input-bordered input-sm w-full"></div>
+          <div><label>Partner</label><input type="text" name="GK_LN_PARTNR" class="input input-bordered input-sm w-full" placeholder="P001" maxlength="10"></div>
+        </div>
+        <div class="grid grid-cols-4 gap-2 mb-2">
+          <div><label>Currency</label><input type="text" name="GK_LN_SIFDVZ" class="input input-bordered input-sm w-full" placeholder="EUR" maxlength="3"></div>
+          <div><label>Rate</label><input type="number" step="0.0001" name="GK_LN_TECAJ" class="input input-bordered input-sm w-full" placeholder="1.0000"></div>
+          <div><label>Amount/Curr</label><input type="number" step="0.01" name="GK_LN_IZNDEV" class="input input-bordered input-sm w-full" placeholder="100.00"></div>
+          <div class="flex gap-2 items-end">
+            <button type="button" id="save-line-btn" class="btn btn-success btn-sm" disabled>Save Line</button>
+            <button type="button" id="new-line-btn" class="btn btn-primary btn-sm" disabled>New Line</button>
+            <button type="button" id="clear-line-btn" class="btn btn-warning btn-sm">Clear</button>
+          </div>
+        </div>
+      </form>
     </div>
 
   </div>
@@ -536,17 +666,319 @@
 
   </script>
   <script>
-    // In your HTML, or via endpoint
-    document.getElementById("line-entry-form").innerHTML = `
-    <div><label>Account</label><input type="text" class="input input-bordered w-full" name="acc"></div>
-    <div><label>Amount</label><input type="number" step="0.01" class="input input-bordered w-full" name="amt"></div>
-    <div><label>DP</label><input type="text" class="input input-bordered w-full" name="DP"></div>
-    <div><label>CostCenter</label><input type="text" class="input input-bordered w-full" name="CostCenter"></div>
-    <div><label>Partner</label><input type="text" class="input input-bordered w-full" name="Partner"></div>
-    <div><label>Currency</label><input type="text" class="input input-bordered w-full" name="Currency"></div>
-    <div><label>Description</label><input type="text" class="input input-bordered w-full" name="Description"></div>
-    <div><label>DocDate</label><input type="text" class="input input-bordered w-full" name="Docdate"></div>
-    `;
+    // Function to select a line for editing
+    function selectLineForEdit(rowElement) {
+      const masterId = rowElement.getAttribute('data-id');
+      const lineId = rowElement.getAttribute('data-line');
+      const lineData = {
+        lineId: lineId,
+        account: rowElement.getAttribute('data-account') || '',
+        costCenter: rowElement.getAttribute('data-costcenter') || '',
+        description: rowElement.getAttribute('data-description') || '',
+        dp: rowElement.getAttribute('data-dp') || '',
+        amount: rowElement.getAttribute('data-amount') || '',
+        docId: rowElement.getAttribute('data-docid') || '',
+        docDate: rowElement.getAttribute('data-docdate') || '',
+        partner: rowElement.getAttribute('data-partner') || '',
+        currency: rowElement.getAttribute('data-currency') || '',
+        rate: rowElement.getAttribute('data-rate') || '',
+        amountCurr: rowElement.getAttribute('data-amountcurr') || ''
+      };
+      
+      // Highlight selected line
+      highlightCurrentLine(rowElement);
+      
+      // Always populate form with line data for viewing/editing
+      populateLineForm(masterId, lineData);
+    }
+
+    // Function to highlight current line in detail table
+    function highlightCurrentLine(row) {
+      // Remove current-line class from all lines
+      document.querySelectorAll('.datagrid-container-detail tr.current-line').forEach(r => {
+        r.classList.remove('current-line');
+      });
+
+      // Add current-line class to clicked row
+      if (row) {
+        row.classList.add('current-line');
+      }
+    }
+
+    // Line form functionality
+    let currentMasterId = null;
+    let currentLineId = null;
+    let isEditMode = false;
+    let isMasterInEditMode = false;
+
+    // Clear form function
+    function clearLineForm() {
+      document.getElementById('line-entry-form').reset();
+      document.querySelector('input[name="masterId"]').value = '';
+      document.querySelector('input[name="lineId"]').value = '';
+      currentMasterId = null;
+      currentLineId = null;
+      isEditMode = false;
+      updateFormState();
+      document.querySelector('.bottom-form h2').textContent = 'Line Entry';
+    }
+
+    // Function to update form state based on master edit mode
+    function updateFormState() {
+      const saveBtn = document.getElementById('save-line-btn');
+      const newLineBtn = document.getElementById('new-line-btn');
+      const formInputs = document.querySelectorAll('#line-entry-form input, #line-entry-form select');
+      
+      if (isMasterInEditMode && currentMasterId) {
+        // Enable form for editing
+        saveBtn.disabled = false;
+        newLineBtn.disabled = false;
+        formInputs.forEach(input => {
+          input.disabled = false;
+        });
+        saveBtn.textContent = currentLineId ? 'Update Line' : 'Save Line';
+      } else {
+        // Disable form for read-only viewing
+        saveBtn.disabled = true;
+        newLineBtn.disabled = true;
+        formInputs.forEach(input => {
+          input.disabled = true;
+        });
+        saveBtn.textContent = 'Save Line';
+      }
+    }
+
+    // Clear button click handler
+    document.getElementById('clear-line-btn').addEventListener('click', clearLineForm);
+
+    // New Line button click handler
+    document.getElementById('new-line-btn').addEventListener('click', function() {
+      if (currentMasterId && isMasterInEditMode) {
+        enableNewLineForm(currentMasterId);
+      }
+    });
+
+    // Save line button click handler
+    document.getElementById('save-line-btn').addEventListener('click', function() {
+      if (!currentMasterId) {
+        alert('Please select a master transaction first');
+        return;
+      }
+
+      if (!isMasterInEditMode) {
+        alert('Master transaction must be in edit mode to save lines');
+        return;
+      }
+
+      const formData = new FormData(document.getElementById('line-entry-form'));
+      const url = currentLineId ? 
+        `/gk-lines/${currentMasterId}/${currentLineId}` : 
+        `/gk-lines/${currentMasterId}`;
+      const method = currentLineId ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        body: formData
+      })
+      .then(response => response.text())
+      .then(html => {
+        // Refresh the detail table
+        htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
+          target: '.datagrid-container-detail',
+          swap: 'innerHTML'
+        }).then(() => {
+          // Reload first line data to refresh the form
+          loadFirstLineData(currentMasterId);
+        });
+      })
+      .catch(error => {
+        console.error('Error saving line:', error);
+        alert('Error saving line');
+      });
+    });
+
+    // Function to populate form for editing
+    function populateLineForm(masterId, lineData) {
+      currentMasterId = masterId;
+      currentLineId = lineData.lineId;
+      isEditMode = !!lineData.lineId;
+
+      document.querySelector('input[name="masterId"]').value = masterId;
+      document.querySelector('input[name="lineId"]').value = lineData.lineId || '';
+      document.querySelector('input[name="GK_LN_KONTO"]').value = lineData.account || '';
+      document.querySelector('input[name="GK_LN_OBJED"]').value = lineData.costCenter || '';
+      document.querySelector('input[name="GK_LN_OPIS"]').value = lineData.description || '';
+      document.querySelector('select[name="GK_LN_DP"]').value = lineData.dp || '';
+      document.querySelector('input[name="GK_LN_IZNOS"]').value = lineData.amount || '';
+      document.querySelector('input[name="GK_LN_BRDOK"]').value = lineData.docId || '';
+      document.querySelector('input[name="GK_LN_DATDOK"]').value = lineData.docDate || '';
+      document.querySelector('input[name="GK_LN_PARTNR"]').value = lineData.partner || '';
+      document.querySelector('input[name="GK_LN_SIFDVZ"]').value = lineData.currency || '';
+      document.querySelector('input[name="GK_LN_TECAJ"]').value = lineData.rate || '';
+      document.querySelector('input[name="GK_LN_IZNDEV"]').value = lineData.amountCurr || '';
+
+      updateFormState();
+      document.querySelector('.bottom-form h2').textContent = currentLineId ? 'Line Details' : 'New Line Entry';
+    }
+
+    // Function to enable form for new line entry
+    function enableNewLineForm(masterId) {
+      currentMasterId = masterId;
+      currentLineId = null;
+      isEditMode = false;
+      
+      // Clear form but keep masterId
+      document.getElementById('line-entry-form').reset();
+      document.querySelector('input[name="masterId"]').value = masterId;
+      document.querySelector('input[name="lineId"]').value = '';
+      
+      updateFormState();
+      document.querySelector('.bottom-form h2').textContent = 'New Line Entry';
+    }
+
+    // Function to set master edit mode
+    function setMasterEditMode(editMode) {
+      isMasterInEditMode = editMode;
+      updateFormState();
+      
+      // Update visual indication
+      if (editMode) {
+        document.querySelector('.bottom-form').classList.add('edit-mode');
+      } else {
+        document.querySelector('.bottom-form').classList.remove('edit-mode');
+      }
+    }
+
+    // Function to handle master save/cancel - preserve current line
+    function handleMasterSaveCancel() {
+      console.log('handleMasterSaveCancel called');
+      console.log('currentMasterId:', currentMasterId);
+      console.log('currentLineId:', currentLineId);
+      
+      const currentSelectedLineId = currentLineId;
+      setMasterEditMode(false);
+      
+      // After master table refreshes, restore the current line selection
+      if (currentMasterId && currentSelectedLineId) {
+        console.log('Attempting to restore line selection after 300ms delay');
+        setTimeout(() => {
+          // Reload the lines for this master
+          fetch(`/gk-lines/${currentMasterId}`)
+            .then(response => response.text())
+            .then(html => {
+              document.querySelector('.datagrid-container-detail').innerHTML = html;
+              
+              // Try to select the same line again
+              setTimeout(() => {
+                const lineRow = document.querySelector(`.datagrid-container-detail tr[data-line="${currentSelectedLineId}"]`);
+                console.log('Looking for line row with id:', currentSelectedLineId);
+                console.log('Found line row:', lineRow);
+                
+                if (lineRow) {
+                  selectLineForEdit(lineRow);
+                } else {
+                  // If line no longer exists, select first line
+                  console.log('Original line not found, selecting first line');
+                  loadFirstLineData(currentMasterId);
+                }
+              }, 100);
+            })
+            .catch(error => {
+              console.error('Error reloading lines:', error);
+              loadFirstLineData(currentMasterId);
+            });
+        }, 300);
+      } else if (currentMasterId) {
+        // Just reload first line if no specific line was selected
+        setTimeout(() => {
+          loadFirstLineData(currentMasterId);
+        }, 300);
+      }
+    }
+
+    // Function to load first line when master is selected
+    function loadFirstLineData(masterId) {
+      // Wait a bit for the detail table to load, then select first line
+      setTimeout(() => {
+        const firstLineRow = document.querySelector('.datagrid-container-detail tr[data-line]');
+        if (firstLineRow) {
+          selectLineForEdit(firstLineRow);
+        } else {
+          // No lines exist, enable new line form
+          enableNewLineForm(masterId);
+        }
+      }, 100);
+    }
+
+    // Listen for master row selection to enable new line entry
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
+      addRowClickHandlers();
+      
+      // Check if we're back to normal view (not edit mode)
+      const editForm = document.querySelector('.datagrid-container-master form');
+      if (!editForm) {
+        setMasterEditMode(false);
+      }
+      
+      // Enable form for first row if available and load first line
+      const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
+      if (firstRow) {
+        const masterId = firstRow.getAttribute('data-id');
+        highlightCurrentRow(firstRow);
+        currentMasterId = masterId;
+        
+        // Load first line data when detail table loads
+        htmx.ajax('GET', `/gk-lines/${masterId}`, {
+          target: '.datagrid-container-detail',
+          swap: 'innerHTML'
+        }).then(() => {
+          loadFirstLineData(masterId);
+        });
+      }
+    });
+
+    // Listen for detail table updates to add line click handlers
+    htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function() {
+      addLineClickHandlers();
+      // Auto-select first line if available
+      if (currentMasterId) {
+        loadFirstLineData(currentMasterId);
+      }
+    });
+
+    // Function to add click handlers to line rows
+    function addLineClickHandlers() {
+      document.querySelectorAll('.datagrid-container-detail tr[data-line]').forEach(row => {
+        row.addEventListener('click', function (e) {
+          // Only handle click if not clicking on buttons
+          if (!e.target.closest('button')) {
+            selectLineForEdit(this);
+          }
+        });
+      });
+    }
+
+    // Override the addRowClickHandlers to include form enabling
+    function addRowClickHandlers() {
+      document.querySelectorAll('.datagrid-container-master tr[data-id]').forEach(row => {
+        row.addEventListener('click', function (e) {
+          // Only highlight if not clicking on buttons or form elements
+          if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
+            highlightCurrentRow(this);
+            const masterId = this.getAttribute('data-id');
+            currentMasterId = masterId;
+            
+            // Load lines for this master and select first line
+            htmx.ajax('GET', `/gk-lines/${masterId}`, {
+              target: '.datagrid-container-detail',
+              swap: 'innerHTML'
+            }).then(() => {
+              loadFirstLineData(masterId);
+            });
+          }
+        });
+      });
+    }
 
   </script>
 
@@ -622,6 +1054,32 @@
         }
       });
     }
+
+    // Theme toggle functionality
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeToggle = document.getElementById('theme-toggle');
+      
+      if (themeToggle.checked) {
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        html.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    // Load saved theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      const html = document.documentElement;
+      const themeToggle = document.getElementById('theme-toggle');
+      
+      html.setAttribute('data-theme', savedTheme);
+      if (savedTheme === 'dark') {
+        themeToggle.checked = true;
+      }
+    });
   </script>
 
 </body>
