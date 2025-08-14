@@ -1,6 +1,7 @@
 // ... (keep previous SQLConnectionString and getRoot function) ...
 //SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
-SQLConnectionString("Data Source=localhost,1433;Initial Catalog=C__DATAX_T4__BT4;User Id=sa;password=aura;TrustServerCertificate=True;");
+//SQLConnectionString("Data Source=localhost,1433;Initial Catalog=C__DATAX_T4__BT4;User Id=sa;password=aura;TrustServerCertificate=True;");
+SQLConnectionString("Data Source=localhost,1433;Initial Catalog=C__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
 
 
 // Add to the beginning of the file
@@ -170,10 +171,10 @@ function getGKTransactions(requestGlave) {
             } else {
                 gkTrans_html += "<tr data-id='" + gkTrans_row[0] + "' data-original='" + gkTrans_originalData + "' class='hover:bg-base-300 cursor-pointer' hx-get='/gk-lines/" + gkTrans_row[0] + "' hx-target='.datagrid-container-detail' hx-swap='innerHTML' onclick='currentMasterId = " + gkTrans_row[0] + "; loadFirstLineData(" + gkTrans_row[0] + ");'>";
             }
-                // Add Select column
+                // Select column
                 gkTrans_html += "<td class='frozen-column-select'><input type='checkbox' class='checkbox' name='selectedRows' value='" + gkTrans_row[0] + "'></td>";
-                // Modify ID column
-                gkTrans_html += "<td class='frozen-column-id' data-field='GK_GL_BR_TEM' class='text-right'>" + gkTrans_row[0] + "</td>";
+                // ID column
+                gkTrans_html += "<td class='frozen-column-id text-right' data-field='GK_GL_BR_TEM'>" + gkTrans_row[0] + "</td>";
                 // ... rest of cells ...
                 
                 // Cells with proper data-field attributes
@@ -197,10 +198,10 @@ function getGKTransactions(requestGlave) {
                 // Change the actions cell to use frozen-column-right
                 gkTrans_html += "<td class='flex gap-1 frozen-column-right'>";
                 
-                gkTrans_html += "<button class='btn btn-info btn-sm' hx-get='/gk-transactions/" + gkTrans_row[0] + "/edit' hx-target='.datagrid-container-master' hx-swap='outerHTML' onclick='setMasterEditMode(true)'>Edit</button>";
+                gkTrans_html += "<button class='btn btn-info btn-xs action-button' hx-get='/gk-transactions/" + gkTrans_row[0] + "/edit' hx-target='.datagrid-container-master' hx-swap='outerHTML' onclick='setMasterEditMode(true)'>Edit</button>";
                 
                 //gkTrans_html += "<button class='btn btn-error btn-sm' hx-delete='/gk-transactions/" + gkTrans_row[0] + "' hx-target='.datagrid-container-master' hx-swap='outerHTML' hx-confirm='Are you sure?'>Delete</button>";
-                gkTrans_html += "<button class='btn btn-error btn-sm' onclick='confirmDeleteGlava(" + gkTrans_row[0] + ")'>Delete</button>";
+                gkTrans_html += "<button class='btn btn-error btn-xs action-button' onclick='confirmDeleteGlava(" + gkTrans_row[0] + ")'>Delete</button>";
                 
                 gkTrans_html += "</td>";
                 gkTrans_html += "</tr>";

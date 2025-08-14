@@ -10,6 +10,109 @@
   <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
+    
+    /* Disable hover effect on all table header cells */
+    /* Restore hover effect for each <th> so only hovered header cell is highlighted */
+    /* Turn off hover effect for all header cells */
+    .datagrid-table thead th:hover {
+      background-color: inherit !important;
+      color: inherit !important;
+      cursor: default !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    /* Ensure all <th> have the same background color in light mode */
+    [data-theme="light"] .datagrid-table th,
+    [data-theme="light"] .datagrid-table th.frozen-column-select,
+    [data-theme="light"] .datagrid-table th.frozen-column-id,
+    [data-theme="light"] .datagrid-table th.frozen-column-right {
+      background-color: #ebecee !important; /* Tailwind gray-100 */
+      color: hsl(var(--bc)) !important;
+    }
+    /* Ensure sticky columns match dark background in dark mode */
+    [data-theme="dark"] .datagrid-table th.frozen-column-select,
+    [data-theme="dark"] .datagrid-table th.frozen-column-id,
+    [data-theme="dark"] .datagrid-table th.frozen-column-right {
+      background-color: #1f2937 !important; /* Tailwind gray-800 */
+      color: hsl(var(--bc)) !important;
+    }
+    [data-theme="dark"] .datagrid-table td.frozen-column-select,
+    [data-theme="dark"] .datagrid-table td.frozen-column-id,
+    [data-theme="dark"] .datagrid-table td.frozen-column-right {
+      background-color: #1f2937 !important;
+      color: hsl(var(--bc)) !important;
+    }
+    /* Ensure all <th> have the same background color in dark mode */
+    [data-theme="dark"] .datagrid-table th {
+      background-color: #1f2937 !important; /* Tailwind gray-800 */
+      color: hsl(var(--bc)) !important;
+    }
+    /* Vertical column separator lines in very light gray for light mode */
+    [data-theme="light"] .datagrid-table th,
+    [data-theme="light"] .datagrid-table td {
+      border-right: 1px solid #e5e7eb; /* Tailwind gray-200 */
+    }
+    [data-theme="light"] .datagrid-table th:last-child,
+    [data-theme="light"] .datagrid-table td:last-child {
+      border-right: none;
+    }
+
+    /* Vertical column separator lines in gray for dark mode */
+    [data-theme="dark"] .datagrid-table th,
+    [data-theme="dark"] .datagrid-table td {
+      border-right: 1px solid #374151; /* Tailwind gray-700 */
+    }
+    [data-theme="dark"] .datagrid-table th:last-child,
+    [data-theme="dark"] .datagrid-table td:last-child {
+      border-right: none;
+    }
+    /* Make checkbox in select column smaller */
+    .datagrid-table td.frozen-column-select input[type='checkbox'] {
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      min-height: 16px;
+      vertical-align: middle;
+      border-radius: 4px;
+    }
+
+    /* Force sticky columns to always match row background for hover and selected states */
+    [data-theme="light"] .datagrid-table tr:hover td.frozen-column-select,
+    [data-theme="light"] .datagrid-table tr:hover td.frozen-column-id,
+    [data-theme="light"] .datagrid-table tr:hover td.frozen-column-right {
+      background-color: #e6f2ff !important;
+    }
+
+    [data-theme="dark"] .datagrid-table tr:hover td.frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr:hover td.frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr:hover td.frozen-column-right {
+      background-color: #0a1830 !important;
+    }
+
+    [data-theme="light"] .datagrid-table tr.current-row td.frozen-column-select,
+    [data-theme="light"] .datagrid-table tr.current-row td.frozen-column-id,
+    [data-theme="light"] .datagrid-table tr.current-row td.frozen-column-right {
+      background-color: #b3d8fd !important;
+    }
+
+    [data-theme="dark"] .datagrid-table tr.current-row td.frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr.current-row td.frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr.current-row td.frozen-column-right {
+      background-color: #143a5c !important;
+    }
+
+    [data-theme="light"] .datagrid-table tr.current-row:hover td.frozen-column-select,
+    [data-theme="light"] .datagrid-table tr.current-row:hover td.frozen-column-id,
+    [data-theme="light"] .datagrid-table tr.current-row:hover td.frozen-column-right {
+      background-color: #b3d8fd !important;
+    }
+
+    [data-theme="dark"] .datagrid-table tr.current-row:hover td.frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr.current-row:hover td.frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr.current-row:hover td.frozen-column-right {
+      background-color: #143a5c !important;
+    }
+
     html,
     body {
       height: 100%;
@@ -169,14 +272,27 @@
       /* Ensure table is wide enough for all columns */
     }
 
-    .datagrid-table th,
-    .datagrid-table td {
+    .datagrid-table th {
       padding: 6px;
       font-size: 14px;
       white-space: nowrap;
       /* Prevent text wrapping in cells */
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .datagrid-table td {
+      padding: 0px;
+      font-size: 14px;
+      white-space: nowrap;
+      /* Prevent text wrapping in cells */
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Center align Select column cells */
+    .datagrid-table td.frozen-column-select {
+      text-align: center;
     }
 
     /* Specific column widths to prevent wrapping */
@@ -319,9 +435,30 @@
       font-size: 14px;
     }
 
-    .datagrid-table tr:hover,
-    .datatable tr:hover {
-      background-color: hsl(var(--n) / 0.1) !important;
+    /* Table row hover color - light mode */
+    [data-theme="light"] .datagrid-table tr:hover,
+    [data-theme="light"] .datatable tr:hover {
+      background-color: #e6f2ff !important;
+      /* Very light blue */
+    }
+
+    [data-theme="light"] .datagrid-table tr:hover .frozen-column-select,
+    [data-theme="light"] .datagrid-table tr:hover .frozen-column-id,
+    [data-theme="light"] .datagrid-table tr:hover .frozen-column-right {
+      background-color: #e6f2ff !important;
+    }
+
+    /* Table row hover color - dark mode */
+    [data-theme="dark"] .datagrid-table tr:hover,
+    [data-theme="dark"] .datatable tr:hover {
+      background-color: #0a1830 !important;
+      /* Very dark blue */
+    }
+
+    [data-theme="dark"] .datagrid-table tr:hover .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr:hover .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr:hover .frozen-column-right {
+      background-color: #0a1830 !important;
     }
 
     /* Horizontal scrollable table with fixed columns */
@@ -363,18 +500,35 @@
     }
 
     /* Fixed left columns (Select and ID) */
-    .frozen-column-select,
-    .frozen-column-id {
+    .frozen-column-select {
       position: sticky;
       left: 0;
-      z-index: 15;
+      z-index: 17;
       border-right: 2px solid hsl(var(--b3));
       box-shadow: 2px 0 4px hsl(var(--bc) / 0.1);
+      background: inherit;
+      width: 60px;
+      min-width: 60px;
+      max-width: 60px;
+      text-align: center;
+      flex-shrink: 0;
+      /* Prevent sticky column from moving */
+      right: auto;
     }
 
     .frozen-column-id {
+      position: sticky;
       left: 60px;
-      /* Position after select column */
+      z-index: 16;
+      border-right: 2px solid hsl(var(--b3));
+      box-shadow: 2px 0 4px hsl(var(--bc) / 0.1);
+      background: inherit;
+      width: 80px;
+      min-width: 80px;
+      max-width: 80px;
+      flex-shrink: 0;
+      /* Prevent sticky column from moving */
+      right: auto;
     }
 
     /* Fixed right column (Actions) */
@@ -384,79 +538,203 @@
       z-index: 15;
       border-left: 2px solid hsl(var(--b3));
       box-shadow: -2px 0 4px hsl(var(--bc) / 0.1);
-      min-width: 160px;
+      min-width: 120px;
+      max-width: 140px;
+      width: auto;
+      padding-left: 4px;
+      padding-right: 0px;
+    }
+
+    .action-button {
+      margin: 5px;
     }
 
     /* Zebra striping for table rows */
-    .datagrid-table tbody tr:nth-child(even) {
-      background-color: hsl(var(--b1));
+    /* Zebra striping for table rows - light mode */
+    [data-theme="light"] .datagrid-table tbody tr:nth-child(even) {
+      background-color: #fff;
     }
 
-    .datagrid-table tbody tr:nth-child(odd) {
-      background-color: hsl(var(--b2) / 0.3);
+    [data-theme="light"] .datagrid-table tbody tr:nth-child(odd) {
+      background-color: #f7f7f7;
     }
 
-    /* Ensure frozen columns inherit row background */
-    .datagrid-table tbody tr:nth-child(even) .frozen-column-select,
-    .datagrid-table tbody tr:nth-child(even) .frozen-column-id,
-    .datagrid-table tbody tr:nth-child(even) .frozen-column-right {
-      background-color: hsl(var(--b1));
+    /* Sticky columns inherit zebra stripe colors - light mode */
+    [data-theme="light"] .datagrid-table tbody tr:nth-child(even) .frozen-column-select,
+    [data-theme="light"] .datagrid-table tbody tr:nth-child(even) .frozen-column-id,
+    [data-theme="light"] .datagrid-table tbody tr:nth-child(even) .frozen-column-right {
+      background-color: #fff !important;
     }
 
-    .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
-    .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
-    .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
-      background-color: hsl(var(--b2) / 0.3);
+    [data-theme="light"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    [data-theme="light"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    [data-theme="light"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background-color: #f7f7f7 !important;
+    }
+
+    /* Zebra striping for table rows - dark mode */
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) {
+      background-color: #18181b;
+    }
+
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) {
+      background-color: #23232a;
+    }
+
+    /* Sticky columns inherit zebra stripe colors - dark mode */
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-right {
+      background-color: #18181b !important;
+    }
+
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background-color: #23232a !important;
     }
 
     /* Ensure proper background for row hover with sticky columns */
-    .datagrid-table tr:hover .frozen-column-select,
-    .datagrid-table tr:hover .frozen-column-id,
-    .datagrid-table tr:hover .frozen-column-right {
-      background-color: hsl(var(--n) / 0.1) !important;
+    /* Apply hover color to sticky columns - light mode */
+    [data-theme="light"] .datagrid-table tr:hover .frozen-column-select,
+    [data-theme="light"] .datagrid-table tr:hover .frozen-column-id,
+    [data-theme="light"] .datagrid-table tr:hover .frozen-column-right {
+      background-color: #e6f2ff !important;
     }
 
-    /* Current/Active row highlighting */
-    .datagrid-table tr.current-row {
-      background-color: hsl(var(--n) / 0.2) !important;
+    /* Apply hover color to sticky columns - dark mode */
+    [data-theme="dark"] .datagrid-table tr:hover .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr:hover .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr:hover .frozen-column-right {
+      background-color: #0a1830 !important;
     }
 
-    .datagrid-table tr.current-row .frozen-column-select,
-    .datagrid-table tr.current-row .frozen-column-id,
-    .datagrid-table tr.current-row .frozen-column-right {
-      background-color: hsl(var(--n) / 0.2) !important;
+    /* Apply selected row color to sticky columns - light mode */
+    [data-theme="light"] .datagrid-table tr.current-row .frozen-column-select,
+    [data-theme="light"] .datagrid-table tr.current-row .frozen-column-id,
+    [data-theme="light"] .datagrid-table tr.current-row .frozen-column-right {
+      background-color: #b3d8fd !important;
     }
 
-    /* Ensure current row highlighting is visible even on hover */
-    .datagrid-table tr.current-row:hover,
-    .datagrid-table tr.current-row:hover .frozen-column-select,
-    .datagrid-table tr.current-row:hover .frozen-column-id,
-    .datagrid-table tr.current-row:hover .frozen-column-right {
-      background-color: hsl(var(--n) / 0.3) !important;
+    /* Apply selected row color to sticky columns - dark mode */
+    [data-theme="dark"] .datagrid-table tr.current-row .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr.current-row .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr.current-row .frozen-column-right {
+      background-color: #143a5c !important;
+    }
+
+    /* Disable hover effect for selected row sticky columns - light mode */
+    [data-theme="light"] .datagrid-table tr.current-row:hover .frozen-column-select,
+    [data-theme="light"] .datagrid-table tr.current-row:hover .frozen-column-id,
+    [data-theme="light"] .datagrid-table tr.current-row:hover .frozen-column-right {
+      background-color: #b3d8fd !important;
+    }
+
+    /* Disable hover effect for selected row sticky columns - dark mode */
+    [data-theme="dark"] .datagrid-table tr.current-row:hover .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr.current-row:hover .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr.current-row:hover .frozen-column-right {
+      background-color: #143a5c !important;
+    }
+
+    /* Current/Active row highlighting - light mode */
+    [data-theme="light"] .datagrid-table tr.current-row {
+      background-color: #b3d8fd !important;
+      /* Light blue */
+    }
+
+    [data-theme="light"] .datagrid-table tr.current-row .frozen-column-select,
+    [data-theme="light"] .datagrid-table tr.current-row .frozen-column-id,
+    [data-theme="light"] .datagrid-table tr.current-row .frozen-column-right {
+      background-color: #b3d8fd !important;
+    }
+
+    /* Current/Active row highlighting - dark mode */
+    [data-theme="dark"] .datagrid-table tr.current-row {
+      background-color: #143a5c !important;
+      /* Dark blue */
+    }
+
+    [data-theme="dark"] .datagrid-table tr.current-row .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr.current-row .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr.current-row .frozen-column-right {
+      background-color: #143a5c !important;
+    }
+
+    /* Disable hover effect for selected (current-row) row in both themes */
+    [data-theme="light"] .datagrid-table tr.current-row:hover,
+    [data-theme="light"] .datagrid-table tr.current-row:hover .frozen-column-select,
+    [data-theme="light"] .datagrid-table tr.current-row:hover .frozen-column-id,
+    [data-theme="light"] .datagrid-table tr.current-row:hover .frozen-column-right {
+      background-color: #b3d8fd !important;
+    }
+
+    [data-theme="dark"] .datagrid-table tr.current-row:hover,
+    [data-theme="dark"] .datagrid-table tr.current-row:hover .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr.current-row:hover .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr.current-row:hover .frozen-column-right {
+      background-color: #143a5c !important;
     }
 
     /* Ensure header row styling for frozen columns - higher z-index for headers */
-    .datagrid-table thead th.frozen-column-select,
-    .datagrid-table thead th.frozen-column-id,
+    .datagrid-table thead th.frozen-column-select {
+      position: sticky;
+      left: 0;
+      z-index: 27;
+      background-color: #f3f4f6 !important;
+      color: hsl(var(--bc)) !important;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .datagrid-table thead th.frozen-column-id {
+      position: sticky;
+      left: 60px;
+      z-index: 26;
+      background-color: #f3f4f6 !important;
+      color: hsl(var(--bc)) !important;
+      font-weight: 600;
+      text-align: center;
+    }
+
     .datagrid-table thead th.frozen-column-right {
-      background: hsl(var(--b2));
-      color: hsl(var(--bc));
+      background-color: #f3f4f6 !important;
+      color: hsl(var(--bc)) !important;
       font-weight: 600;
       z-index: 25;
-      /* Higher than sticky header z-index */
+      text-align: center;
     }
 
     /* Set fixed widths for frozen columns */
     .frozen-column-select {
+      position: sticky;
+      left: 0;
+      z-index: 17;
+      border-right: 2px solid hsl(var(--b3));
+      box-shadow: 2px 0 4px hsl(var(--bc) / 0.1);
+      background: inherit;
       width: 60px;
       min-width: 60px;
       max-width: 60px;
+      text-align: center;
+      flex-shrink: 0;
+      /* Prevent sticky column from moving */
+      right: auto;
     }
 
     .frozen-column-id {
+      position: sticky;
+      left: 60px;
+      z-index: 16;
+      border-right: 2px solid hsl(var(--b3));
+      box-shadow: 2px 0 4px hsl(var(--bc) / 0.1);
+      background: inherit;
       width: 80px;
       min-width: 80px;
       max-width: 80px;
+      flex-shrink: 0;
+      /* Prevent sticky column from moving */
+      right: auto;
     }
 
     /* Edit mode styling */
@@ -489,16 +767,60 @@
     .datagrid-container-detail tr[data-line]:hover {
       background-color: hsl(var(--n) / 0.1) !important;
     }
+
+    /* Prevent hover effect on table header */
+    /* .datagrid-table thead tr:hover,
+    .datagrid-table thead th:hover,
+    .datagrid-table thead th:hover a,
+    .datagrid-table thead th:active,
+    .datagrid-table thead th:focus {
+      
+      background-color: red !important;
+      color: hsl(var(--bc)) !important;
+      cursor: default !important;
+      box-shadow: none !important;
+      outline: none !important;
+    } */
+
+
+
+    /* --- FORCE sticky columns to match row hover/selected color, override Tailwind --- */
+    [data-theme="light"] .datagrid-table tr:hover td.frozen-column-select,
+    [data-theme="light"] .datagrid-table tr:hover td.frozen-column-id,
+    [data-theme="light"] .datagrid-table tr:hover td.frozen-column-right {
+      background-color: #e6f2ff !important;
+    }
+
+    [data-theme="dark"] .datagrid-table tr:hover td.frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr:hover td.frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr:hover td.frozen-column-right {
+      background-color: #0a1830 !important;
+    }
+
+    [data-theme="light"] .datagrid-table tr.current-row td.frozen-column-select,
+    [data-theme="light"] .datagrid-table tr.current-row td.frozen-column-id,
+    [data-theme="light"] .datagrid-table tr.current-row td.frozen-column-right {
+      background-color: #b3d8fd !important;
+    }
+
+    [data-theme="dark"] .datagrid-table tr.current-row td.frozen-column-select,
+    [data-theme="dark"] .datagrid-table tr.current-row td.frozen-column-id,
+    [data-theme="dark"] .datagrid-table tr.current-row td.frozen-column-right {
+      background-color: #143a5c !important;
+    }
+
   </style>
 </head>
 
 <body>
 
   <!-- Fixed header with controls -->
-  <div class="fixed top-4 left-4 right-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg mb-4 fixed-header">
+  <div
+    class="fixed top-4 left-4 right-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg mb-4 fixed-header">
     <div class="flex items-center gap-4">
       <h1 class="text-xl font-bold">GK Transactions Management</h1>
-      <button class='btn btn-accent btn-sm' hx-get='/gk-transactions/new' hx-target='.datagrid-container-master' hx-swap='outerHTML'>
+      <button class='btn btn-accent btn-sm' hx-get='/gk-transactions/new' hx-target='.datagrid-container-master'
+        hx-swap='outerHTML'>
         Add New Transaction
       </button>
     </div>
@@ -531,25 +853,35 @@
         <input type="hidden" name="masterId" value="">
         <input type="hidden" name="lineId" value="">
         <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Account</label><input type="text" name="GK_LN_KONTO" class="input input-bordered input-sm w-full" placeholder="11100" maxlength="15"></div>
-          <div><label>Cost Center</label><input type="text" name="GK_LN_OBJED" class="input input-bordered input-sm w-full" placeholder="601" maxlength="6"></div>
-          <div><label>Description</label><input type="text" name="GK_LN_OPIS" class="input input-bordered input-sm w-full" placeholder="Payment" maxlength="50"></div>
+          <div><label>Account</label><input type="text" name="GK_LN_KONTO" class="input input-bordered input-sm w-full"
+              placeholder="11100" maxlength="15"></div>
+          <div><label>Cost Center</label><input type="text" name="GK_LN_OBJED"
+              class="input input-bordered input-sm w-full" placeholder="601" maxlength="6"></div>
+          <div><label>Description</label><input type="text" name="GK_LN_OPIS"
+              class="input input-bordered input-sm w-full" placeholder="Payment" maxlength="50"></div>
           <div><label>DP</label><select name="GK_LN_DP" class="select select-bordered select-sm w-full">
-            <option value="">Select</option>
-            <option value="D">D</option>
-            <option value="P">P</option>
-          </select></div>
+              <option value="">Select</option>
+              <option value="D">D</option>
+              <option value="P">P</option>
+            </select></div>
         </div>
         <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Amount</label><input type="number" step="0.01" name="GK_LN_IZNOS" class="input input-bordered input-sm w-full" placeholder="100.00"></div>
-          <div><label>Doc ID</label><input type="number" name="GK_LN_BRDOK" class="input input-bordered input-sm w-full" placeholder="12345"></div>
-          <div><label>Doc Date</label><input type="date" name="GK_LN_DATDOK" class="input input-bordered input-sm w-full"></div>
-          <div><label>Partner</label><input type="text" name="GK_LN_PARTNR" class="input input-bordered input-sm w-full" placeholder="P001" maxlength="10"></div>
+          <div><label>Amount</label><input type="number" step="0.01" name="GK_LN_IZNOS"
+              class="input input-bordered input-sm w-full" placeholder="100.00"></div>
+          <div><label>Doc ID</label><input type="number" name="GK_LN_BRDOK" class="input input-bordered input-sm w-full"
+              placeholder="12345"></div>
+          <div><label>Doc Date</label><input type="date" name="GK_LN_DATDOK"
+              class="input input-bordered input-sm w-full"></div>
+          <div><label>Partner</label><input type="text" name="GK_LN_PARTNR" class="input input-bordered input-sm w-full"
+              placeholder="P001" maxlength="10"></div>
         </div>
         <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Currency</label><input type="text" name="GK_LN_SIFDVZ" class="input input-bordered input-sm w-full" placeholder="EUR" maxlength="3"></div>
-          <div><label>Rate</label><input type="number" step="0.0001" name="GK_LN_TECAJ" class="input input-bordered input-sm w-full" placeholder="1.0000"></div>
-          <div><label>Amount/Curr</label><input type="number" step="0.01" name="GK_LN_IZNDEV" class="input input-bordered input-sm w-full" placeholder="100.00"></div>
+          <div><label>Currency</label><input type="text" name="GK_LN_SIFDVZ"
+              class="input input-bordered input-sm w-full" placeholder="EUR" maxlength="3"></div>
+          <div><label>Rate</label><input type="number" step="0.0001" name="GK_LN_TECAJ"
+              class="input input-bordered input-sm w-full" placeholder="1.0000"></div>
+          <div><label>Amount/Curr</label><input type="number" step="0.01" name="GK_LN_IZNDEV"
+              class="input input-bordered input-sm w-full" placeholder="100.00"></div>
           <div class="flex gap-2 items-end">
             <button type="button" id="save-line-btn" class="btn btn-success btn-sm" disabled>Save Line</button>
             <button type="button" id="new-line-btn" class="btn btn-primary btn-sm" disabled>New Line</button>
@@ -684,10 +1016,10 @@
         rate: rowElement.getAttribute('data-rate') || '',
         amountCurr: rowElement.getAttribute('data-amountcurr') || ''
       };
-      
+
       // Highlight selected line
       highlightCurrentLine(rowElement);
-      
+
       // Always populate form with line data for viewing/editing
       populateLineForm(masterId, lineData);
     }
@@ -728,7 +1060,7 @@
       const saveBtn = document.getElementById('save-line-btn');
       const newLineBtn = document.getElementById('new-line-btn');
       const formInputs = document.querySelectorAll('#line-entry-form input, #line-entry-form select');
-      
+
       if (isMasterInEditMode && currentMasterId) {
         // Enable form for editing
         saveBtn.disabled = false;
@@ -752,14 +1084,14 @@
     document.getElementById('clear-line-btn').addEventListener('click', clearLineForm);
 
     // New Line button click handler
-    document.getElementById('new-line-btn').addEventListener('click', function() {
+    document.getElementById('new-line-btn').addEventListener('click', function () {
       if (currentMasterId && isMasterInEditMode) {
         enableNewLineForm(currentMasterId);
       }
     });
 
     // Save line button click handler
-    document.getElementById('save-line-btn').addEventListener('click', function() {
+    document.getElementById('save-line-btn').addEventListener('click', function () {
       if (!currentMasterId) {
         alert('Please select a master transaction first');
         return;
@@ -771,8 +1103,8 @@
       }
 
       const formData = new FormData(document.getElementById('line-entry-form'));
-      const url = currentLineId ? 
-        `/gk-lines/${currentMasterId}/${currentLineId}` : 
+      const url = currentLineId ?
+        `/gk-lines/${currentMasterId}/${currentLineId}` :
         `/gk-lines/${currentMasterId}`;
       const method = currentLineId ? 'PUT' : 'POST';
 
@@ -780,21 +1112,21 @@
         method: method,
         body: formData
       })
-      .then(response => response.text())
-      .then(html => {
-        // Refresh the detail table
-        htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
-          target: '.datagrid-container-detail',
-          swap: 'innerHTML'
-        }).then(() => {
-          // Reload first line data to refresh the form
-          loadFirstLineData(currentMasterId);
+        .then(response => response.text())
+        .then(html => {
+          // Refresh the detail table
+          htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
+            target: '.datagrid-container-detail',
+            swap: 'innerHTML'
+          }).then(() => {
+            // Reload first line data to refresh the form
+            loadFirstLineData(currentMasterId);
+          });
+        })
+        .catch(error => {
+          console.error('Error saving line:', error);
+          alert('Error saving line');
         });
-      })
-      .catch(error => {
-        console.error('Error saving line:', error);
-        alert('Error saving line');
-      });
     });
 
     // Function to populate form for editing
@@ -826,12 +1158,12 @@
       currentMasterId = masterId;
       currentLineId = null;
       isEditMode = false;
-      
+
       // Clear form but keep masterId
       document.getElementById('line-entry-form').reset();
       document.querySelector('input[name="masterId"]').value = masterId;
       document.querySelector('input[name="lineId"]').value = '';
-      
+
       updateFormState();
       document.querySelector('.bottom-form h2').textContent = 'New Line Entry';
     }
@@ -840,7 +1172,7 @@
     function setMasterEditMode(editMode) {
       isMasterInEditMode = editMode;
       updateFormState();
-      
+
       // Update visual indication
       if (editMode) {
         document.querySelector('.bottom-form').classList.add('edit-mode');
@@ -854,10 +1186,10 @@
       console.log('handleMasterSaveCancel called');
       console.log('currentMasterId:', currentMasterId);
       console.log('currentLineId:', currentLineId);
-      
+
       const currentSelectedLineId = currentLineId;
       setMasterEditMode(false);
-      
+
       // After master table refreshes, restore the current line selection
       if (currentMasterId && currentSelectedLineId) {
         console.log('Attempting to restore line selection after 300ms delay');
@@ -867,13 +1199,13 @@
             .then(response => response.text())
             .then(html => {
               document.querySelector('.datagrid-container-detail').innerHTML = html;
-              
+
               // Try to select the same line again
               setTimeout(() => {
                 const lineRow = document.querySelector(`.datagrid-container-detail tr[data-line="${currentSelectedLineId}"]`);
                 console.log('Looking for line row with id:', currentSelectedLineId);
                 console.log('Found line row:', lineRow);
-                
+
                 if (lineRow) {
                   selectLineForEdit(lineRow);
                 } else {
@@ -911,22 +1243,22 @@
     }
 
     // Listen for master row selection to enable new line entry
-    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
       addRowClickHandlers();
-      
+
       // Check if we're back to normal view (not edit mode)
       const editForm = document.querySelector('.datagrid-container-master form');
       if (!editForm) {
         setMasterEditMode(false);
       }
-      
+
       // Enable form for first row if available and load first line
       const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
       if (firstRow) {
         const masterId = firstRow.getAttribute('data-id');
         highlightCurrentRow(firstRow);
         currentMasterId = masterId;
-        
+
         // Load first line data when detail table loads
         htmx.ajax('GET', `/gk-lines/${masterId}`, {
           target: '.datagrid-container-detail',
@@ -938,7 +1270,7 @@
     });
 
     // Listen for detail table updates to add line click handlers
-    htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function() {
+    htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function () {
       addLineClickHandlers();
       // Auto-select first line if available
       if (currentMasterId) {
@@ -967,7 +1299,7 @@
             highlightCurrentRow(this);
             const masterId = this.getAttribute('data-id');
             currentMasterId = masterId;
-            
+
             // Load lines for this master and select first line
             htmx.ajax('GET', `/gk-lines/${masterId}`, {
               target: '.datagrid-container-detail',
@@ -1059,7 +1391,7 @@
     function toggleTheme() {
       const html = document.documentElement;
       const themeToggle = document.getElementById('theme-toggle');
-      
+
       if (themeToggle.checked) {
         html.setAttribute('data-theme', 'dark');
         localStorage.setItem('theme', 'dark');
@@ -1070,11 +1402,11 @@
     }
 
     // Load saved theme on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const savedTheme = localStorage.getItem('theme') || 'light';
       const html = document.documentElement;
       const themeToggle = document.getElementById('theme-toggle');
-      
+
       html.setAttribute('data-theme', savedTheme);
       if (savedTheme === 'dark') {
         themeToggle.checked = true;
