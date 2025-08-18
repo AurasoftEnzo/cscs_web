@@ -1,0 +1,66 @@
+print("");// \n
+//--- example 1 -----------------
+try{
+    //expected: couldn't find variable [field]
+    //actual:  Couldn't find function [field.EndsWith]
+    //maybe error message could be more appropriate
+    print("example 1 ok: " + " --- " + (field.EndsWith("a") ? " X " : "Y") + " --- ");
+}catch(ex){
+    print("example 1 catch: " + ex);
+}
+
+
+print("");// \n
+//--- example 2 (ok) -------------
+field = "test";
+
+try{
+    //expected: ---    X    ---
+    //actual:  ---    X    ---
+    // that's ok
+    print("example 2 ok: " + " --- " + (field.EndsWith("t") ? " X " : "Y") + " --- ");
+}catch(ex){
+    print("example 2 catch: " + ex);
+}
+
+
+print("");// \n
+//--- example 3 --------------
+
+try{
+    string1 = "A_B_C_D";
+    string2 = " --- " + string1.Split("_")[1] + " --- ";
+
+    //expected:  --- B --- 
+    //actual:--- ["A", "B", "C", "D"]
+    print("example 3 ok: " + string2);
+}catch(ex){
+    //...but didn't get here
+    print("example 3 catch: " + ex);
+}
+
+
+print("");// \n
+//--- example 4 --------------
+
+try{
+    var1 = "something";
+    var2 = "something else";
+    field = "aaaa";
+    isEdit =  true;
+
+    html = "";
+    html += "      <div><label>" + var1 + ":</label>" +
+        "        <input class='input input-bordered input-sm w-full' " +
+        "               name='" + var2 + "' " +
+        (field == "GK_GL_BR_TEM" && isEdit == true ? " readonly " : "") +
+        "               value='" + var1 + "'" +
+        "               " + ((field.EndsWith("DATUM") || field.EndsWith("DATDOK")) ? " type='date'" : "") + ">" +
+        "      </div>";
+
+    //expected: {some html}
+    print("example 4 ok: " + html);
+}catch(ex){
+    //actual: Couldn't find variable []
+    print("example 4 catch: " + ex);
+}
