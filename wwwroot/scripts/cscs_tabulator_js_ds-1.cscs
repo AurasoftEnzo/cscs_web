@@ -1,10 +1,10 @@
-SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+SQLConnectionString(ReadConfig("SqlConnectionString"));
 //MASTER TABLE
 
 CreateEndpoint("GET", "/", "getRoot");
 function getRoot(){
     headers = {"Content-Type": "text/html"};
-    return Response(headers, RenderHtml(LoadTemplate(TemplatesPath() + "htmx_tailwind_daisyUI\\" + "cscs_tabulator_js_ds.html")), 200);
+    return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "htmx_tailwind_daisyUI\\" + "cscs_tabulator_js_ds.html")), 200);
 }
 
 // GET: api/gk-transactions

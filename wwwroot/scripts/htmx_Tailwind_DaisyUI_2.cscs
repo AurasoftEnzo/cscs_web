@@ -1,8 +1,9 @@
-SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+SQLConnectionString(ReadConfig("SqlConnectionString"));
+
 
 CreateEndpoint("GET", "/", "getRoot");
 function getRoot(){
-    return RenderHtml(LoadTemplate(TemplatesPath() + "htmx_Tailwind_DaisyUI_2.html"));
+    return RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "htmx_Tailwind_DaisyUI_2.html"));
 }
 
 CreateEndpoint("GET", "/parts", "getParts");
@@ -206,7 +207,7 @@ function getParts(args){
     //     return "Error: No records found.";
     // }
 
-    // return RenderHtml(LoadTemplate(TemplatesPath() + "parts.html", {"parts": sqlResult}));
+    // return RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "parts.html", {"parts": sqlResult}));
 }
 
 

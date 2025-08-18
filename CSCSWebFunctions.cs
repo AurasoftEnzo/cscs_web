@@ -33,8 +33,10 @@ namespace CSCS_Web_Enzo_1
 
             //--
 
-            interpreter.RegisterFunction("TemplatesPath", new TemplatesPathFunction());
-            interpreter.RegisterFunction("ScriptsPath", new ScriptsPathFunction());
+            interpreter.RegisterFunction("ReadConfig", new ReadConfigFunction());
+            
+            //interpreter.RegisterFunction("TemplatesPath", new TemplatesPathFunction());
+            //interpreter.RegisterFunction("ScriptsPath", new ScriptsPathFunction());
 
             //--
 
@@ -80,6 +82,36 @@ namespace CSCS_Web_Enzo_1
             //Uri.UnescapeDataString(var1.String);
 
             return Variable.EmptyInstance;
+        }   
+    }
+    
+    
+    class ReadConfigFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            var configKey = Utils.GetSafeString(args, 0);
+
+            switch (configKey)
+            {
+                case "SqlConnectionString":
+                    return new Variable(CSCSWebApplication.CSCSConfig.SQLConnectionString);
+
+                case "ScriptsDirectory":
+                    return new Variable(CSCSWebApplication.CSCSConfig.ScriptsDirectory);
+                case "TemplatesDirectory":
+                    return new Variable(CSCSWebApplication.CSCSConfig.TemplatesDirectory);
+                
+                case "StartScript":
+                    return new Variable(CSCSWebApplication.CSCSConfig.StartScript);
+
+                default:
+                    Console.WriteLine($"Unknown config key: {configKey}");
+                    return new Variable("");
+            }
         }   
     }
 

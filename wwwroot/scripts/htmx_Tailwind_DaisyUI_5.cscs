@@ -1,8 +1,4 @@
-// ... (keep previous SQLConnectionString and getRoot function) ...
-//SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
-//SQLConnectionString("Data Source=localhost,1433;Initial Catalog=C__DATAX_T4__BT4;User Id=sa;password=aura;TrustServerCertificate=True;");
-SQLConnectionString("Data Source=localhost,1433;Initial Catalog=C__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
-
+SQLConnectionString(ReadConfig("SqlConnectionString"));
 
 // Add to the beginning of the file
 var currentlyEditingId = null;
@@ -11,7 +7,7 @@ var currentlyEditingId = null;
 CreateEndpoint("GET", "/", "getRoot");
 function getRoot(){
     root_headers = {"Content-Type": "text/html"};
-    return Response(root_headers, RenderHtml(LoadTemplate(TemplatesPath() + "htmx_tailwind_daisyUI\\" + "htmx_Tailwind_DaisyUI_5.html")), 200);
+    return Response(root_headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "htmx_tailwind_daisyUI\\" + "htmx_Tailwind_DaisyUI_5.html")), 200);
 }
 
 

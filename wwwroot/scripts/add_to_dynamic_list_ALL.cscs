@@ -2,8 +2,7 @@
 console.log("************ADD TO DYNAMIC LIST***********************");
 
 
-SQLConnectionString = "Data Source=localhost,1433;Initial Catalog=master;User Id=sa;password=aura;TrustServerCertificate=True;";
-SQLConnectionString(SQLConnectionString);
+SQLConnectionString(ReadConfig("SqlConnectionString"));
 
 sqlString = "SELECT TOP 5 convert(varchar, database_id) as ID, name, coalesce(collation_name, '') as COLLATION from master.sys.databases; ";
 console.log(sqlString);

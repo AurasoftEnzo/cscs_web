@@ -1,11 +1,10 @@
-SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
-
+SQLConnectionString(ReadConfig("SqlConnectionString"));
 
 
 CreateEndpoint("GET", "/", "getRoot");
 function getRoot(){
 
-    templateHandle = LoadTemplate(TemplatesPath() + "htmx_GK_2.html");
+    templateHandle = LoadTemplate(ReadConfig("TemplatesDirectory") + "htmx_GK_2.html");
 
     // print("templateHandle = " + templateHandle);
 
