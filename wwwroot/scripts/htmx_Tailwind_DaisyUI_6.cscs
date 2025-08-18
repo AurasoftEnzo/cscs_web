@@ -4,17 +4,17 @@ SQLConnectionString(ReadConfig("SqlConnectionString"));
 // Add to the beginning of the file
 currentlyEditingId = null;
 
-// Custom join function since CSCS doesn't have Join()
-function joinArray(arr, separator) {
-    result = "";
-    for(i = 0; i < Size(arr); i++) {
-        if (i > 0) {
-            result += separator;
-        }
-        result += arr[i];
-    }
-    return result;
-}
+// // Custom join function since CSCS doesn't have Join()
+// function joinArray(arr, separator) {
+//     result = "";
+//     for(i = 0; i < Size(arr); i++) {
+//         if (i > 0) {
+//             result += separator;
+//         }
+//         result += arr[i];
+//     }
+//     return result;
+// }
 
 // ===== GLOBAL CONFIGURATION =====
 gk_masterFields = [
@@ -454,7 +454,7 @@ function getEditGKTransactionForm(args) {
 // Replace getEditGKTransactionForm with:
 function getEditGKTransactionForm(args) {
     id = args["RouteValues"]["id"];
-    query = "SELECT " + joinArray(gk_masterFields, ", ") + " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    query = "SELECT " + gk_masterFields.Join(", ") + " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
     sqlParams = {"@id": int(id)};
     transaction = sqlQuery(query, sqlParams);
     
@@ -937,7 +937,7 @@ function getEditLineForm(args) {
     masterId = args["RouteValues"]["id"];
     lineId = args["RouteValues"]["line"];
     
-    query = "SELECT " + joinArray(gk_lineFields, ", ") + 
+    query = "SELECT " + gk_lineFields.Join(", ") + 
             " FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id AND GK_LN_BR_LIN = @line";
     sqlParams = {"@id": int(masterId), "@line": int(lineId)};
     result = sqlQuery(query, sqlParams);
@@ -1120,7 +1120,7 @@ function createLine(args) {
     }
 
     // Build INSERT
-    queryde = "INSERT INTO NKGKLNTM (GK_LN_BR_TEM, GK_LN_BR_LIN, " + joinArray(fieldsx, ", ") + ") VALUES (@masterId, @lineId, ";
+    queryde = "INSERT INTO NKGKLNTM (GK_LN_BR_TEM, GK_LN_BR_LIN, " + fieldsx.Join(", ") + ") VALUES (@masterId, @lineId, ";
     for(ig = 0; ig < Size(fieldsx); ig++) {
         if (ig > 0) queryde += ", ";
         queryde += "@" + fieldsx[ig];
