@@ -64,3 +64,19 @@ try{
     //actual: Couldn't find variable []
     print("example 4 catch: " + ex);
 }
+
+
+print("");// \n
+//--- example 5 --------------
+
+try{
+    varA = "1,2,3,4,5";
+    varB = varA.split(",")[1];
+
+    //expected: 2
+    //actual: varB["1", "2", "3", "4", "5"]
+    print("example 5 ok: varB" + varB);
+}catch(ex){
+    //actual: Couldn't find variable []
+    print("example 5 catch: " + ex);
+}
