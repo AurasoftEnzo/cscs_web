@@ -1,0 +1,1224 @@
+// ... (keep previous SQLConnectionString and getRoot function) ...
+SQLConnectionString("Data Source=localhost,1433;Initial Catalog=T__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+//SQLConnectionString("Data Source=localhost,1433;Initial Catalog=C__DATAX_Y4__BY4;User Id=sa;password=aura;TrustServerCertificate=True;");
+//SQLConnectionString("Data Source=localhost,1433;Initial Catalog=C__DATAX_T4__BT4;User Id=sa;password=aura;TrustServerCertificate=True;");
+
+
+// Add to the beginning of the file
+currentlyEditingId = null;
+
+// Custom join function since CSCS doesn't have Join()
+function joinArray(arr, separator) {
+    result = "";
+    for(i = 0; i < Size(arr); i++) {
+        if (i > 0) {
+            result += separator;
+        }
+        result += arr[i];
+    }
+    return result;
+}
+
+// ===== GLOBAL CONFIGURATION =====
+gk_masterFields = [
+    "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
+    "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
+    "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
+    "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
+];
+
+gk_lineFields = [
+    "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
+    "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
+    "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
+];
+
+gk_defaultValues = {
+    "GK_GL_BR_TEM": "0",
+    "GK_GL_DATUM": "",
+    "GK_GL_POSTED": "",
+    "GK_GL_OPIS": "",
+    // ... other default values
+};
+
+function gk_generateForm(mode, values, id = null, errorHtml = "") {
+    // mode can be "new" or "edit"
+    isEdit = (mode == "edit");
+    
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>";
+    
+    if (errorHtml != "") {
+        html += errorHtml;
+    }
+    
+    html += "    <div class='grid grid-cols-8 gap-4'>";
+    
+    for(i = 0; i < Size(gk_masterFields); i++) {
+        field = gk_masterFields[i];
+        value = Contains(values, field) ? values[field] : gk_defaultValues[field];
+        
+        html += "      <div><label>" + field.Split("_")[2] + ":</label>" +
+                "        <input class='input input-bordered input-sm w-full' " +
+                "               name='" + field + "' " +
+                (field == "GK_GL_BR_TEM" && isEdit ? "readonly " : "") +
+                "               value='" + value + "'" +
+                "               " + (field.EndsWith("DATUM") || field.EndsWith("DATDOK") ? "type='date'" : "") + ">" +
+                "      </div>";
+    }
+    
+    html += "    </div>" +
+            "    <div class='form-actions mt-4'>" +
+            "      <button class='btn btn-success btn-sm' " +
+            "              hx-" + (isEdit ? "put" : "post") + "='/gk-transactions" + (isEdit ? "/" + id : "") + "' " +
+            "              hx-include='closest form' " +
+            "              hx-target='.datagrid-container-master' " +
+            "              hx-swap='outerHTML'>Save</button>" +
+            "      <button class='btn btn-error btn-sm' " +
+            "              hx-get='/gk-transactions' " +
+            "              hx-target='.datagrid-container-master' " +
+            "              hx-swap='outerHTML'>Cancel</button>" +
+            "    </div>" +
+            "  </form>" +
+            "</div>";
+    
+    return html;
+}
+
+//MASTER TABLE
+CreateEndpoint("GET", "/", "getRoot");
+function getRoot(){
+    root_headers = {"Content-Type": "text/html"};
+    return Response(root_headers, RenderHtml(LoadTemplate(TemplatesPath() + "htmx_tailwind_daisyUI\\" + "htmx_Tailwind_DaisyUI_6.html")), 200);
+}
+
+
+
+// Main endpoint for GK transactions grid
+CreateEndpoint("GET", "/gk-transactions", "getGKTransactions");
+function getGKTransactions(requestGlave) {
+    // ... (keep existing pagination/sorting/search logic) ...
+    // Pagination
+    gkTrans_page = 1;
+    if (Contains(requestGlave["QueryParams"], "page")) {
+        gkTrans_page = int(requestGlave["QueryParams"]["page"]);
+    }
+    if (gkTrans_page < 1) {
+        gkTrans_headers = {"Content-Type": "text/html"};
+        return Response(gkTrans_headers, "Error: 'page' must be positive integer", 200);
+    }
+    
+    // Sorting
+    gkTrans_sort = "GK_GL_BR_TEM";
+    if (Contains(requestGlave["QueryParams"], "sort")) {
+        gkTrans_sort = requestGlave["QueryParams"]["sort"];
+    }
+    
+    gkTrans_order = "asc";
+    if (Contains(requestGlave["QueryParams"], "order")) {
+        gkTrans_order = requestGlave["QueryParams"]["order"];
+    }
+    
+    // Search - always exclude zero/null IDs
+    // Search
+    gkTrans_search = "";
+    if (Contains(requestGlave["QueryParams"], "search")) {
+        gkTrans_search = requestGlave["QueryParams"]["search"];
+    }
+    
+    // Fixed page size
+    gkTrans_pageSize = 8;
+    gkTrans_skip = (gkTrans_page - 1) * gkTrans_pageSize;
+    
+    // Build SQL query - always exclude zero/null IDs
+    gkTrans_whereClause = " WHERE GK_GL_BR_TEM IS NOT NULL AND GK_GL_BR_TEM <> 0";
+    if (gkTrans_search != "") {
+        gkTrans_whereClause += " AND (GK_GL_BR_TEM LIKE @search OR GK_GL_OPIS LIKE @search OR GK_GL_OZNAKA LIKE @search)";
+    }
+    
+    gkTrans_query = "SELECT " +
+            "GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'dd-MM-yyyy') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS, " +
+            "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK, " +
+            "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ, " +
+            "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'dd-MM-yyyy') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN " +
+            "FROM NKGKGLTM" + gkTrans_whereClause + " " +
+            "ORDER BY " + gkTrans_sort + " " + gkTrans_order + " " +
+            "OFFSET @skip ROWS FETCH NEXT @pageSize ROWS ONLY";
+    
+    gkTrans_countQuery = "SELECT COUNT(*) FROM NKGKGLTM" + gkTrans_whereClause;
+    
+    // Execute queries
+    gkTrans_sqlParams = {};
+    gkTrans_sqlParams.Add({"@skip", gkTrans_skip});
+    gkTrans_sqlParams.Add({"@pageSize", gkTrans_pageSize});
+    if (gkTrans_search != "") {
+        gkTrans_sqlParams.Add({"@search", "%" + gkTrans_search + "%"});
+    }
+    gkTrans_transactions = sqlQuery(gkTrans_query, gkTrans_sqlParams);
+
+    gkTrans_countResult = sqlQuery(gkTrans_countQuery, gkTrans_sqlParams);
+    gkTrans_totalRecords = gkTrans_countResult[1][0];
+
+    gkTrans_totalPages = Math.Ceil(gkTrans_totalRecords / gkTrans_pageSize);
+
+    // Build HTML
+    gkTrans_html = "<div class='datagrid-container-master'>";
+        //start the table
+        gkTrans_html += "<table class='datagrid-table'>";
+        // Add the table header
+        gkTrans_html += "<thead><tr>";
+            // Example for the ID column (sortable)
+            // Add Select column header
+            gkTrans_html += "<th class='frozen-column-select'>Select</th>";
+            // Modify ID column header
+            gkTrans_newOrder = "asc";
+            // ... rest of headers ...    
+            if (gkTrans_sort == "GK_GL_BR_TEM" && gkTrans_order == "asc") {
+                gkTrans_newOrder = "desc";
+            }
+            gkTrans_html += "<th class='frozen-column-id'><a class='link' hx-get='/gk-transactions?page=1&sort=GK_GL_BR_TEM&order=" + gkTrans_newOrder + "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>ID</a></th>";
+            // Example for other columns
+            gkTrans_headers = [
+                ["GK_GL_DATUM", "Date"],
+                ["GK_GL_POSTED", "Posted"],
+                ["GK_GL_OPIS", "Description"],
+                ["GK_GL_GOD", "Year"],
+                ["GK_GL_TIP", "Type"],
+                ["GK_GL_OZNAKA", "Mark"],
+                ["GK_GL_ZNAK", "Sign"],
+                ["GK_GL_IZNL", "Amount NL"],
+                ["GK_GL_IZNP", "Amount NP"],
+                ["GK_GL_ZATV_KLAS", "Closed"],
+                ["GK_GL_POC_STANJ", "Status"],
+                ["GK_GL_BRDOK", "Doc Num"],
+                ["GK_GL_DATDOK", "Doc Date"],
+                ["GK_GL_PARTNER", "Partner"],
+                ["GK_GL_BR_LIN", "Line"] // ,
+               // ["", "Actions"]
+            ];
+
+            for(gkTrans_i = 0; gkTrans_i < Size(gkTrans_headers); gkTrans_i++) {
+                gkTrans_headerField = gkTrans_headers[gkTrans_i][0];
+                gkTrans_headerTitle = gkTrans_headers[gkTrans_i][1];
+
+                if (gkTrans_headerField != "") {
+                    gkTrans_newOrder = "asc";
+                    if (gkTrans_sort == gkTrans_headerField && gkTrans_order == "asc") {
+                        gkTrans_newOrder = "desc";
+                    }
+                    gkTrans_html += "<th><a class='link' hx-get='/gk-transactions?page=1&sort=" + gkTrans_headerField + "&order=" + gkTrans_newOrder + "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>" + gkTrans_headerTitle + "</a></th>";
+                //} else {
+                //    gkTrans_html += "<th>" + gkTrans_headerTitle + "</th>";
+                }
+            }
+            // Change the Actions header to use frozen-column-right
+            gkTrans_headerTitle = "Actions";
+            gkTrans_html += "<th class='frozen-column-right'>" + gkTrans_headerTitle + "</th>";
+        gkTrans_html += "</tr></thead>";
+        // Start the table body
+        gkTrans_html += "<tbody>";
+        // ... your data rows here ...
+        
+        if(gkTrans_transactions != null && Size(gkTrans_transactions) > 1) {
+            for(gkTrans_i = 1; gkTrans_i < Size(gkTrans_transactions); gkTrans_i++) {
+                gkTrans_row = gkTrans_transactions[gkTrans_i];
+                // Skip data-original to avoid HTML corruption issues
+                // Just use data-id which is all we need for row selection
+                
+                // In the row generation loop, create rows with proper classes from the start:
+                if (gkTrans_i % 2 == 0) {
+                    gkTrans_html += "<tr data-id='" + gkTrans_row[0] + "' class='bg-base-200 hover:bg-base-300 cursor-pointer' hx-get='/gk-lines/" + gkTrans_row[0] + "' hx-target='.datagrid-container-detail' hx-swap='innerHTML' onclick='currentMasterId = " + gkTrans_row[0] + "; loadFirstLineData(" + gkTrans_row[0] + ");'>";
+                } else {
+                    gkTrans_html += "<tr data-id='" + gkTrans_row[0] + "' class='hover:bg-base-300 cursor-pointer' hx-get='/gk-lines/" + gkTrans_row[0] + "' hx-target='.datagrid-container-detail' hx-swap='innerHTML' onclick='currentMasterId = " + gkTrans_row[0] + "; loadFirstLineData(" + gkTrans_row[0] + ");'>";
+                }
+               // Select column
+                gkTrans_html += "<td class='frozen-column-select'><input type='checkbox' class='checkbox' name='selectedRows' value='" + gkTrans_row[0] + "' title='Select row " + gkTrans_row[0] + "' aria-label='Select row " + gkTrans_row[0] + "'></td>";
+                // ID column
+                gkTrans_html += "<td class='frozen-column-id text-right' data-field='GK_GL_BR_TEM'>" + gkTrans_row[0] + "</td>";
+                // ... rest of cells ...
+                
+                // Cells with proper data-field attributes
+                gkTrans_html += "<td data-field='GK_GL_DATUM' class='text-center'>" + gkTrans_row[1] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_POSTED' class='text-center'>" + gkTrans_row[2] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_OPIS' class='text-left'>" + gkTrans_row[3] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_GOD' class='text-center'>" + gkTrans_row[4] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_TIP' class='text-center'>" + gkTrans_row[5] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_OZNAKA' class='text-center'>" + gkTrans_row[6] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_ZNAK' class='text-center'>" + gkTrans_row[7] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_IZNL' class='text-center'>" + gkTrans_row[8] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_IZNP' class='text-center'>" + gkTrans_row[9] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_ZATV_KLAS' class='text-center'>" + gkTrans_row[10] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_POC_STANJ' class='text-center'>" + gkTrans_row[11] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_BRDOK' class='text-center'>" + gkTrans_row[12] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_DATDOK' class='text-center'>" + gkTrans_row[13] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_PARTNER' class='text-center'>" + gkTrans_row[14] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_BR_LIN' class='text-center'>" + gkTrans_row[15] + "</td>";
+            
+                // Actions column
+                // Change the actions cell to use frozen-column-right
+                gkTrans_html += "<td class='flex gap-1 frozen-column-right'>";
+                
+                gkTrans_html += "<button class='btn btn-info btn-xs action-button' hx-get='/gk-transactions/" + gkTrans_row[0] + "/edit' hx-target='.datagrid-container-master' hx-swap='outerHTML' onclick='setMasterEditMode(true)'>Edit</button>";
+                
+                //gkTrans_html += "<button class='btn btn-error btn-sm' hx-delete='/gk-transactions/" + gkTrans_row[0] + "' hx-target='.datagrid-container-master' hx-swap='outerHTML' hx-confirm='Are you sure?'>Delete</button>";
+                gkTrans_html += "<button class='btn btn-error btn-xs action-button' onclick='confirmDeleteGlava(" + gkTrans_row[0] + ")'>Delete</button>";
+                
+                gkTrans_html += "</td>";
+                gkTrans_html += "</tr>";
+            }
+        }
+        gkTrans_html += "</tbody></table>";
+
+        // Pagination
+        gkTrans_html += "<div class='pagination'>";
+        if(gkTrans_page > 1) {
+            gkTrans_html += "<a class='btn' hx-get='/gk-transactions?page=" + (gkTrans_page - 1) + "&sort=" + gkTrans_sort + "&order=" + gkTrans_order + 
+                    "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Previous</a>";
+        }
+        gkTrans_html += "<span class='page-info'>Page " + gkTrans_page + " of " + gkTrans_totalPages + "</span>";
+        if(gkTrans_page < gkTrans_totalPages) {
+            gkTrans_html += "<a class='btn' hx-get='/gk-transactions?page=" + (gkTrans_page + 1) + "&sort=" + gkTrans_sort + "&order=" + gkTrans_order + 
+                    "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Next</a>";
+        }
+        gkTrans_html += "</div>";  
+    gkTrans_html += "</div>";  
+    
+    gkTrans_headers1 = {"Content-Type": "text/html"};
+
+    
+    return Response(gkTrans_headers1, gkTrans_html, 200);
+}
+
+// New transaction form
+CreateEndpoint("GET", "/gk-transactions/new", "getNewGKTransactionForm");
+/*
+function getNewGKTransactionForm(args) {
+    newForm_html = "<div class='datagrid-container-master'>" +
+       "  <form class='vertical-form eight-column-form'>" +
+       "    <div class='grid grid-cols-8 gap-4'>" +
+       "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM'></div>" +
+       "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM'></div>" +
+       "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' maxlength='1'></div>" +
+       "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' maxlength='50'></div>" +
+       "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' maxlength='2'></div>" +
+       "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' maxlength='2'></div>" +
+       "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' maxlength='10'></div>" +
+       "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK'></div>" +
+       "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL'></div>" +
+       "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP'></div>" +
+       "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' maxlength='1'></div>" +
+       "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' maxlength='1'></div>" +
+       "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK'></div>" +
+       "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK'></div>" +
+       "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' maxlength='10'></div>" +
+       "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN'></div>" +
+       "    </div>" +
+       "    <div class='form-actions mt-4'>" +
+       "      <button class='btn btn-success btn-sm' hx-post='/gk-transactions' hx-include='closest form' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Save</button>" +
+       "      <button class='btn btn-error btn-sm' hx-get='/gk-transactions' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Cancel</button>" +
+       "    </div>" +
+       "  </form>" +
+       "</div>";
+
+    newForm_headers = {"Content-Type": "text/html"};
+    return Response(newForm_headers, newForm_html, 200);
+}
+*/
+
+function getNewGKTransactionForm(args) {
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, gk_generateForm("new", gk_defaultValues), 200);
+}
+
+
+// Create new transaction
+CreateEndpoint("POST", "/gk-transactions", "createGKTransaction");
+function createGKTransaction(args) {
+    currentlyEditingId = null;
+
+    // Get all form values
+    create_fields = [
+        "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
+        "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
+        "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
+        "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
+    ];
+    print("Creating new GK transaction with fields: " + create_fields);
+    create_values = {};
+    for(create_i = 0; create_i < Size(create_fields); create_i++) {
+        create_field = create_fields[create_i];
+        create_values[create_i]= GetValueFromForm(args["Body"], create_field);
+    }
+
+    // Validate required fields
+    if("GK_GL_BR_TEM" == "" || "GK_GL_DATUM" == "") {
+        // 🔴 Validation failed: Return the form again with error + values
+
+        create_headers = {"Content-Type": "text/html"};
+        return Response(create_headers, getNewGKTransactionFormWithValues(create_values, "<div class='alert alert-error mb-4'>ID and Date are required</div>"), 200);
+    }
+
+    // Build insert query
+    create_query = "INSERT INTO NKGKGLTM (";
+    create_first = true;
+    for(create_i = 0; create_i < Size(create_fields); create_i++) {
+        if (!create_first){ 
+            create_query += ", ";
+        }    
+        create_query += create_fields[create_i];
+        create_first = false;
+    }
+    print("Insert 1.dio: " + create_query);
+    create_query += ") VALUES (";
+    create_first = true;
+    for(create_i = 0; create_i < Size(create_fields); create_i++) {
+        if (!create_first) {
+            create_query += ", ";
+        }
+        //create_query += create_fields[create_i] + "  @" + create_fields[create_i];
+        create_query += "@" + create_fields[create_i];
+        create_first = false;
+    }
+    create_query += ")";
+    // Execute query
+    create_sqlParams = {};
+    for(create_i = 0; create_i < Size(create_fields); create_i++) {
+        //create_sqlParams.Add({create_fields[create_i], create_values[create_fields[create_i]]});
+        create_sqlParams.Add({"@"+create_fields[create_i], create_values[create_i]});
+    }
+    sqlNonQuery(create_query, create_sqlParams);
+
+    //htmx.trigger("body", "refreshTable");
+    create_args2 = {};
+    create_args2["QueryParams"] = {"page": 1};
+    return getGKTransactions(create_args2);
+}
+
+// Edit form
+CreateEndpoint("GET", "/gk-transactions/{id}/edit", "getEditGKTransactionForm");
+/*
+function getEditGKTransactionForm(args) {
+    editForm_id = args["RouteValues"]["id"];
+    editForm_query = "SELECT GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS,"+
+        "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK,"+
+        "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ,"+
+        "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'yyyy-MM-dd') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN"+
+        " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", int(id)});
+    transaction = sqlQuery(editForm_query, sqlParams);
+    if(transaction == null || Size(transaction) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Transaction not found</div>", 200);
+    }
+    row = transaction[1];
+
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>" +
+           "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + row[0] + "' readonly></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + row[1] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + row[2] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + row[3] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + row[4] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + row[5] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + row[6] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + row[7] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + row[8] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + row[9] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + row[10] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + row[11] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + row[12] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + row[13] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + row[14] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + row[15] + "'></div>" +
+           "    </div>" +
+           "    <div class='form-actions mt-4'>" +
+           "      <button class='btn btn-success btn-sm' " +
+           "              hx-put='/gk-transactions/" + id + "' " +
+           "              hx-include='closest form' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML' " +
+           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Save</button>" +
+           "      <button class='btn btn-error btn-sm' " +
+           "              hx-get='/gk-transactions' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML' " +
+           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Cancel</button>" +
+           "    </div>" +
+           "  </form>" +
+           "</div>";
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, html, 200);
+}
+*/
+
+// Replace getEditGKTransactionForm with:
+function getEditGKTransactionForm(args) {
+    id = args["RouteValues"]["id"];
+    query = "SELECT " + joinArray(gk_masterFields, ", ") + " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    sqlParams = {"@id": int(id)};
+    transaction = sqlQuery(query, sqlParams);
+    
+    if(transaction == null || Size(transaction) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<script>showError('Transaction not found');</script>", 200);
+    }
+    
+    values = {};
+    for(i = 0; i < Size(gk_masterFields); i++) {
+        values[gk_masterFields[i]] = transaction[1][i];
+    }
+    
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, gk_generateForm("edit", values, id), 200);
+}
+
+
+// update transactions
+CreateEndpoint("PUT", "/gk-transactions/{id}", "updateGKTransaction");
+function updateGKTransaction(args) {
+    id = args["RouteValues"]["id"];
+
+    fields = [
+        "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
+        "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
+        "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
+        "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
+    ];
+    values = {};
+    print("sizefields: " + Size(fields));  
+    for(i = 0; i < Size(fields); i++) {
+        field = fields[i];
+        values[field] = GetValueFromForm(args["Body"], field);
+    }
+
+    // Validate required fields
+    errorHtml = "";
+    if(values["GK_GL_BR_TEM"] == "" || values["GK_GL_DATUM"] == "" || values["GK_GL_DATUM"] == "1900-01-01") {
+        // 🔴 Return edit form again with error + data
+        print("gggggggggggggggggggggg");
+        
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, getEditGKTransactionFormWithValues(id, values, "<div class='alert alert-error mb-4'>ID and Date are required</div>"), 200);
+    }
+
+    // Build update query
+    query = "UPDATE NKGKGLTM SET ";
+    first = true;
+    for(i = 1; i < Size(fields); i++) {
+        if (!first) {
+            query += ", ";
+        }
+        query += fields[i] + " = @" + fields[i];
+        first = false;
+    }
+     query += " WHERE GK_GL_BR_TEM = @id";
+   
+    // Execute query
+    sqlParams = {};
+    for(i = 0; i < Size(fields); i++) {
+        sqlParams.Add({"@"+fields[i], values[i]});
+    }
+    print("Update query: " + query);
+    sqlParams.Add({"@id", int(id)});
+
+    sqlNonQuery(query, sqlParams);
+    args2 = {};
+    args2["QueryParams"] = {};
+    if (Contains(args2["QueryParams"], "page")) {
+        args2["QueryParams"]["page"] = args2["QueryParams"]["page"];
+    } else {
+        args2["QueryParams"]["page"] = 1;
+    }
+    //htmx.trigger('body', 'refreshTable'); //it does not work in cdcd language, this is javascript
+    return getGKTransactions(args2);
+}
+
+
+//new helper functions
+function getNewGKTransactionFormWithValues(values, errorHtml) {
+    // Default empty values
+    defaults = {
+        "GK_GL_BR_TEM": "0",
+        "GK_GL_DATUM": "",
+        "GK_GL_POSTED": "",
+        "GK_GL_OPIS": "",
+        "GK_GL_GOD": "",
+        "GK_GL_TIP": "",
+        "GK_GL_OZNAKA": "",
+        "GK_GL_ZNAK": "",
+        "GK_GL_IZNL": "",
+        "GK_GL_IZNP": "",
+        "GK_GL_ZATV_KLAS": "",
+        "GK_GL_POC_STANJ": "",
+        "GK_GL_BRDOK": "",
+        "GK_GL_DATDOK": "",
+        "GK_GL_PARTNER": "",
+        "GK_GL_BR_LIN": ""
+    };
+
+    // Merge defaults with submitted values
+    for(key in defaults) {
+        if (Contains(values, key)) {
+            defaults[key] = values[key];
+        }
+    }
+
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>" +
+           "    " + (errorHtml ? errorHtml : "") +
+           "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + defaults["GK_GL_BR_TEM"] + "'></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + defaults["GK_GL_DATUM"] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + defaults["GK_GL_POSTED"] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + defaults["GK_GL_OPIS"] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + defaults["GK_GL_GOD"] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + defaults["GK_GL_TIP"] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + defaults["GK_GL_OZNAKA"] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + defaults["GK_GL_ZNAK"] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + defaults["GK_GL_IZNL"] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + defaults["GK_GL_IZNP"] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + defaults["GK_GL_ZATV_KLAS"] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + defaults["GK_GL_POC_STANJ"] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + defaults["GK_GL_BRDOK"] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + defaults["GK_GL_DATDOK"] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + defaults["GK_GL_PARTNER"] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + defaults["GK_GL_BR_LIN"] + "'></div>" +
+           "    </div>" +
+           "    <div class='form-actions mt-4'>" +
+           "      <button class='btn btn-success btn-sm' " +
+           "              hx-post='/gk-transactions' " +
+           "              hx-include='closest form' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML'>Save</button>" +
+           "      <button class='btn btn-error btn-sm' " +
+           "              hx-get='/gk-transactions' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML'>Cancel</button>" +
+           "    </div>" +
+           "  </form>" +
+           "</div>";
+
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, html, 200);
+}
+
+function getEditGKTransactionFormWithValues(id, values, errorHtml) {
+    // Fetch current data from DB
+    query = "SELECT GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS,"+
+        "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK,"+
+        "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ,"+
+        "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'yyyy-MM-dd') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN"+
+        " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", int(id)});
+    transaction = sqlQuery(query, sqlParams);
+    if(transaction == null || Size(transaction) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Transaction not found</div>", 200);
+    }
+    row = transaction[1];
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>";
+           if(errorHtml != ""){
+              html += errorHtml;
+           }
+           html += "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + row[0] + "' readonly></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + row[1] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + row[2] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + row[3] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + row[4] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + row[5] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + row[6] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + row[7] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + row[8] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + row[9] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + row[10] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + row[11] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + row[12] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + row[13] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + row[14] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + row[15] + "'></div>" +
+           "    </div>" +
+           "    <div class='form-actions mt-4'>" +
+           "      <button class='btn btn-success btn-sm' " +
+           "              hx-put='/gk-transactions/" + id + "' " +
+           "              hx-include='closest form' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML' " +
+           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Save</button>" +
+           "      <button class='btn btn-error btn-sm' " +
+           "              hx-get='/gk-transactions' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML' " +
+           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Cancel</button>" +
+           "    </div>" +
+           "  </form>" +
+           "</div>";
+
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, html, 200);
+}
+
+
+// Use submitted values if present, otherwise original
+function vrfy(field, fallback) {
+    if (Contains(values, field) && values[field] != null){
+        return values[field];
+    } else {
+        return fallback;
+    } 
+} 
+
+
+
+// Delete endpoint (already exists, keep as is)
+// Delete endpoint
+CreateEndpoint("DELETE", "/gk-transactions/{id}", "deleteGKTransaction");
+function deleteGKTransaction(args) {
+    id = args["RouteValues"]["id"];
+    
+    // Execute delete
+    query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", int(id)});
+    sqlNonQuery(query, sqlParams);
+    
+    // Return current view (preserve search/sort)
+    args2 = {};
+    args2["QueryParams"] = {"page": 1};
+    /*
+    args2["QueryParams"] = {};
+    if (Contains(args["QueryParams"], "page")) {
+        args2["QueryParams"]["page"] = args["QueryParams"]["page"];
+    } else {
+        args2["QueryParams"]["page"] = 1;
+    }
+    */
+    return getGKTransactions(args2);
+}
+
+CreateEndpoint("DELETE", "/gk-transactions-norefresh/{id}", "deleteGKTransactionNoRefresh");
+function deleteGKTransactionNoRefresh(args) {
+    id = args["RouteValues"]["id"];
+    
+    // Execute delete
+    query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", int(id)});
+    sqlNonQuery(query, sqlParams);
+    
+    // Return current view (preserve search/sort)
+    args2 = {};
+    args2["QueryParams"] = {"page": 1};
+    /*
+    args2["QueryParams"] = {};
+    if (Contains(args["QueryParams"], "page")) {
+        args2["QueryParams"]["page"] = args["QueryParams"]["page"];
+    } else {
+        args2["QueryParams"]["page"] = 1;
+    }
+    */
+    //return getGKTransactions(args2);
+    headers = {"Content-Type": "application/json"};
+    return Response(headers, '{"Result" : "Success"}', 200);
+}
+
+function formatForDisplay(dateStr) {
+    //if (dateStr == null || dateStr == "" || dateStr == "1900-01-01" || dateStr == "01.01.1900") {
+    //    return "";
+    //}
+    // Assume input is YYYY-MM-DD
+    if (Size(dateStr) >= 10) {
+        year = Substring(dateStr, 0, 4);   // YYYY
+        month = Substring(dateStr, 5, 2);  // MM
+        day = Substring(dateStr, 8, 2);    // DD
+        return day + "." + month + "." + year;
+    }
+    return dateStr;
+}
+
+
+//=============================================================================================================
+//DETAIL table endpoints
+//=======================================================================================
+CreateEndpoint("GET", "/gk-lines/{id}", "getGKLines");
+function getGKLines(requestLinije) {
+    id = requestLinije["RouteValues"]["id"];
+    print("Fetching lines for GK transaction ID: " + id);
+    queryd = "SELECT " +
+            "GK_LN_BR_TEM, GK_LN_KONTO, GK_LN_OBJED, GK_LN_OPIS, " +
+            "GK_LN_DP, GK_LN_IZNOS, GK_LN_BRDOK, FORMAT(GK_LN_DATDOK, 'yyyy-MM-dd') AS GK_LN_DATDOK, " +
+            "GK_LN_PARTNR, GK_LN_BR_LIN, GK_LN_SIFDVZ, GK_LN_TECAJ, GK_LN_IZNDEV " +
+            "FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id ORDER BY GK_LN_BR_LIN";
+    sqlParamsd = {};
+    sqlParamsd.Add({"@id", int(id)});
+    
+    lines = sqlQuery(queryd, sqlParamsd);
+
+    htmld = "<h2 class='text-lg font-bold mb-2'>Transaction Lines (Transaction ID: " + id + ")</h2>";
+    htmld += "<div class='overflow-x-auto'>";
+    htmld += "<table class='datatable w-full text-sm'>";
+    htmld += "<thead>";
+    htmld += "<tr class='bg-base-200'>";
+    htmld += "<th>Line</th>";
+    htmld += "<th>Account</th>";
+    htmld += "<th>Cost Center</th>";
+    htmld += "<th>Description</th>";
+    htmld += "<th>Debit</th>";
+    htmld += "<th>Credit</th>";
+    htmld += "<th>Doc ID</th>";
+    htmld += "<th>Doc Date</th>";
+    htmld += "<th>Partner</th>";
+    htmld += "<th>Currency</th>";
+    htmld += "<th>Rate</th>";
+    htmld += "<th>Amount/Curr</th>";
+    htmld += "<th>Actions</th>";
+    htmld += "</tr></thead><tbody>";
+
+    if (lines != null && Size(lines) > 1) {
+        for (idet = 1; idet < Size(lines); idet++) {
+            rowx = lines[idet];
+            lineId = rowx[9]; // GK_LN_BR_LIN
+            // 🔴 Zebra striping
+            if (idet % 2 == 0) {
+                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-300 hover:bg-base-300'>";
+            } else {
+                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-300 hover:bg-base-300'>";
+            }
+
+            htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' " +
+                "data-account='" + safestr(rowx[1]) + "' " +
+                "data-costcenter='" + safestr(rowx[2]) + "' " +
+                "data-description='" + safestr(rowx[3]) + "' " +
+                "data-dp='" + rowx[4] + "' " +
+                "data-amount='" + formatNumber(rowx[5]) + "' " +
+                "data-docid='" + safestr(rowx[6]) + "' " +
+                "data-docdate='" + safestr(rowx[7]) + "' " +
+                "data-partner='" + safestr(rowx[8]) + "' " +
+                "data-currency='" + safestr(rowx[10]) + "' " +
+                "data-rate='" + formatNumber(rowx[11]) + "' " +
+                "data-amountcurr='" + formatNumber(rowx[12]) + "' " +
+                "class='cursor-pointer hover:bg-base-200' onclick='selectLineForEdit(this)'>";
+
+            // Line
+            htmld += "<td class='text-center'>" + lineId + "</td>";
+
+            // Account
+            htmld += "<td data-field='GK_LN_KONTO'>" + safestr(rowx[1]) + "</td>";
+
+            // Cost Center
+            htmld += "<td data-field='GK_LN_OBJED'>" + safestr(rowx[2]) + "</td>";
+
+            // Description
+            htmld += "<td data-field='GK_LN_OPIS'>" + safestr(rowx[3]) + "</td>";
+
+            // Debit / Credit (based on GK_LN_DP)
+            if (rowx[4] == "D") {
+                htmld += "<td class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+                htmld += "<td class='text-right'></td>";
+            } else {
+                htmld += "<td class='text-right'></td>";
+                htmld += "<td class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+            }
+
+            // Doc ID
+            htmld += "<td class='text-center'>" + safestr(rowx[6]) + "</td>";
+
+            // Doc Date
+            htmld += "<td class='text-center'>" + safestr(rowx[7]) + "</td>";
+
+            // Partner
+            htmld += "<td class='text-center'>" + safestr(rowx[8]) + "</td>";
+
+            // Currency
+            htmld += "<td class='text-center'>" + safestr(rowx[10]) + "</td>";
+
+            // Rate
+            htmld += "<td class='text-right'>" + formatNumber(rowx[11]) + "</td>";
+
+            // Amount/Currency
+            htmld += "<td class='text-right'>" + formatNumber(rowx[12]) + "</td>";
+
+            // Actions - only show delete button, no edit button
+            htmld += "<td class='flex gap-1'>";
+            htmld += "<button class='btn btn-error btn-xs' hx-delete='/gk-lines/" + id + "/" + lineId + "' hx-confirm='Delete line?' hx-target='closest tr' hx-swap='outerHTML'>Del</button>";
+            htmld += "</td>";
+
+            htmld += "</tr>";
+        }
+    }
+
+    htmld += "</tbody></table>";
+    htmld += "</div>";
+
+    // return htmld;
+
+    headers2 = {"Content-Type": "text/html"};
+    return Response(headers2, htmld, 200);
+}
+
+function formatNumber(vali) {
+    if (vali == null || vali == "") {
+        return "";
+    }
+    return vali; //parseFloat(val).toFixed(2).replace(/\.00$/, "");
+}
+
+CreateEndpoint("GET", "/gk-lines/{id}/{line}/edit", "getEditLineForm");
+/*
+function getEditLineForm(args) {
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+
+    queryda = "SELECT GK_LN_KONTO, GK_LN_OBJED, GK_LN_OPIS, GK_LN_DP, GK_LN_IZNOS, " +
+            "GK_LN_BRDOK, GK_LN_DATDOK, GK_LN_PARTNR, GK_LN_SIFDVZ, GK_LN_TECAJ, GK_LN_IZNDEV " +
+            "FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id AND GK_LN_BR_LIN = @line";
+
+    sqlParamsa = {};
+    sqlParamsa.Add({"@id", int(masterId)});
+    sqlParamsa.Add({"@line", int(lineId)});
+
+    result = sqlQuery(queryda, sqlParamsa);
+    if (result == null || Size(result) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Transaction not found</div>", 200);
+    }
+    row = result[1];
+
+    htmlda = "<td class='text-center'>" + lineId + "</td>";
+
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_KONTO' value='" + safeStr(rowx[0]) + "' maxlength='15'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_OBJED' value='" + safeStr(rowx[1]) + "' maxlength='6'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_OPIS' value='" + safeStr(rowx[2]) + "' maxlength='50'></td>";
+
+    // DP: D/P selector
+    htmlda += "<td>";
+    htmlda += "<select class='select select-bordered select-xs w-full' name='GK_LN_DP' title='Debit or Credit' aria-label='Debit or Credit'>";
+    htmlda += "<option value='D'" + (rowx[3] == "D" ? " selected" : "") + ">D</option>";
+    htmlda += "<option value='P'" + (rowx[3] == "P" ? " selected" : "") + ">P</option>";
+    htmlda += "</select>";
+    htmlda += "</td>";
+
+    // Amount
+    htmlda += "<td><input type='number' step='0.01' class='input input-bordered input-xs w-full' name='GK_LN_IZNOS' value='" + (rowx[4] != "" ? rowx[4] : "0.00") + "'></td>";
+
+    // Rest as inputs
+    htmlda += "<td><input type='number' class='input input-bordered input-xs w-full' name='GK_LN_BRDOK' value='" + safeStr(rowx[5]) + "'></td>";
+    htmlda += "<td><input type='date' class='input input-bordered input-xs w-full' name='GK_LN_DATDOK' value='" + safeStr(rowx[6]) + "'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_PARTNR' value='" + safeStr(rowx[7]) + "' maxlength='10'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_SIFDVZ' value='" + safeStr(rowx[8]) + "' maxlength='3'></td>";
+    htmlda += "<td><input type='number' step='0.0001' class='input input-bordered input-xs w-full' name='GK_LN_TECAJ' value='" + safeStr(rowx[9]) + "'></td>";
+    htmlda += "<td><input type='number' step='0.01' class='input input-bordered input-xs w-full' name='GK_LN_IZNDEV' value='" + safeStr(rowx[10]) + "'></td>";
+
+    // Actions
+    htmlda += "<td class='flex gap-1'>";
+    htmlda += "<button class='btn btn-success btn-xs' " +
+            "hx-put='/gk-lines/" + masterId + "/" + lineId + "' " +
+            "hx-include='closest tr' " +
+            "hx-target='this' " +
+            "hx-swap='outerHTML'>Save</button>";
+    htmlda += "<button class='btn btn-error btn-xs' " +
+            "hx-get='/gk-lines/" + masterId + "/" + lineId + "/view' " +
+            "hx-target='this' " +
+            "hx-swap='outerHTML'>Cancel</button>";
+    htmlda += "</td>";
+
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, htmlda, 200);
+}
+*/
+
+// Replace getEditLineForm with:
+function getEditLineForm(args) {
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+    
+    query = "SELECT " + joinArray(gk_lineFields, ", ") + 
+            " FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id AND GK_LN_BR_LIN = @line";
+    sqlParams = {"@id": int(masterId), "@line": int(lineId)};
+    result = sqlQuery(query, sqlParams);
+    
+    if(result == null || Size(result) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<td colspan='13'>Error</td>", 200);
+    }
+    
+    values = {};
+    for(i = 0; i < Size(gk_lineFields); i++) {
+        values[gk_lineFields[i]] = result[1][i];
+    }
+    
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, gk_generateLineForm("edit", values, masterId, lineId), 200);
+}
+
+
+//View Single Line (for Cancel)
+
+CreateEndpoint("GET", "/gk-lines/{id}/{line}/view", "getViewLine");
+function getViewLine(args) {
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+
+    querydb = "SELECT GK_LN_KONTO, GK_LN_OBJED, GK_LN_OPIS, GK_LN_DP, GK_LN_IZNOS, " +
+            "GK_LN_BRDOK, GK_LN_DATDOK, GK_LN_PARTNR, GK_LN_SIFDVZ, GK_LN_TECAJ, GK_LN_IZNDEV " +
+            "FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id AND GK_LN_BR_LIN = @line";
+
+    sqlParamsb = {};
+    sqlParamsb.Add({"@id", int(masterId)});
+    sqlParamsb.Add({"@line", int(lineId)});
+
+    resultd = sqlQuery(querydb, sqlParamsb);
+    if (resultd == null || Size(resultd) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<td colspan='13'>Error</td>", 200);
+    }
+    rowd = resultd[1];
+
+    htmlda = "<td class='text-center'>" + lineId + "</td>";
+    htmlda += "<td>" + safeStr(rowd[0]) + "</td>";
+    htmlda += "<td>" + safeStr(rowd[1]) + "</td>";
+    htmlda += "<td>" + safeStr(rowd[2]) + "</td>";
+
+    if (rowd[3] == "D") {
+        htmlda += "<td class='text-right'>" + formatNumber(rowd[4]) + "</td><td></td>";
+    } else {
+        htmlda += "<td></td><td class='text-right'>" + formatNumber(rowd[4]) + "</td>";
+    }
+
+    htmlda += "<td class='text-center'>" + safeStr(rowd[5]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[6]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[7]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[6]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[7]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[8]) + "</td>";
+    htmlda += "<td class='text-right'>" + formatNumber(rowd[9]) + "</td>";
+    htmlda += "<td class='text-right'>" + formatNumber(rowd[10]) + "</td>";
+
+    htmlda += "<td class='flex gap-1'>";
+    htmlda += "<button class='btn btn-info btn-xs' hx-get='/gk-lines/" + masterId + "/" + lineId + "/edit' hx-target='this' hx-swap='outerHTML'>Edit</button>";
+    htmlda += "<button class='btn btn-error btn-xs' hx-delete='/gk-lines/" + masterId + "/" + lineId + "' hx-confirm='Delete?' hx-target='closest tr' hx-swap='outerHTML'>Del</button>";
+    htmlda += "</td>";
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, htmlda, 200);
+}
+
+function gk_generateLineForm(mode, values, masterId, lineId = null) {
+    isEdit = (mode == "edit");
+    
+    html = "<tr>";
+    html += "<td class='text-center'>" + (isEdit ? lineId : "(new)") + "</td>";
+    
+    for(i = 0; i < Size(gk_lineFields); i++) {
+        field = gk_lineFields[i];
+        value = Contains(values, field) ? values[field] : "";
+        
+        if(field == "GK_LN_DP") {
+            html += "<td><select class='select select-bordered select-xs w-full' name='" + field + "'>" +
+                    "<option value='D'" + (value == "D" ? " selected" : "") + ">D</option>" +
+                    "<option value='P'" + (value == "P" ? " selected" : "") + ">P</option>" +
+                    "</select></td>";
+        } else {
+            html += "<td><input type='" + 
+                   (field.Contains("IZNOS") || field.Contains("TECAJ") ? "number" : "text") + 
+                   "' class='input input-bordered input-xs w-full' name='" + field + "' value='" + value + "'></td>";
+        }
+    }
+    
+    html += "<td class='flex gap-1'>" +
+            "  <button class='btn btn-success btn-xs' " +
+            "          hx-" + (isEdit ? "put" : "post") + "='/gk-lines/" + masterId + (isEdit ? "/" + lineId : "") + "' " +
+            "          hx-include='closest tr' hx-target='closest tr' hx-swap='outerHTML'>Save</button>" +
+            "  <button class='btn btn-error btn-xs' " +
+            "          hx-get='" + (isEdit ? "/gk-lines/" + masterId + "/" + lineId + "/view" : "/gk-lines/" + masterId) + "' " +
+            "          hx-target='closest tr' hx-swap='outerHTML'>Cancel</button>" +
+            "</td></tr>";
+    
+    return html;
+}
+
+
+//NewLine Endpoint
+CreateEndpoint("GET", "/gk-lines/{id}/new", "getNewLineForm");
+function getNewLineForm(args) {
+    masterId = args["RouteValues"]["id"];
+
+    // Find next line number
+    querydc = "SELECT ISNULL(MAX(GK_LN_BR_LIN), 0) + 1 FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
+    sqlParamsc = {};
+    sqlParamsc.Add({"@id", int(masterId)});
+    resulte = sqlQuery(querydc, sqlParamsc);
+    nextLine = resulte[1][0];
+
+    htmlda = "<tr>";
+    htmlda += "<td class='text-center'>" + nextLine + "</td>";
+
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_KONTO' maxlength='15'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_OBJED' maxlength='6'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_OPIS' maxlength='50'></td>";
+
+    htmlda += "<td><select class='select select-bordered select-xs w-full' name='GK_LN_DP' title='Debit or Credit' aria-label='Debit or Credit'>";
+    htmlda += "<option value='D'>D</option><option value='P'>P</option></select></td>";
+
+    htmlda += "<td><input type='number' step='0.01' class='input input-bordered input-xs w-full' name='GK_LN_IZNOS'></td>";
+    htmlda += "<td><input type='number' class='input input-bordered input-xs w-full' name='GK_LN_BRDOK'></td>";
+    htmlda += "<td><input type='date' class='input input-bordered input-xs w-full' name='GK_LN_DATDOK'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_PARTNR' maxlength='10'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_SIFDVZ' maxlength='3'></td>";
+    htmlda += "<td><input type='number' step='0.0001' class='input input-bordered input-xs w-full' name='GK_LN_TECAJ'></td>";
+    htmlda += "<td><input type='number' step='0.01' class='input input-bordered input-xs w-full' name='GK_LN_IZNDEV'></td>";
+
+    htmlda += "<td class='flex gap-1'>";
+    htmlda += "<button class='btn btn-success btn-xs' " +
+            "hx-post='/gk-lines/" + masterId + "' " +
+            "hx-include='closest tr' " +
+            "hx-target='this' " +
+            "hx-swap='outerHTML'>Save</button>";
+    htmlda += "<button class='btn btn-error btn-xs' " +
+            "hx-get='/gk-lines/" + masterId + "' " +
+            "hx-target='closest tr' " +
+            "hx-swap='outerHTML'>Cancel</button>";
+    htmlda += "</td>";
+
+    htmlda += "</tr>";
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, htmlda, 200);
+}
+
+//Create/Update/Delete Endpoints for lines
+CreateEndpoint("POST", "/gk-lines/{id}", "createLine");
+function createLine(args) {
+    masterId = args["RouteValues"]["id"];
+
+    fieldsx = [
+        "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
+        "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
+        "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
+    ];
+
+    // Get next line number
+    querydd = "SELECT ISNULL(MAX(GK_LN_BR_LIN), 0) + 1 FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
+    sqlParamsdd = {};
+    sqlParamsdd.Add({"@id", int(masterId)});
+    resulte = sqlQuery(querydd, sqlParamsdd);
+    lineId = resulte[1][0];
+
+    // Validate
+    konto = GetValueFromForm(args["Body"], "GK_LN_KONTO");
+    iznos = GetValueFromForm(args["Body"], "GK_LN_IZNOS");
+
+    if (konto == "" || iznos == "") {
+        
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<td colspan='13'><div class='alert alert-error'>Account and Amount required</div></td>", 200);
+    }
+
+    // Build INSERT
+    queryde = "INSERT INTO NKGKLNTM (GK_LN_BR_TEM, GK_LN_BR_LIN, " + joinArray(fieldsx, ", ") + ") VALUES (@masterId, @lineId, ";
+    for(ig = 0; ig < Size(fieldsx); ig++) {
+        if (ig > 0) queryde += ", ";
+        queryde += "@" + fieldsx[ig];
+    }
+    queryde += ")";
+
+    // Set params
+    sqlParams = {};
+    sqlParams.Add({"@masterId", int(masterId)});
+    sqlParams.Add({"@lineId", int(lineId)});
+    for(ih = 0; ih < Size(fieldsx); ih++) {
+        sqlParams.Add({"@" + fieldsx[ih], GetValueFromForm(args["Body"], fieldsx[ih])});
+    }
+    sqlNonQuery(queryde, sqlParams);
+
+    // Reload detail table
+    args2 = {};
+    args2["RouteValues"] = {"id": int(masterId)};
+    return getGKLines(args2);
+}
+
+// Update line endpoint
+CreateEndpoint("PUT", "/gk-lines/{id}/{line}", "updateLine");
+function updateLine(args) {
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+    
+    fieldsx = [
+        "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
+        "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
+        "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
+    ];
+
+    // Validate
+    konto = GetValueFromForm(args["Body"], "GK_LN_KONTO");
+    iznos = GetValueFromForm(args["Body"], "GK_LN_IZNOS");
+
+    if (konto == "" || iznos == "") {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Account and Amount required</div>", 400);
+    }
+
+    // Build UPDATE
+    queryUpdate = "UPDATE NKGKLNTM SET ";
+    for(i = 0; i < Size(fieldsx); i++) {
+        if (i > 0) queryUpdate += ", ";
+        queryUpdate += fieldsx[i] + " = @" + fieldsx[i];
+    }
+    queryUpdate += " WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
+
+    // Set params
+    sqlParams = {};
+    sqlParams.Add({"@masterId", int(masterId)});
+    sqlParams.Add({"@lineId", int(lineId)});
+    for(i = 0; i < Size(fieldsx); i++) {
+        sqlParams.Add({"@" + fieldsx[i], GetValueFromForm(args["Body"], fieldsx[i])});
+    }
+    sqlNonQuery(queryUpdate, sqlParams);
+
+    // Reload detail table
+    args2 = {};
+    args2["RouteValues"] = {"id": int(masterId)};
+    return getGKLines(args2);
+}
+
+// Delete line endpoint
+CreateEndpoint("DELETE", "/gk-lines/{id}/{line}", "deleteLine");
+function deleteLine(args) {
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+    
+    queryDelete = "DELETE FROM NKGKLNTM WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
+    sqlParams = {};
+    sqlParams.Add({"@masterId", int(masterId)});
+    sqlParams.Add({"@lineId", int(lineId)});
+    sqlNonQuery(queryDelete, sqlParams);
+
+    // Reload detail table
+    args2 = {};
+    args2["RouteValues"] = {"id": int(masterId)};
+    return getGKLines(args2);
+}
+
+function safeStr(valu) {
+    //if (valu == null || valu == "null" || valu == undefined) {
+    //    return "";
+    //}
+    return valu;
+}
+
+function gk_showAlert(title, message, icon = "error") {
+    return "<script>Swal.fire({" +
+           "title: '" + title + "'," +
+           "text: '" + message + "'," +
+           "icon: '" + icon + "'," +
+           "confirmButtonText: 'OK'" +
+           "});</script>";
+}
