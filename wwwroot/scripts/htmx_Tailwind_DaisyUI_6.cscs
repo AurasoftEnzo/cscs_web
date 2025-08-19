@@ -268,12 +268,12 @@ function getGKTransactions(requestGlave) {
         // Pagination
         gkTrans_html += "<div class='pagination'>";
         if(gkTrans_page > 1) {
-            gkTrans_html += "<a class='btn' hx-get='/gk-transactions?page=" + (gkTrans_page - 1) + "&sort=" + gkTrans_sort + "&order=" + gkTrans_order + 
+            gkTrans_html += "<a class='btn btn-sm' hx-get='/gk-transactions?page=" + (gkTrans_page - 1) + "&sort=" + gkTrans_sort + "&order=" + gkTrans_order + 
                     "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Previous</a>";
         }
         gkTrans_html += "<span class='page-info'>Page " + gkTrans_page + " of " + gkTrans_totalPages + "</span>";
         if(gkTrans_page < gkTrans_totalPages) {
-            gkTrans_html += "<a class='btn' hx-get='/gk-transactions?page=" + (gkTrans_page + 1) + "&sort=" + gkTrans_sort + "&order=" + gkTrans_order + 
+            gkTrans_html += "<a class='btn btn-sm' hx-get='/gk-transactions?page=" + (gkTrans_page + 1) + "&sort=" + gkTrans_sort + "&order=" + gkTrans_order + 
                     "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Next</a>";
         }
         gkTrans_html += "</div>";  

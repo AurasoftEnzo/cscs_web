@@ -14,11 +14,15 @@
       --b1: #1e90ff;
     } */
 
-    html,
+    html{
+      height: 100%;
+      margin: 0;
+      padding: 0px;
+    }
     body {
       height: 100%;
       margin: 0;
-      padding: 16px;
+      padding: 10px;
     }
 
     .master-detail-layout {
@@ -26,7 +30,7 @@
       flex-direction: column;
       height: calc(100vh - 112px);
       /* Full viewport height minus padding and fixed header */
-      gap: 16px;
+      gap: 5px;
       overflow: hidden;
     }
 
@@ -40,22 +44,23 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* 1. Master Table: Expanded height for 8 rows */
+    /* 1. Master Table: Expanded height for 5 rows */
     .master-table {
-      height: 400px;
+      height: 235px;
       /* ~8 rows with headers and pagination */
       background: hsl(var(--b1));
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      /* border-radius: 8px; */
+      padding: 0px;
+      /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
       display: flex;
       flex-direction: column;
-      border: 1px solid hsl(var(--b3));
+      /* border: 1px solid hsl(var(--b3)); */
+      /* border: 1px solid red; */
     }
 
-    [data-theme="dark"] .master-table {
+    /* [data-theme="dark"] .master-table {
       box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
-    }
+    } */
 
     .master-table h2 {
       flex-shrink: 0;
@@ -72,19 +77,27 @@
 
     /* 2. Detail Table: Reduced to fit with expanded master */
     .detail-table {
-      flex: 1;
+      flex: 1 1 0%;
+      min-height: 0;
+      height: 100%;
+      overflow-y:auto;
+
       /* Takes remaining available space */
-      min-height: 150px;
+      /* max-height: 3000px; */
+      /* min-height: 150px; */
+      
       /* Minimum height to ensure visibility */
-      max-height: 300px;
+      /* max-height: 300px; */
       /* Maximum height to prevent overflow */
+      
       overflow-y: auto;
       background: hsl(var(--b1));
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      border: 1px solid hsl(var(--b3));
+      /* border-radius: 8px; */
+      padding: 0px;
+      /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
+      /* border: 1px solid green; */
     }
+
 
     [data-theme="dark"] .detail-table {
       box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
@@ -92,19 +105,19 @@
 
     /* 3. Bottom Form: Compact */
     .bottom-form {
-      height: 220px;
+      height: 270px;
       /* Fixed height for 3-row form */
       background: hsl(var(--b1));
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      /* border-radius: 8px; */
+      padding: 0px;
+      /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
       overflow-y: auto;
-      border: 1px solid hsl(var(--b3));
+      /* border: 1px solid purple; */
     }
 
-    [data-theme="dark"] .bottom-form {
+    /* [data-theme="dark"] .bottom-form {
       box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
-    }
+    } */
 
     /* Compact form grid: 4 columns */
     #line-entry-form {
@@ -144,8 +157,8 @@
 
     .datagrid-table th,
     .datagrid-table td {
-      padding: 6px;
-      font-size: 14px;
+      padding: 2px 4px;
+      font-size: 13px;
       white-space: nowrap;
       /* Prevent text wrapping in cells */
       overflow: hidden;
@@ -296,7 +309,7 @@
     }
 
     .pagination {
-      padding: 8px 0;
+      padding: 2px;
       font-size: 14px;
     }
 
@@ -378,7 +391,7 @@
 
     /* Edit mode styling */
     .bottom-form.edit-mode {
-      border: 2px solid hsl(var(--su));
+      /* border: 1px solid purple; */
       box-shadow: 0 4px 6px hsl(var(--su) / 0.1);
     }
 
@@ -659,8 +672,7 @@
 <body>
 
   <!-- Fixed header with controls -->
-  <div
-    class="fixed top-4 left-4 right-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg mb-4 fixed-header">
+  <div class="mb-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg fixed-header">
     <div class="flex items-center gap-4">
       <h1 class="text-xl font-bold">GK Transactions Management</h1>
       <button class='btn btn-accent btn-sm' hx-get='/gk-transactions/new' hx-target='.datagrid-container-master'
@@ -678,7 +690,7 @@
   </div>
 
   <!-- Add top margin to compensate for fixed header -->
-  <div style="margin-top: 80px;"></div>
+  <!-- <div style="margin-top: 40px;"></div> -->
 
   <div class="master-detail-layout">
 
@@ -694,7 +706,7 @@
 
     <!-- 3. BOTTOM FORM (compact 2-row) -->
     <div class="bottom-form">
-      <h2 class="text-lg font-bold mb-2">Line Entry</h2>
+      <h2 class="text-lg font-bold">Line Entry</h2>
       <form id="line-entry-form">
         <input type="hidden" name="masterId" value="">
         <input type="hidden" name="lineId" value="">
