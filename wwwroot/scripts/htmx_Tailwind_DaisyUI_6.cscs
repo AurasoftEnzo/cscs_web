@@ -57,7 +57,7 @@ function gk_generateForm(mode, values, id = null, errorHtml = "") {
                 "               name='" + field + "' " +
                 ternary1 +
                 "               value='" + value + "'" +
-                "               " + ternary2 + ">" +
+                "               " + ternary2 + "/>" +
                 "      </div>";
 
         // print(html);
@@ -133,10 +133,10 @@ function getGKTransactions(requestGlave) {
     }
     
     gkTrans_query = "SELECT " +
-            "GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'dd-MM-yyyy') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS, " +
+            "GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'dd.MM.yyyy') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS, " +
             "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK, " +
             "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ, " +
-            "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'dd-MM-yyyy') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN " +
+            "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'dd.MM.yyyy') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN " +
             "FROM NKGKGLTM" + gkTrans_whereClause + " " +
             "ORDER BY " + gkTrans_sort + " " + gkTrans_order + " " +
             "OFFSET @skip ROWS FETCH NEXT @pageSize ROWS ONLY";
