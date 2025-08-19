@@ -10,6 +10,10 @@
   <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
+    /* :root {
+      --b1: #1e90ff;
+    } */
+
     html,
     body {
       height: 100%;
@@ -110,7 +114,7 @@
     /* Shrink input fields */
     #line-entry-form input,
     #line-entry-form select {
-      padding: 4px 8px !important;
+      padding: 4px 8px;
       height: 32px;
       font-size: 14px;
     }
@@ -263,11 +267,11 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      background: hsl(var(--b2));
+      background: rgb(222, 222, 222);
     }
 
     .datagrid-table thead th {
-      background: hsl(var(--b2));
+      background: rgb(222, 222, 222);
       color: hsl(var(--bc));
       font-weight: 600;
       border-bottom: 2px solid hsl(var(--b3));
@@ -298,13 +302,13 @@
 
     .datagrid-table tr:hover,
     .datatable tr:hover {
-      background-color: hsl(45 100% 88%) !important;
+      background-color: hsl(45 100% 88%);
     }
 
     /* Dark mode hover */
     [data-theme="dark"] .datagrid-table tr:hover,
     [data-theme="dark"] .datatable tr:hover {
-      background-color: hsl(45 50% 25%) !important;
+      background-color: hsl(45 50% 25%);
     }
 
     /* Horizontal scrollable table with fixed columns */
@@ -351,8 +355,10 @@
       right: 0;
       z-index: 30;
       min-width: 160px;
-      background: white !important; /* Temporary - should be very visible */
-      box-shadow: -2px 0 4px rgba(0,0,0,0.1); /* Left shadow for right column */
+      /* backgro  und: white ; */
+      /* Temporary - should be very visible */
+      box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+      /* Left shadow for right column */
     }
 
     /* Set fixed widths for frozen columns */
@@ -366,6 +372,8 @@
       width: 80px;
       min-width: 80px;
       max-width: 80px;
+
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     }
 
     /* Edit mode styling */
@@ -382,25 +390,28 @@
 
     /* Current line highlighting in detail table - bluish like master */
     .datagrid-container-detail tr.current-line {
-      background-color: hsl(220 91% 85%) !important;
+      background-color: hsl(220 91% 85%);
       border-left: 4px solid hsl(220 91% 65%);
-      z-index: 1; /* Lower than header z-index */
+      z-index: 1;
+      /* Lower than header z-index */
       position: relative;
     }
 
     /* Dark mode current line */
     [data-theme="dark"] .datagrid-container-detail tr.current-line {
-      background-color: hsl(220 50% 25%) !important;
+      background-color: hsl(220 50% 25%);
       border-left: 4px solid hsl(220 70% 40%);
     }
 
     .datagrid-container-detail tr.current-line:hover {
-      background-color: hsl(220 91% 78%) !important; /* Slightly darker blue on hover */
+      background-color: hsl(220 91% 78%);
+      /* Slightly darker blue on hover */
     }
 
     /* Dark mode current line hover */
     [data-theme="dark"] .datagrid-container-detail tr.current-line:hover {
-      background-color: hsl(220 50% 20%) !important; /* Even darker blue for dark mode */
+      background-color: hsl(220 50% 20%);
+      /* Even darker blue for dark mode */
     }
 
     /* Make detail table rows clickable */
@@ -409,166 +420,238 @@
     }
 
     .datagrid-container-detail tr[data-line]:hover {
-      background-color: hsl(45 100% 88%) !important; /* Same amber hover as master table */
+      background-color: hsl(45 100% 88%);
+      /* Same amber hover as master table */
     }
 
     /* Dark mode detail table hover */
     [data-theme="dark"] .datagrid-container-detail tr[data-line]:hover {
-      background-color: hsl(45 50% 25%) !important; /* Dark amber for dark mode */
+      background-color: hsl(45 50% 25%);
+      /* Dark amber for dark mode */
     }
 
-  /* Add these styles to your existing style section */
+    /* Add these styles to your existing style section */
 
-  /* Table header styling */
-  .datagrid-table thead th {
-    background: hsl(var(--b2));
-    color: hsl(var(--bc));
-    font-weight: 600;
-    border-bottom: 2px solid hsl(var(--b3));
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    cursor: pointer; /* Indicate clickable for sorting */
-  }
+    /* Table header styling */
+    .datagrid-table thead th {
+      background: rgb(222, 222, 222);
+      color: hsl(var(--bc));
+      font-weight: 600;
+      border-bottom: 2px solid hsl(var(--b3));
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      cursor: pointer;
+      /* Indicate clickable for sorting */
+    }
 
-  /* Header hover for sorting indication */
-  .datagrid-table thead th:hover {
-    background: hsl(var(--b3));
-    transition: background-color 0.2s ease;
-  }
+    /* Header hover for sorting indication */
+    .datagrid-table thead th:hover {
+      background: hsl(var(--b3));
+      transition: background-color 0.2s ease;
+    }
 
-  /* Zebra striping for rows */
-  .datagrid-table tbody tr:nth-child(even) {
-    background-color: hsl(var(--b2));
-  }
+    /* Zebra striping for rows */
+    .datagrid-table tbody tr:nth-child(odd) {
+      background-color: rgb(244, 244, 244);
+    }
 
-  /* Hover effect - distinct amber/yellow tint */
-  .datagrid-table tbody tr:hover {
-    background-color: hsl(45 100% 88%) !important; /* Light amber on hover */
-  }
+    .datagrid-table tbody tr:nth-child(even) {
+      background-color: rgb(233, 233, 233);
+    }
 
-  /* Dark mode hover - much darker */
-  [data-theme="dark"] .datagrid-table tbody tr:hover {
-    background-color: hsl(45 50% 25%) !important; /* Dark amber for dark mode */
-  }
+    /* Dark theme zebra stripes */
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) {
+      background-color: rgb(66, 66, 66);
+    }
 
-  /* Selected row styling - bluish - higher specificity to override zebra and hover */
-  .datagrid-table tbody tr.current-row {
-    background-color: hsl(220 91% 85%) !important; /* Light blue background */
-    box-shadow: inset 0 0 0 1px hsl(220 91% 65%); /* Darker blue border */
-    z-index: 35; /* Higher than frozen columns to ensure proper scrolling */
-    position: relative;
-  }
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) {
+      background-color: rgb(77, 77, 77);
+    }
 
-  /* Selected row on hover - keep blue, don't let hover color override */
-  .datagrid-table tbody tr.current-row:hover {
-    background-color: hsl(220 91% 80%) !important; /* Slightly darker blue on hover */
-    box-shadow: inset 0 0 0 1px hsl(220 91% 60%); /* Darker blue border on hover */
-  }
+    /* Hover effect - distinct amber/yellow tint */
+    .datagrid-table tbody tr:hover {
+      background-color: hsl(45 100% 88%);
+      /* Light amber on hover */
+    }
 
-  /* Dark mode selected row - much darker blue */
-  [data-theme="dark"] .datagrid-table tbody tr.current-row {
-    background-color: hsl(220 50% 25%) !important; /* Dark blue for dark mode */
-    box-shadow: inset 0 0 0 1px hsl(220 70% 40%); /* Darker blue border for dark mode */
-  }
+    /* Dark mode hover - much darker */
+    [data-theme="dark"] .datagrid-table tbody tr:hover {
+      background-color: hsl(45 50% 25%);
+      /* Dark amber for dark mode */
+    }
 
-  /* Dark mode selected row on hover - even darker blue */
-  [data-theme="dark"] .datagrid-table tbody tr.current-row:hover {
-    background-color: hsl(220 50% 20%) !important; /* Even darker blue on hover for dark mode */
-    box-shadow: inset 0 0 0 1px hsl(220 70% 35%); /* Darker border on hover for dark mode */
-  }
+    /* Selected row styling - bluish - higher specificity to override zebra and hover */
+    .datagrid-table tbody tr.current-row {
+      background-color: hsl(220 91% 85%);
+      /* Light blue background */
+      box-shadow: inset 0 0 0 1px hsl(220 91% 65%);
+      /* Darker blue border */
+      z-index: 35;
+      /* Higher than frozen columns to ensure proper scrolling */
+      position: relative;
+    }
 
-  /* Extra specificity for selected rows - force blue on all rows */
-  .datagrid-container-master .datagrid-table tbody tr.current-row,
-  .datagrid-container-master tbody tr.current-row,
-  .datagrid-table tbody tr[class*="current-row"] {
-    background-color: hsl(220 91% 85%) !important; /* Force blue selection */
-    box-shadow: inset 0 0 0 1px hsl(220 91% 65%) !important; /* Force blue border */
-  }
+    /* Selected row on hover - keep blue, don't let hover color override */
+    .datagrid-table tbody tr.current-row:hover {
+      background-color: hsl(220 91% 80%);
+      /* Slightly darker blue on hover */
+      box-shadow: inset 0 0 0 1px hsl(220 91% 60%);
+      /* Darker blue border on hover */
+    }
 
-  /* Extra specificity for dark mode selected rows */
-  [data-theme="dark"] .datagrid-container-master .datagrid-table tbody tr.current-row,
-  [data-theme="dark"] .datagrid-container-master tbody tr.current-row,
-  [data-theme="dark"] .datagrid-table tbody tr[class*="current-row"] {
-    background-color: hsl(220 50% 25%) !important; /* Force dark blue selection */
-    box-shadow: inset 0 0 0 1px hsl(220 70% 40%) !important; /* Force dark blue border */
-  }
-</style>
- <style>
-  /* Frozen columns - keep only positioning and ensure solid background */
-  .frozen-column-select,
-  .frozen-column-id,
-  .frozen-column-right {
-    position: sticky;
-    z-index: 30;
-  }
+    /* Dark mode selected row - much darker blue */
+    [data-theme="dark"] .datagrid-table tbody tr.current-row {
+      background-color: hsl(220 50% 25%);
+      /* Dark blue for dark mode */
+      box-shadow: inset 0 0 0 1px hsl(220 70% 40%);
+      /* Darker blue border for dark mode */
+    }
 
-  /* Non-selected rows should have lower z-index so content scrolls behind frozen columns */
-  .datagrid-table tbody tr:not(.current-row) {
-    z-index: 1;
-    position: relative;
-  }
+    /* Dark mode selected row on hover - even darker blue */
+    [data-theme="dark"] .datagrid-table tbody tr.current-row:hover {
+      background-color: hsl(220 50% 20%);
+      /* Even darker blue on hover for dark mode */
+      box-shadow: inset 0 0 0 1px hsl(220 70% 35%);
+      /* Darker border on hover for dark mode */
+    }
 
-  /* Left frozen columns */
-  .frozen-column-select {
-    left: 0;
-    background: hsl(var(--b1)) !important; /* Solid background - normal rows */
-  }
-  
-  .frozen-column-id {
-    left: 60px; /* Width of select column */
-    background: hsl(var(--b1)) !important; /* Solid background - normal rows */
-  }
+    /* Extra specificity for selected rows - force blue on all rows */
+    .datagrid-container-master .datagrid-table tbody tr.current-row,
+    .datagrid-container-master tbody tr.current-row,
+    .datagrid-table tbody tr[class*="current-row"] {
+      background-color: hsl(220 91% 85%);
+      /* Force blue selection */
+      box-shadow: inset 0 0 0 1px hsl(220 91% 65%);
+      /* Force blue border */
+    }
 
-  /* Right frozen column (Actions) */
-  .frozen-column-right {
-    right: 0;
-    background: hsl(var(--b1)) !important; /* Solid background - normal rows */
-  }
+    /* Extra specificity for dark mode selected rows */
+    [data-theme="dark"] .datagrid-container-master .datagrid-table tbody tr.current-row,
+    [data-theme="dark"] .datagrid-container-master tbody tr.current-row,
+    [data-theme="dark"] .datagrid-table tbody tr[class*="current-row"] {
+      background-color: hsl(220 50% 25%);
+      /* Force dark blue selection */
+      box-shadow: inset 0 0 0 1px hsl(220 70% 40%);
+      /* Force dark blue border */
+    }
+  </style>
+  <style>
+    /* Frozen columns - keep only positioning and ensure solid background */
+    .frozen-column-select,
+    .frozen-column-id,
+    .frozen-column-right {
+      position: sticky;
+      z-index: 30;
+    }
 
-  /* Zebra striping for frozen columns - odd rows */
-  .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
-  .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
-  .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
-    background: hsl(var(--b2)) !important; /* Match zebra stripe */
-  }
+    /* Non-selected rows should have lower z-index so content scrolls behind frozen columns */
+    .datagrid-table tbody tr:not(.current-row) {
+      z-index: 1;
+      position: relative;
+    }
 
-  /* Hover state for frozen columns */
-  .datagrid-table tbody tr:hover .frozen-column-select,
-  .datagrid-table tbody tr:hover .frozen-column-id,
-  .datagrid-table tbody tr:hover .frozen-column-right {
-    background: hsl(45 100% 88%) !important; /* Match hover color */
-  }
+    /* Left frozen columns */
+    .frozen-column-select {
+      left: 0;
+      background: hsl(var(--b1));
+      /* Solid background - normal rows */
+    }
 
-  /* Dark mode hover for frozen columns */
-  [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-select,
-  [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-id,
-  [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-right {
-    background: hsl(45 50% 25%) !important; /* Match dark mode hover */
-  }
+    .frozen-column-id {
+      left: 60px;
+      /* Width of select column */
+      background: hsl(var(--b1));
+      /* Solid background - normal rows */
+    }
 
-  /* Selected row state for frozen columns - higher specificity */
-  .datagrid-table tbody tr.current-row .frozen-column-select,
-  .datagrid-table tbody tr.current-row .frozen-column-id,
-  .datagrid-table tbody tr.current-row .frozen-column-right {
-    background: hsl(220 91% 85%) !important; /* Match selected color */
-  }
+    /* Right frozen column (Actions) */
+    .frozen-column-right {
+      right: 0;
+      background: hsl(var(--b1));
+      /* Solid background - normal rows */
+    }
 
-  /* Dark mode selected row for frozen columns */
-  [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-select,
-  [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-id,
-  [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-right {
-    background: hsl(220 50% 25%) !important; /* Match dark mode selected */
-  }
+    /* Zebra striping for frozen columns - odd rows */
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background: transparent;
+    }
 
-  /* Header frozen columns */
-  .datagrid-table thead th.frozen-column-select,
-  .datagrid-table thead th.frozen-column-id,
-  .datagrid-table thead th.frozen-column-right {
-    z-index: 50; /* Higher than row frozen columns */
-    background: hsl(var(--b2)) !important; /* Solid header background */
-  }
-</style>
+    /* Match zebra stripe for odd rows */
+
+    /* Zebra striping for frozen columns - odd rows */
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background: rgb(244, 244, 244);
+    }
+
+    /* Zebra striping for frozen columns - even rows */
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-select,
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-id,
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-right {
+      background: rgb(233, 233, 233);
+    }
+
+    /* Match zebra stripe for even rows */
+
+    /* Dark theme zebra stripes for frozen columns */
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background: rgb(66, 66, 66);
+    }
+
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-right {
+      background: rgb(77, 77, 77);
+    }
+
+    /* Hover state for frozen columns */
+    .datagrid-table tbody tr:hover .frozen-column-select,
+    .datagrid-table tbody tr:hover .frozen-column-id,
+    .datagrid-table tbody tr:hover .frozen-column-right {
+      background: hsl(45 100% 88%);
+      /* Match hover color */
+    }
+
+    /* Dark mode hover for frozen columns */
+    [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-right {
+      background: hsl(45 50% 25%);
+      /* Match dark mode hover */
+    }
+
+    /* Selected row state for frozen columns - higher specificity */
+    .datagrid-table tbody tr.current-row .frozen-column-select,
+    .datagrid-table tbody tr.current-row .frozen-column-id,
+    .datagrid-table tbody tr.current-row .frozen-column-right {
+      background: hsl(220 91% 85%);
+      /* Match selected color */
+    }
+
+    /* Dark mode selected row for frozen columns */
+    [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-right {
+      background: hsl(220 50% 25%);
+      /* Match dark mode selected */
+    }
+
+    /* Header frozen columns */
+    .datagrid-table thead th.frozen-column-select,
+    .datagrid-table thead th.frozen-column-id,
+    .datagrid-table thead th.frozen-column-right {
+      z-index: 50;
+      /* Higher than row frozen columns */
+      background: rgb(222, 222, 222);
+      /* Solid header background */
+    }
+  </style>
 
 
 </head>
@@ -576,17 +659,20 @@
 <body>
 
   <!-- Fixed header with controls -->
-  <div class="fixed top-4 left-4 right-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg mb-4 fixed-header">
+  <div
+    class="fixed top-4 left-4 right-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg mb-4 fixed-header">
     <div class="flex items-center gap-4">
       <h1 class="text-xl font-bold">GK Transactions Management</h1>
-      <button class='btn btn-accent btn-sm' hx-get='/gk-transactions/new' hx-target='.datagrid-container-master' hx-swap='outerHTML'>
+      <button class='btn btn-accent btn-sm' hx-get='/gk-transactions/new' hx-target='.datagrid-container-master'
+        hx-swap='outerHTML'>
         Add New Transaction
       </button>
     </div>
     <div class="flex items-center gap-2">
       <span class="text-sm">Theme:</span>
       <label for="theme-toggle" class="sr-only">Toggle dark/light theme</label>
-      <input type="checkbox" id="theme-toggle" class="toggle toggle-sm" onchange="toggleTheme()" title="Toggle dark/light theme">
+      <input type="checkbox" id="theme-toggle" class="toggle toggle-sm" onchange="toggleTheme()"
+        title="Toggle dark/light theme">
       <span class="text-sm">Dark</span>
     </div>
   </div>
@@ -613,25 +699,35 @@
         <input type="hidden" name="masterId" value="">
         <input type="hidden" name="lineId" value="">
         <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Account</label><input type="text" name="GK_LN_KONTO" class="input input-bordered input-sm w-full" placeholder="11100" maxlength="15"></div>
-          <div><label>Cost Center</label><input type="text" name="GK_LN_OBJED" class="input input-bordered input-sm w-full" placeholder="601" maxlength="6"></div>
-          <div><label>Description</label><input type="text" name="GK_LN_OPIS" class="input input-bordered input-sm w-full" placeholder="Payment" maxlength="50"></div>
+          <div><label>Account</label><input type="text" name="GK_LN_KONTO" class="input input-bordered input-sm w-full"
+              placeholder="11100" maxlength="15"></div>
+          <div><label>Cost Center</label><input type="text" name="GK_LN_OBJED"
+              class="input input-bordered input-sm w-full" placeholder="601" maxlength="6"></div>
+          <div><label>Description</label><input type="text" name="GK_LN_OPIS"
+              class="input input-bordered input-sm w-full" placeholder="Payment" maxlength="50"></div>
           <div><label>DP</label><select name="GK_LN_DP" class="select select-bordered select-sm w-full">
-            <option value="">Select</option>
-            <option value="D">D</option>
-            <option value="P">P</option>
-          </select></div>
+              <option value="">Select</option>
+              <option value="D">D</option>
+              <option value="P">P</option>
+            </select></div>
         </div>
         <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Amount</label><input type="number" step="0.01" name="GK_LN_IZNOS" class="input input-bordered input-sm w-full" placeholder="100.00"></div>
-          <div><label>Doc ID</label><input type="number" name="GK_LN_BRDOK" class="input input-bordered input-sm w-full" placeholder="12345"></div>
-          <div><label>Doc Date</label><input type="date" name="GK_LN_DATDOK" class="input input-bordered input-sm w-full"></div>
-          <div><label>Partner</label><input type="text" name="GK_LN_PARTNR" class="input input-bordered input-sm w-full" placeholder="P001" maxlength="10"></div>
+          <div><label>Amount</label><input type="number" step="0.01" name="GK_LN_IZNOS"
+              class="input input-bordered input-sm w-full" placeholder="100.00"></div>
+          <div><label>Doc ID</label><input type="number" name="GK_LN_BRDOK" class="input input-bordered input-sm w-full"
+              placeholder="12345"></div>
+          <div><label>Doc Date</label><input type="date" name="GK_LN_DATDOK"
+              class="input input-bordered input-sm w-full"></div>
+          <div><label>Partner</label><input type="text" name="GK_LN_PARTNR" class="input input-bordered input-sm w-full"
+              placeholder="P001" maxlength="10"></div>
         </div>
         <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Currency</label><input type="text" name="GK_LN_SIFDVZ" class="input input-bordered input-sm w-full" placeholder="EUR" maxlength="3"></div>
-          <div><label>Rate</label><input type="number" step="0.0001" name="GK_LN_TECAJ" class="input input-bordered input-sm w-full" placeholder="1.0000"></div>
-          <div><label>Amount/Curr</label><input type="number" step="0.01" name="GK_LN_IZNDEV" class="input input-bordered input-sm w-full" placeholder="100.00"></div>
+          <div><label>Currency</label><input type="text" name="GK_LN_SIFDVZ"
+              class="input input-bordered input-sm w-full" placeholder="EUR" maxlength="3"></div>
+          <div><label>Rate</label><input type="number" step="0.0001" name="GK_LN_TECAJ"
+              class="input input-bordered input-sm w-full" placeholder="1.0000"></div>
+          <div><label>Amount/Curr</label><input type="number" step="0.01" name="GK_LN_IZNDEV"
+              class="input input-bordered input-sm w-full" placeholder="100.00"></div>
           <div class="flex gap-2 items-end">
             <button type="button" id="save-line-btn" class="btn btn-success btn-sm" disabled>Save Line</button>
             <button type="button" id="new-line-btn" class="btn btn-primary btn-sm" disabled>New Line</button>
@@ -776,10 +872,10 @@
         rate: rowElement.getAttribute('data-rate') || '',
         amountCurr: rowElement.getAttribute('data-amountcurr') || ''
       };
-      
+
       // Highlight selected line
       highlightCurrentLine(rowElement);
-      
+
       // Always populate form with line data for viewing/editing
       populateLineForm(masterId, lineData);
     }
@@ -797,16 +893,16 @@
       }
     }
 
-function showError(message, title = 'Error') {
-  Swal.fire({
-    title: title,
-    text: message,
-    icon: 'error',
-    confirmButtonText: 'OK',
-    background: getComputedStyle(document.documentElement).getPropertyValue('--b1'),
-    color: getComputedStyle(document.documentElement).getPropertyValue('--bc')
-  });
-}
+    function showError(message, title = 'Error') {
+      Swal.fire({
+        title: title,
+        text: message,
+        icon: 'error',
+        confirmButtonText: 'OK',
+        background: getComputedStyle(document.documentElement).getPropertyValue('--b1'),
+        color: getComputedStyle(document.documentElement).getPropertyValue('--bc')
+      });
+    }
 
 
     // Line form functionality
@@ -832,7 +928,7 @@ function showError(message, title = 'Error') {
       const saveBtn = document.getElementById('save-line-btn');
       const newLineBtn = document.getElementById('new-line-btn');
       const formInputs = document.querySelectorAll('#line-entry-form input, #line-entry-form select');
-      
+
       if (isMasterInEditMode && currentMasterId) {
         // Enable form for editing
         saveBtn.disabled = false;
@@ -856,14 +952,14 @@ function showError(message, title = 'Error') {
     document.getElementById('clear-line-btn').addEventListener('click', clearLineForm);
 
     // New Line button click handler
-    document.getElementById('new-line-btn').addEventListener('click', function() {
+    document.getElementById('new-line-btn').addEventListener('click', function () {
       if (currentMasterId && isMasterInEditMode) {
         enableNewLineForm(currentMasterId);
       }
     });
 
     // Save line button click handler
-    document.getElementById('save-line-btn').addEventListener('click', function() {
+    document.getElementById('save-line-btn').addEventListener('click', function () {
       if (!currentMasterId) {
         alert('Please select a master transaction first');
         return;
@@ -875,8 +971,8 @@ function showError(message, title = 'Error') {
       }
 
       const formData = new FormData(document.getElementById('line-entry-form'));
-      const url = currentLineId ? 
-        `/gk-lines/${currentMasterId}/${currentLineId}` : 
+      const url = currentLineId ?
+        `/gk-lines/${currentMasterId}/${currentLineId}` :
         `/gk-lines/${currentMasterId}`;
       const method = currentLineId ? 'PUT' : 'POST';
 
@@ -884,21 +980,21 @@ function showError(message, title = 'Error') {
         method: method,
         body: formData
       })
-      .then(response => response.text())
-      .then(html => {
-        // Refresh the detail table
-        htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
-          target: '.datagrid-container-detail',
-          swap: 'innerHTML'
-        }).then(() => {
-          // Reload first line data to refresh the form
-          loadFirstLineData(currentMasterId);
+        .then(response => response.text())
+        .then(html => {
+          // Refresh the detail table
+          htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
+            target: '.datagrid-container-detail',
+            swap: 'innerHTML'
+          }).then(() => {
+            // Reload first line data to refresh the form
+            loadFirstLineData(currentMasterId);
+          });
+        })
+        .catch(error => {
+          console.error('Error saving line:', error);
+          alert('Error saving line');
         });
-      })
-      .catch(error => {
-        console.error('Error saving line:', error);
-        alert('Error saving line');
-      });
     });
 
     // Function to populate form for editing
@@ -930,12 +1026,12 @@ function showError(message, title = 'Error') {
       currentMasterId = masterId;
       currentLineId = null;
       isEditMode = false;
-      
+
       // Clear form but keep masterId
       document.getElementById('line-entry-form').reset();
       document.querySelector('input[name="masterId"]').value = masterId;
       document.querySelector('input[name="lineId"]').value = '';
-      
+
       updateFormState();
       document.querySelector('.bottom-form h2').textContent = 'New Line Entry';
     }
@@ -944,7 +1040,7 @@ function showError(message, title = 'Error') {
     function setMasterEditMode(editMode) {
       isMasterInEditMode = editMode;
       updateFormState();
-      
+
       // Update visual indication
       if (editMode) {
         document.querySelector('.bottom-form').classList.add('edit-mode');
@@ -958,10 +1054,10 @@ function showError(message, title = 'Error') {
       console.log('handleMasterSaveCancel called');
       console.log('currentMasterId:', currentMasterId);
       console.log('currentLineId:', currentLineId);
-      
+
       const currentSelectedLineId = currentLineId;
       setMasterEditMode(false);
-      
+
       // After master table refreshes, restore the current line selection
       if (currentMasterId && currentSelectedLineId) {
         console.log('Attempting to restore line selection after 300ms delay');
@@ -971,13 +1067,13 @@ function showError(message, title = 'Error') {
             .then(response => response.text())
             .then(html => {
               document.querySelector('.datagrid-container-detail').innerHTML = html;
-              
+
               // Try to select the same line again
               setTimeout(() => {
                 const lineRow = document.querySelector(`.datagrid-container-detail tr[data-line="${currentSelectedLineId}"]`);
                 console.log('Looking for line row with id:', currentSelectedLineId);
                 console.log('Found line row:', lineRow);
-                
+
                 if (lineRow) {
                   selectLineForEdit(lineRow);
                 } else {
@@ -1015,22 +1111,22 @@ function showError(message, title = 'Error') {
     }
 
     // Listen for master row selection to enable new line entry
-    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
       addRowClickHandlers();
-      
+
       // Check if we're back to normal view (not edit mode)
       const editForm = document.querySelector('.datagrid-container-master form');
       if (!editForm) {
         setMasterEditMode(false);
       }
-      
+
       // Enable form for first row if available and load first line
       const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
       if (firstRow) {
         const masterId = firstRow.getAttribute('data-id');
         highlightCurrentRow(firstRow);
         currentMasterId = masterId;
-        
+
         // Load first line data when detail table loads
         htmx.ajax('GET', `/gk-lines/${masterId}`, {
           target: '.datagrid-container-detail',
@@ -1042,7 +1138,7 @@ function showError(message, title = 'Error') {
     });
 
     // Listen for detail table updates to add line click handlers
-    htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function() {
+    htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function () {
       addLineClickHandlers();
       // Auto-select first line if available
       if (currentMasterId) {
@@ -1071,7 +1167,7 @@ function showError(message, title = 'Error') {
             highlightCurrentRow(this);
             const masterId = this.getAttribute('data-id');
             currentMasterId = masterId;
-            
+
             // Load lines for this master and select first line
             htmx.ajax('GET', `/gk-lines/${masterId}`, {
               target: '.datagrid-container-detail',
@@ -1163,7 +1259,7 @@ function showError(message, title = 'Error') {
     function toggleTheme() {
       const html = document.documentElement;
       const themeToggle = document.getElementById('theme-toggle');
-      
+
       if (themeToggle.checked) {
         html.setAttribute('data-theme', 'dark');
         localStorage.setItem('theme', 'dark');
@@ -1174,11 +1270,11 @@ function showError(message, title = 'Error') {
     }
 
     // Load saved theme on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const savedTheme = localStorage.getItem('theme') || 'light';
       const html = document.documentElement;
       const themeToggle = document.getElementById('theme-toggle');
-      
+
       html.setAttribute('data-theme', savedTheme);
       if (savedTheme === 'dark') {
         themeToggle.checked = true;

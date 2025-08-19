@@ -1,34 +1,23 @@
-SQLConnectionString(ReadConfig("SqlConnectionString"));
+// var1 = askdjhaksjd();
 
+SQLConnectionString(ReadConfig("SqlConnectionString"));
 
 // Add to the beginning of the file
 currentlyEditingId = null;
 
-// // Custom join function since CSCS doesn't have Join()
-// function joinArray(arr, separator) {
-//     result = "";
-//     for(i = 0; i < Size(arr); i++) {
-//         if (i > 0) {
-//             result += separator;
-//         }
-//         result += arr[i];
-//     }
-//     return result;
-// }
-
 // ===== GLOBAL CONFIGURATION =====
-gk_masterFields = [
+gk_masterFields = {
     "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
     "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
     "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
     "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
-];
+};
 
-gk_lineFields = [
+gk_lineFields = {
     "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
     "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
     "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
-];
+};
 
 gk_defaultValues = {
     "GK_GL_BR_TEM": "0",
@@ -52,16 +41,26 @@ function gk_generateForm(mode, values, id = null, errorHtml = "") {
     html += "    <div class='grid grid-cols-8 gap-4'>";
     
     for(i = 0; i < Size(gk_masterFields); i++) {
+        
         field = gk_masterFields[i];
+
         value = Contains(values, field) ? values[field] : gk_defaultValues[field];
         
-        html += "      <div><label>" + field.Split("_")[2] + ":</label>" +
+        // fieldSplit2 = field.Split("_");
+        // print(fieldSplit2[2]);
+        fieldShort = strReplace(field, "GK_GL_", "");
+
+        ternary1 = (field == "GK_GL_BR_TEM" && isEdit == true ? " readonly " : "");
+        ternary2 = ((field.EndsWith("DATUM") || field.EndsWith("DATDOK")) ? " type='date'" : "");
+        html += "      <div><label>" + fieldShort + ":</label>" +
                 "        <input class='input input-bordered input-sm w-full' " +
                 "               name='" + field + "' " +
-                (field == "GK_GL_BR_TEM" && isEdit ? "readonly " : "") +
+                ternary1 +
                 "               value='" + value + "'" +
-                "               " + (field.EndsWith("DATUM") || field.EndsWith("DATDOK") ? "type='date'" : "") + ">" +
+                "               " + ternary2 + ">" +
                 "      </div>";
+
+        // print(html);
     }
     
     html += "    </div>" +
@@ -124,7 +123,7 @@ function getGKTransactions(requestGlave) {
     }
     
     // Fixed page size
-    gkTrans_pageSize = 8;
+    gkTrans_pageSize = 5;
     gkTrans_skip = (gkTrans_page - 1) * gkTrans_pageSize;
     
     // Build SQL query - always exclude zero/null IDs
@@ -453,11 +452,15 @@ function getEditGKTransactionForm(args) {
 
 // Replace getEditGKTransactionForm with:
 function getEditGKTransactionForm(args) {
+
     id = args["RouteValues"]["id"];
     query = "SELECT " + gk_masterFields.Join(", ") + " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
-    sqlParams = {"@id": int(id)};
-    transaction = sqlQuery(query, sqlParams);
     
+    sqlParams = {};
+    sqlParams.Add({"@id", int(id)});
+
+    transaction = sqlQuery(query, sqlParams);
+
     if(transaction == null || Size(transaction) < 2) {
         headers = {"Content-Type": "text/html"};
         return Response(headers, "<script>showError('Transaction not found');</script>", 200);
@@ -758,12 +761,13 @@ function getGKLines(requestLinije) {
     
     lines = sqlQuery(queryd, sqlParamsd);
 
-    htmld = "<h2 class='text-lg font-bold mb-2'>Transaction Lines (Transaction ID: " + id + ")</h2>";
-    htmld += "<div class='overflow-x-auto'>";
-    htmld += "<table class='datatable w-full text-sm'>";
+    htmld = "<div class='datagrid-container-detail'>";
+    htmld += "<h2 class='text-lg font-bold mb-2'>Transaction Lines (Transaction ID: " + id + ")</h2>";
+    htmld += "<table class='datagrid-table'>";
     htmld += "<thead>";
-    htmld += "<tr class='bg-base-200'>";
-    htmld += "<th>Line</th>";
+    htmld += "<tr>";
+    htmld += "<th class='frozen-column-select'>Select</th>";
+    htmld += "<th class='frozen-column-id'>Line</th>";
     htmld += "<th>Account</th>";
     htmld += "<th>Cost Center</th>";
     htmld += "<th>Description</th>";
@@ -775,45 +779,35 @@ function getGKLines(requestLinije) {
     htmld += "<th>Currency</th>";
     htmld += "<th>Rate</th>";
     htmld += "<th>Amount/Curr</th>";
-    htmld += "<th>Actions</th>";
+    htmld += "<th class='frozen-column-right'>Actions</th>";
     htmld += "</tr></thead><tbody>";
 
     if (lines != null && Size(lines) > 1) {
         for (idet = 1; idet < Size(lines); idet++) {
             rowx = lines[idet];
             lineId = rowx[9]; // GK_LN_BR_LIN
-            // 🔴 Zebra striping
+            
+            // Proper alternating row styling like master table
             if (idet % 2 == 0) {
-                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-300 hover:bg-base-300'>";
+                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-200 hover:bg-base-300 cursor-pointer' onclick='selectLineForEdit(this)'>";
             } else {
-                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-300 hover:bg-base-300'>";
+                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='hover:bg-base-300 cursor-pointer' onclick='selectLineForEdit(this)'>";
             }
 
-            htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' " +
-                "data-account='" + safestr(rowx[1]) + "' " +
-                "data-costcenter='" + safestr(rowx[2]) + "' " +
-                "data-description='" + safestr(rowx[3]) + "' " +
-                "data-dp='" + rowx[4] + "' " +
-                "data-amount='" + formatNumber(rowx[5]) + "' " +
-                "data-docid='" + safestr(rowx[6]) + "' " +
-                "data-docdate='" + safestr(rowx[7]) + "' " +
-                "data-partner='" + safestr(rowx[8]) + "' " +
-                "data-currency='" + safestr(rowx[10]) + "' " +
-                "data-rate='" + formatNumber(rowx[11]) + "' " +
-                "data-amountcurr='" + formatNumber(rowx[12]) + "' " +
-                "class='cursor-pointer hover:bg-base-200' onclick='selectLineForEdit(this)'>";
+            // Select column
+            htmld += "<td class='frozen-column-select'><input type='checkbox' class='checkbox' name='selectedLinesRows' value='" + lineId + "' title='Select line " + lineId + "' aria-label='Select line " + lineId + "'></td>";
 
-            // Line
-            htmld += "<td class='text-center'>" + lineId + "</td>";
+            // Line (ID column)
+            htmld += "<td class='frozen-column-id text-right' data-field='GK_LN_BR_LIN'>" + lineId + "</td>";
 
             // Account
-            htmld += "<td data-field='GK_LN_KONTO'>" + safestr(rowx[1]) + "</td>";
+            htmld += "<td data-field='GK_LN_KONTO' class='text-left'>" + safestr(rowx[1]) + "</td>";
 
             // Cost Center
-            htmld += "<td data-field='GK_LN_OBJED'>" + safestr(rowx[2]) + "</td>";
+            htmld += "<td data-field='GK_LN_OBJED' class='text-center'>" + safestr(rowx[2]) + "</td>";
 
             // Description
-            htmld += "<td data-field='GK_LN_OPIS'>" + safestr(rowx[3]) + "</td>";
+            htmld += "<td data-field='GK_LN_OPIS' class='text-left'>" + safestr(rowx[3]) + "</td>";
 
             // Debit / Credit (based on GK_LN_DP)
             if (rowx[4] == "D") {
@@ -825,26 +819,27 @@ function getGKLines(requestLinije) {
             }
 
             // Doc ID
-            htmld += "<td class='text-center'>" + safestr(rowx[6]) + "</td>";
+            htmld += "<td data-field='GK_LN_BRDOK' class='text-center'>" + safestr(rowx[6]) + "</td>";
 
             // Doc Date
-            htmld += "<td class='text-center'>" + safestr(rowx[7]) + "</td>";
+            htmld += "<td data-field='GK_LN_DATDOK' class='text-center'>" + safestr(rowx[7]) + "</td>";
 
             // Partner
-            htmld += "<td class='text-center'>" + safestr(rowx[8]) + "</td>";
+            htmld += "<td data-field='GK_LN_PARTNR' class='text-center'>" + safestr(rowx[8]) + "</td>";
 
             // Currency
-            htmld += "<td class='text-center'>" + safestr(rowx[10]) + "</td>";
+            htmld += "<td data-field='GK_LN_SIFDVZ' class='text-center'>" + safestr(rowx[10]) + "</td>";
 
             // Rate
-            htmld += "<td class='text-right'>" + formatNumber(rowx[11]) + "</td>";
+            htmld += "<td data-field='GK_LN_TECAJ' class='text-right'>" + formatNumber(rowx[11]) + "</td>";
 
             // Amount/Currency
-            htmld += "<td class='text-right'>" + formatNumber(rowx[12]) + "</td>";
+            htmld += "<td data-field='GK_LN_IZNDEV' class='text-right'>" + formatNumber(rowx[12]) + "</td>";
 
-            // Actions - only show delete button, no edit button
-            htmld += "<td class='flex gap-1'>";
-            htmld += "<button class='btn btn-error btn-xs' hx-delete='/gk-lines/" + id + "/" + lineId + "' hx-confirm='Delete line?' hx-target='closest tr' hx-swap='outerHTML'>Del</button>";
+            // Actions column with same styling as master table
+            htmld += "<td class='flex gap-1 frozen-column-right'>";
+            // htmld += "<button class='btn btn-info btn-xs action-button' hx-get='/gk-lines/" + id + "/" + lineId + "/edit' hx-target='this' hx-swap='outerHTML'>Edit</button>";
+            htmld += "<button class='btn btn-error btn-xs action-button' hx-delete='/gk-lines/" + id + "/" + lineId + "' hx-confirm='Delete line?' hx-target='closest tr' hx-swap='outerHTML'>Del</button>";
             htmld += "</td>";
 
             htmld += "</tr>";
