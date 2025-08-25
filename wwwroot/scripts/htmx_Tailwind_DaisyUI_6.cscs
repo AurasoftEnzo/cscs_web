@@ -24,49 +24,73 @@ gk_defaultValues = {
     "GK_GL_DATUM": "",
     "GK_GL_POSTED": "",
     "GK_GL_OPIS": "",
+    "GK_GL_GOD": "",
+    "GK_GL_TIP": "", 
+    "GK_GL_OZNAKA": "", 
+    "GK_GL_ZNAK": 0,
+    "GK_GL_IZNL": 0, 
+    "GK_GL_IZNP": 0, 
+    "GK_GL_ZATV_KLAS": "", 
+    "GK_GL_POC_STANJ": "",
+    "GK_GL_BRDOK": 0, 
+    "GK_GL_DATDOK": "1900-01-01", 
+    "GK_GL_PARTNER": "", 
+    "GK_GL_BR_LIN": 0
     // ... other default values
 };
 
 function gk_generateForm(mode, values, id = null, errorHtml = "") {
     // mode can be "new" or "edit"
-    isEdit = (mode == "edit");
-    
-    html = "<div class='datagrid-container-master'>" +
+    gk_generateForm_isEdit = (mode == "edit");
+    //print("GLAVA isEdit=" + gk_generateForm_isEdit);
+    gk_generateForm_html = "<div class='datagrid-container-master'>" +
            "  <form class='vertical-form eight-column-form'>";
     
     if (errorHtml != "") {
-        html += errorHtml;
+        gk_generateForm_html += errorHtml;
     }
     
-    html += "    <div class='grid grid-cols-8 gap-4'>";
+    gk_generateForm_html += "    <div class='grid grid-cols-8 gap-4'>";
     
     for(i = 0; i < Size(gk_masterFields); i++) {
         
-        field = gk_masterFields[i];
-
-        value = Contains(values, field) ? values[field] : gk_defaultValues[field];
+        gk_generateForm_field = gk_masterFields[i];
+        //print("field=" + field);
+        //value = Contains(values, field) ? values[field] : gk_defaultValues[field];
+        if (Contains(values, gk_generateForm_field))
+        {
+            gk_generateForm_value = values[gk_generateForm_field];
+        }
+        else
+        {
+            gk_generateForm_value = gk_defaultValues[gk_generateForm_field];
+        }
         
         // fieldSplit2 = field.Split("_");
         // print(fieldSplit2[2]);
-        fieldShort = strReplace(field, "GK_GL_", "");
+        gk_generateForm_fieldShort = strReplace(gk_generateForm_field, "GK_GL_", "");
 
-        ternary1 = (field == "GK_GL_BR_TEM" && isEdit == true ? " readonly " : "");
-        ternary2 = ((field.EndsWith("DATUM") || field.EndsWith("DATDOK")) ? " type='date'" : "");
-        html += "      <div><label>" + fieldShort + ":</label>" +
+        gk_generateForm_ternary1 = (gk_generateForm_field == "GK_GL_BR_TEM" && gk_generateForm_isEdit == true ? " readonly " : "");
+        gk_generateForm_ternary2 = ((gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK")) ? " type='date'" : "");
+        gk_generateForm_html += "      <div><label>" + gk_generateForm_fieldShort + ":</label>" +
                 "        <input class='input input-bordered input-sm w-full' " +
-                "               name='" + field + "' " +
-                ternary1 +
-                "               value='" + value + "'" +
-                "               " + ternary2 + "/>" +
+                "               name='" + gk_generateForm_field + "' " +
+                gk_generateForm_ternary1 +
+                "               value='" + gk_generateForm_value + "'" +
+                "               " + gk_generateForm_ternary2 + ">" +
                 "      </div>";
 
         // print(html);
     }
     
-    html += "    </div>" +
+    gk_generateForm_ternary3 = (gk_generateForm_isEdit ? "put" : "post");
+    gk_generateForm_ternary4 = (gk_generateForm_isEdit ? "/" + id : "");
+
+    gk_generateForm_html += "    </div>" +
             "    <div class='form-actions mt-4'>" +
             "      <button class='btn btn-success btn-sm' " +
-            "              hx-" + (isEdit ? "put" : "post") + "='/gk-transactions" + (isEdit ? "/" + id : "") + "' " +
+            //"              hx-" + (isEdit ? "put" : "post") + "='/gk-transactions" + (isEdit ? "/" + id : "") + "' " +
+            "              hx-" + gk_generateForm_ternary3 + "='/gk-transactions" + gk_generateForm_ternary4 + "' " +
             "              hx-include='closest form' " +
             "              hx-target='.datagrid-container-master' " +
             "              hx-swap='outerHTML'>Save</button>" +
@@ -78,7 +102,7 @@ function gk_generateForm(mode, values, id = null, errorHtml = "") {
             "  </form>" +
             "</div>";
     
-    return html;
+    return gk_generateForm_html;
 }
 
 //MASTER TABLE
@@ -125,7 +149,15 @@ function getGKTransactions(requestGlave) {
     // Fixed page size
     gkTrans_pageSize = 5;
     gkTrans_skip = (gkTrans_page - 1) * gkTrans_pageSize;
-    
+        
+    //ALERT after html
+    gkTrans_alert = "";
+    if (Contains(requestGlave["QueryParams"], "alertText")) 
+    {
+        gkTrans_alert = requestGlave["QueryParams"]["alertText"];
+    }
+    //print("gkTrans_alert=" + gkTrans_alert);
+
     // Build SQL query - always exclude zero/null IDs
     gkTrans_whereClause = " WHERE GK_GL_BR_TEM IS NOT NULL AND GK_GL_BR_TEM <> 0";
     if (gkTrans_search != "") {
@@ -277,7 +309,10 @@ function getGKTransactions(requestGlave) {
                     "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Next</a>";
         }
         gkTrans_html += "</div>";  
-    gkTrans_html += "</div>";  
+    gkTrans_html += "</div>"; 
+
+    gkTrans_html += gkTrans_alert; 
+    
     
     gkTrans_headers1 = {"Content-Type": "text/html"};
 
@@ -331,7 +366,7 @@ function getNewGKTransactionForm(args) {
 CreateEndpoint("POST", "/gk-transactions", "createGKTransaction");
 function createGKTransaction(args) {
     currentlyEditingId = null;
-
+    //print("createGKTransaction - DODAVANJE NOVE GLAVE");
     // Get all form values
     create_fields = [
         "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
@@ -339,20 +374,88 @@ function createGKTransaction(args) {
         "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
         "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
     ];
-    print("Creating new GK transaction with fields: " + create_fields);
+    //print("Creating new GK transaction with fields: " + create_fields);
     create_values = {};
     for(create_i = 0; create_i < Size(create_fields); create_i++) {
         create_field = create_fields[create_i];
         create_values[create_i]= GetValueFromForm(args["Body"], create_field);
     }
 
-    // Validate required fields
-    if("GK_GL_BR_TEM" == "" || "GK_GL_DATUM" == "") {
-        // 🔴 Validation failed: Return the form again with error + values
+    create_values2 = {};
+    create_values2["GK_GL_BR_TEM"] = GetValueFromForm(args["Body"], "GK_GL_BR_TEM");
+    create_values2["GK_GL_DATUM"] = GetValueFromForm(args["Body"], "GK_GL_DATUM");
+    create_values2["GK_GL_POSTED"] = GetValueFromForm(args["Body"], "GK_GL_POSTED");
+    create_values2["GK_GL_OPIS"] = GetValueFromForm(args["Body"], "GK_GL_OPIS");
+    create_values2["GK_GL_GOD"] = GetValueFromForm(args["Body"], "GK_GL_GOD");
+    create_values2["GK_GL_TIP"] = GetValueFromForm(args["Body"], "GK_GL_TIP");
+    create_values2["GK_GL_OZNAKA"] = GetValueFromForm(args["Body"], "GK_GL_OZNAKA");
+    create_values2["GK_GL_ZNAK"] = GetValueFromForm(args["Body"], "GK_GL_ZNAK");
+    create_values2["GK_GL_IZNL"] = GetValueFromForm(args["Body"], "GK_GL_IZNL");
+    create_values2["GK_GL_IZNP"] = GetValueFromForm(args["Body"], "GK_GL_IZNP");
+    create_values2["GK_GL_ZATV_KLAS"] = GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS");
+    create_values2["GK_GL_POC_STANJ"] = GetValueFromForm(args["Body"], "GK_GL_POC_STANJ");
+    create_values2["GK_GL_BRDOK"] = GetValueFromForm(args["Body"], "GK_GL_BRDOK");
+    create_values2["GK_GL_DATDOK"] = GetValueFromForm(args["Body"], "GK_GL_DATDOK");
+    create_values2["GK_GL_PARTNER"] = GetValueFromForm(args["Body"], "GK_GL_PARTNER");
+    create_values2["GK_GL_BR_LIN"] = GetValueFromForm(args["Body"], "GK_GL_BR_LIN");
 
+
+    // Validate required fields
+    //if("GK_GL_BR_TEM" == "" || "GK_GL_DATUM" == "") {
+        
+        // 🔴 Validation failed: Return the form again with error + values
+    //    create_headers = {"Content-Type": "text/html"};
+        //return Response(create_headers, getNewGKTransactionFormWithValues(create_values, "<div class='alert alert-error mb-4'>ID and Date are required</div>"), 200);
+    //}
+
+    //createGKTransaction_GK_GL_BR_TEM = create_values[0];    
+    //createGKTransaction_GK_GL_BR_TEM = create_values2["GK_GL_BR_TEM"];    
+    //print("createGKTransaction GK_GL_BR_TEM = " + createGKTransaction_GK_GL_BR_TEM);
+    if (IsInt(create_values2["GK_GL_BR_TEM"])==false)
+    {
+        print("Provjera GK_GL_BR_TEM nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
         create_headers = {"Content-Type": "text/html"};
-        return Response(create_headers, getNewGKTransactionFormWithValues(create_values, "<div class='alert alert-error mb-4'>ID and Date are required</div>"), 200);
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_TEM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(create_headers, createGKTransaction_validationerror_html, 200);
     }
+    else
+    {
+        print("Provjera GK_GL_BR_TEM je prošla");
+    }    
+
+    print("GK_GL_DATUM = " + create_values2["GK_GL_DATUM"]);
+
+    if (IsDate(create_values2["GK_GL_DATUM"])==false)
+    {
+        print("Provjera GK_GL_DATUM nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        create_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATUM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(create_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_DATUM je prošla");
+    }
+
+    
+    //print("GK_GL_POSTED.SIZE = " + create_values2["GK_GL_POSTED"].Size);
+    createGKTransaction_GK_GL_POSTED = create_values2["GK_GL_POSTED"];
+    print("createGKTransaction_GK_GL_POSTED.size = " + createGKTransaction_GK_GL_POSTED.size);
+
+
+
+
+
+
+
 
     // Build insert query
     create_query = "INSERT INTO NKGKGLTM (";
@@ -364,7 +467,7 @@ function createGKTransaction(args) {
         create_query += create_fields[create_i];
         create_first = false;
     }
-    print("Insert 1.dio: " + create_query);
+    //print("Insert 1.dio: " + create_query);
     create_query += ") VALUES (";
     create_first = true;
     for(create_i = 0; create_i < Size(create_fields); create_i++) {
@@ -382,14 +485,93 @@ function createGKTransaction(args) {
         //create_sqlParams.Add({create_fields[create_i], create_values[create_fields[create_i]]});
         create_sqlParams.Add({"@"+create_fields[create_i], create_values[create_i]});
     }
+    //print("NOVA GLAVA SQL=" + create_query);
     sqlNonQuery(create_query, create_sqlParams);
+
+
 
     //htmx.trigger("body", "refreshTable");
     create_args2 = {};
     create_args2["QueryParams"] = {"page": 1};
+
+    createGKTransaction_alert = "<script>Swal.fire({title: 'Successfully added!', text: 'Added transaction with id " + create_values2["GK_GL_BR_TEM"] + ".', icon: 'success', confirmButtonText: 'Close'});</script>";
+    
+    create_args2["QueryParams"] = {"alertText": createGKTransaction_alert};
+
     return getGKTransactions(create_args2);
 }
 
+function IsInt(value)
+{
+    if (value == "")
+    {
+        return false;
+    }
+
+    try
+    {        
+        // Check if value is a valid integer
+        int1 = int(value);
+        str2 = string(int1);
+        if(value != str2){
+            throw "Int Validacija nije prošla.\nvalue = " + value;
+        }
+
+        //print("Int Validacija OK");        
+        return true; 
+    }
+    catch(ex11)
+    {        
+        //print(ex11);
+        return false;
+    }
+
+    return false;
+}
+
+function IsDate(value)
+{
+    if (value == "")
+    {
+        return false;
+    }
+
+    try
+    {
+        numbers = value.Split("-");
+        if (Size(numbers) != 3)
+        {
+            throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+
+        stryear = numbers[0];
+        strmonth = numbers[1];
+        strday = numbers[2];
+
+        if (IsInt(strday) == false || IsInt(strmonth) == false || IsInt(stryear) == false)
+        {
+            throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+
+        // Check if value is a valid date
+        day = int(strday);
+        month = int(strmonth);
+        year = int(stryear);
+
+        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+            throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+        //print("Date Validacija OK");
+        return true; 
+    }
+    catch(ex11)
+    {
+        //print(ex11);
+        return false;
+    }
+
+    return false;
+}
 // Edit form
 CreateEndpoint("GET", "/gk-transactions/{id}/edit", "getEditGKTransactionForm");
 /*
@@ -604,6 +786,84 @@ function getNewGKTransactionFormWithValues(values, errorHtml) {
 
     headers = {"Content-Type": "text/html"};
     return Response(headers, html, 200);
+}
+
+
+function getNewGKTransactionFormWithValues2(values, errorScript) {
+    print("getNewGKTransactionFormWithValues2");
+    // Default empty values
+    /*defaults = {
+        "GK_GL_BR_TEM": "0",
+        "GK_GL_DATUM": "",
+        "GK_GL_POSTED": "",
+        "GK_GL_OPIS": "",
+        "GK_GL_GOD": "",
+        "GK_GL_TIP": "",
+        "GK_GL_OZNAKA": "",
+        "GK_GL_ZNAK": "",
+        "GK_GL_IZNL": "",
+        "GK_GL_IZNP": "",
+        "GK_GL_ZATV_KLAS": "",
+        "GK_GL_POC_STANJ": "",
+        "GK_GL_BRDOK": "",
+        "GK_GL_DATDOK": "",
+        "GK_GL_PARTNER": "",
+        "GK_GL_BR_LIN": ""
+    };
+*/
+/*
+    // Merge defaults with submitted values
+    for(key in defaults) {
+        if (Contains(values, key)) {
+            defaults[key] = values[key];
+        }
+    }
+*/
+
+   // print("DEFAULTS => " + defaults["GK_GL_BR_TEM"]);//ispiše 0 ako je bilo prazno
+   //print("getNewGKTransactionFormWithValues2 VALUES => " + values["GK_GL_BR_TEM"]);//ispiše 0 ako je bilo prazno
+
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>" +
+          
+           "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + values["GK_GL_BR_TEM"] + "'></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + values["GK_GL_DATUM"] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + values["GK_GL_POSTED"] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + values["GK_GL_OPIS"] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + values["GK_GL_GOD"] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + values["GK_GL_TIP"] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + values["GK_GL_OZNAKA"] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + values["GK_GL_ZNAK"] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + values["GK_GL_IZNL"] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + values["GK_GL_IZNP"] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + values["GK_GL_ZATV_KLAS"] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + values["GK_GL_POC_STANJ"] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + values["GK_GL_BRDOK"] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + values["GK_GL_DATDOK"] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + values["GK_GL_PARTNER"] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + values["GK_GL_BR_LIN"] + "'></div>" +
+           "    </div>" +
+           "    <div class='form-actions mt-4'>" +
+           "      <button class='btn btn-success btn-sm' " +
+           "              hx-post='/gk-transactions' " +
+           "              hx-include='closest form' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML'>Save</button>" +
+           "      <button class='btn btn-error btn-sm' " +
+           "              hx-get='/gk-transactions' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML'>Cancel</button>" +
+           "    </div>" +
+           "  </form>" +
+           "</div>";
+
+    html += errorScript;
+    //print(html);
+
+    //headers = {"Content-Type": "text/html"};
+    //return Response(headers, html, 200);
+    return html;
 }
 
 function getEditGKTransactionFormWithValues(id, values, errorHtml) {
