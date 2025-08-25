@@ -71,7 +71,17 @@ function gk_generateForm(mode, values, id = null, errorHtml = "") {
         gk_generateForm_fieldShort = strReplace(gk_generateForm_field, "GK_GL_", "");
 
         gk_generateForm_ternary1 = (gk_generateForm_field == "GK_GL_BR_TEM" && gk_generateForm_isEdit == true ? " readonly " : "");
-        gk_generateForm_ternary2 = ((gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK")) ? " type='date'" : "");
+
+        //gk_generateForm_ternary2 = ((gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK")) ? " type='date'" : "");
+        if (gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK"))
+        {
+            gk_generateForm_ternary2 = " type='date'";
+        }
+        else
+        {
+            gk_generateForm_ternary2 = "";
+        }
+      
         gk_generateForm_html += "      <div><label>" + gk_generateForm_fieldShort + ":</label>" +
                 "        <input class='input input-bordered input-sm w-full' " +
                 "               name='" + gk_generateForm_field + "' " +
@@ -81,6 +91,7 @@ function gk_generateForm(mode, values, id = null, errorHtml = "") {
                 "      </div>";
 
         // print(html);
+       
     }
     
     gk_generateForm_ternary3 = (gk_generateForm_isEdit ? "put" : "post");
@@ -548,6 +559,10 @@ function IsDate(value)
         strmonth = numbers[1];
         strday = numbers[2];
 
+        stryear = RemoveLeadingZeros(stryear);
+        strmonth = RemoveLeadingZeros(strmonth);
+        strday = RemoveLeadingZeros(strday);
+
         if (IsInt(strday) == false || IsInt(strmonth) == false || IsInt(stryear) == false)
         {
             throw "Date Validacija nije prošla.\nvalue = " + value;
@@ -557,6 +572,7 @@ function IsDate(value)
         day = int(strday);
         month = int(strmonth);
         year = int(stryear);
+
 
         if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
             throw "Date Validacija nije prošla.\nvalue = " + value;
@@ -572,6 +588,23 @@ function IsDate(value)
 
     return false;
 }
+
+function RemoveLeadingZeros(value)
+{
+    if (value == "")
+    {
+        return "";
+    }
+
+    // Remove leading zeros
+    while (value.StartsWith("0"))
+    {
+        value = value.Substring(1);
+    }
+
+    return value;
+}
+
 // Edit form
 CreateEndpoint("GET", "/gk-transactions/{id}/edit", "getEditGKTransactionForm");
 /*
