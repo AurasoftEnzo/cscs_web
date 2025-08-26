@@ -5,31 +5,7 @@
   <title>GK Transactions Management</title>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <meta charset="utf-8">
-  <script>
-    // Fetch form data from the form inside .datagrid-container-master and send to API endpoint
-    function sendMasterFormData() {
-      const form = document.querySelector('.datagrid-container-master form');
-      if (!form) {
-        alert('No form found in master container!');
-        return;
-      }
-      const formData = new FormData(form);
-      fetch('/api/your-endpoint', {
-        method: 'POST',
-        body: formData
-      })
-        .then(response => response.json())
-        .then(data => {
-          // Handle response data
-          console.log('API response:', data);
-          alert('Form submitted successfully!');
-        })
-        .catch(error => {
-          console.error('Error submitting form:', error);
-          alert('Error submitting form');
-        });
-    }
-  </script>
+  
   <script src='https://unpkg.com/htmx.org@1.9.10'></script>
   <script src='https://cdn.tailwindcss.com'></script>
   <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
@@ -538,9 +514,8 @@
       /* Solid header background */
     }
   </style>
-
-
 </head>
+
 
 <body>
 
@@ -558,73 +533,12 @@
     </div>
   </div>
 
-  <!-- Add top margin to compensate for fixed header -->
-  <!-- <div style="margin-top: 40px;"></div> -->
-
   <div class="master-detail-layout">
-
-    <!-- 1. MASTER TABLE (3-4 rows) -->
+    <!-- 1. Employees tabler container -->
     <div class="master-table">
       <div class="datagrid-container-master" hx-get="/employees" hx-trigger="load" hx-swap="innerHTML"></div>
     </div>
-
-    <!-- 2. DETAIL TABLE (fills space) -->
-    <!-- <div class="detail-table">
-      <div class="datagrid-container-detail"></div>
-    </div> -->
-
-    <!-- 3. BOTTOM FORM (compact 2-row) -->
-    <!-- <div class="bottom-form">
-      <h2 class="text-lg font-bold">Line Entry</h2>
-      <form id="line-entry-form">
-        <input type="hidden" name="masterId" value="">
-        <input type="hidden" name="lineId" value="">
-        <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Account</label><input type="text" name="GK_LN_KONTO" class="input input-bordered input-sm w-full"
-              placeholder="11100" maxlength="15"></div>
-          <div><label>Cost Center</label><input type="text" name="GK_LN_OBJED"
-              class="input input-bordered input-sm w-full" placeholder="601" maxlength="6"></div>
-          <div><label>Description</label><input type="text" name="GK_LN_OPIS"
-              class="input input-bordered input-sm w-full" placeholder="Payment" maxlength="50"></div>
-          <div><label>DP</label><select name="GK_LN_DP" class="select select-bordered select-sm w-full">
-              <option value="">Select</option>
-              <option value="D">D</option>
-              <option value="P">P</option>
-            </select></div>
-        </div>
-        <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Amount</label><input type="number" step="0.01" name="GK_LN_IZNOS"
-              class="input input-bordered input-sm w-full" placeholder="100.00"></div>
-          <div><label>Doc ID</label><input type="number" name="GK_LN_BRDOK" class="input input-bordered input-sm w-full"
-              placeholder="12345"></div>
-          <div><label>Doc Date</label><input type="date" name="GK_LN_DATDOK"
-              class="input input-bordered input-sm w-full"></div>
-          <div><label>Partner</label><input type="text" name="GK_LN_PARTNR" class="input input-bordered input-sm w-full"
-              placeholder="P001" maxlength="10"></div>
-        </div>
-        <div class="grid grid-cols-4 gap-2 mb-2">
-          <div><label>Currency</label><input type="text" name="GK_LN_SIFDVZ"
-              class="input input-bordered input-sm w-full" placeholder="EUR" maxlength="3"></div>
-          <div><label>Rate</label><input type="number" step="0.0001" name="GK_LN_TECAJ"
-              class="input input-bordered input-sm w-full" placeholder="1.0000"></div>
-          <div><label>Amount/Curr</label><input type="number" step="0.01" name="GK_LN_IZNDEV"
-              class="input input-bordered input-sm w-full" placeholder="100.00"></div>
-          <div class="flex gap-2 items-end">
-            <button type="button" id="save-line-btn" class="btn btn-success btn-sm" disabled>Save Line</button>
-            <button type="button" id="new-line-btn" class="btn btn-primary btn-sm" disabled>New Line</button>
-            <button type="button" id="clear-line-btn" class="btn btn-warning btn-sm">Clear</button>
-          </div>
-        </div>
-      </form>
-    </div> -->
-
   </div>
-
-
-
-
-
-
 
 
   <script>
@@ -806,165 +720,9 @@
     let isEditMode = false;
     let isMasterInEditMode = false;
 
-    // // Clear form function
-    // function clearLineForm() {
-    //   document.getElementById('line-entry-form').reset();
-    //   document.querySelector('input[name="masterId"]').value = '';
-    //   document.querySelector('input[name="lineId"]').value = '';
-    //   currentMasterId = null;
-    //   currentLineId = null;
-    //   isEditMode = false;
-    //   updateFormState();
-    //   document.querySelector('.bottom-form h2').textContent = 'Line Entry';
-    // }
-
-
-    // // Function to update form state based on master edit mode
-    // function updateFormState() {
-    //   const saveBtn = document.getElementById('save-line-btn');
-    //   const newLineBtn = document.getElementById('new-line-btn');
-    //   const formInputs = document.querySelectorAll('#line-entry-form input, #line-entry-form select');
-
-    //   if (isMasterInEditMode && currentMasterId) {
-    //     // Enable form for editing
-    //     saveBtn.disabled = false;
-    //     newLineBtn.disabled = false;
-    //     formInputs.forEach(input => {
-    //       input.disabled = false;
-    //     });
-    //     saveBtn.textContent = currentLineId ? 'Update Line' : 'Save Line';
-    //   } else {
-    //     // Disable form for read-only viewing
-    //     saveBtn.disabled = true;
-    //     newLineBtn.disabled = true;
-    //     formInputs.forEach(input => {
-    //       input.disabled = true;
-    //     });
-    //     saveBtn.textContent = 'Save Line';
-    //   }
-    // }
-
-
-
-    // // Clear button click handler
-    // document.getElementById('clear-line-btn').addEventListener('click', clearLineForm);
-
-    // // New Line button click handler
-    // document.getElementById('new-line-btn').addEventListener('click', function () {
-    //   if (currentMasterId && isMasterInEditMode) {
-    //     enableNewLineForm(currentMasterId);
-    //   }
-    // });
-
-
-
-
-    // // Save line button click handler
-    // document.getElementById('save-line-btn').addEventListener('click', function () {
-    //   if (!currentMasterId) {
-    //     alert('Please select a master transaction first');
-    //     return;
-    //   }
-
-    //   if (!isMasterInEditMode) {
-    //     alert('Master transaction must be in edit mode to save lines');
-    //     return;
-    //   }
-
-    //   const formData = new FormData(document.getElementById('line-entry-form'));
-    //   const url = currentLineId ?
-    //     `/gk-lines/${currentMasterId}/${currentLineId}` :
-    //     `/gk-lines/${currentMasterId}`;
-    //   const method = currentLineId ? 'PUT' : 'POST';
-
-    //   fetch(url, {
-    //     method: method,
-    //     body: formData
-    //   })
-    //     .then(response => response.text())
-    //     .then(html => {
-    //       // // Refresh the detail table
-    //       // htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
-    //       //   target: '.datagrid-container-detail',
-    //       //   swap: 'innerHTML'
-    //       // }).then(() => {
-    //       //   // Reload first line data to refresh the form
-    //       //   loadFirstLineData(currentMasterId);
-    //       // });
-    //     })
-    //     .catch(error => {
-    //       console.error('Error saving line:', error);
-    //       alert('Error saving line');
-    //     });
-    // });
-
-
-
-    // // Function to populate form for editing
-    // function populateLineForm(masterId, lineData) {
-    //   currentMasterId = masterId;
-    //   currentLineId = lineData.lineId;
-    //   isEditMode = !!lineData.lineId;
-
-    //   document.querySelector('input[name="masterId"]').value = masterId;
-    //   document.querySelector('input[name="lineId"]').value = lineData.lineId || '';
-    //   document.querySelector('input[name="GK_LN_KONTO"]').value = lineData.account || '';
-    //   document.querySelector('input[name="GK_LN_OBJED"]').value = lineData.costCenter || '';
-    //   document.querySelector('input[name="GK_LN_OPIS"]').value = lineData.description || '';
-    //   document.querySelector('select[name="GK_LN_DP"]').value = lineData.dp || '';
-    //   document.querySelector('input[name="GK_LN_IZNOS"]').value = lineData.amount || '';
-    //   document.querySelector('input[name="GK_LN_BRDOK"]').value = lineData.docId || '';
-    //   document.querySelector('input[name="GK_LN_DATDOK"]').value = lineData.docDate || '';
-    //   document.querySelector('input[name="GK_LN_PARTNR"]').value = lineData.partner || '';
-    //   document.querySelector('input[name="GK_LN_SIFDVZ"]').value = lineData.currency || '';
-    //   document.querySelector('input[name="GK_LN_TECAJ"]').value = lineData.rate || '';
-    //   document.querySelector('input[name="GK_LN_IZNDEV"]').value = lineData.amountCurr || '';
-
-    //   updateFormState();
-    //   document.querySelector('.bottom-form h2').textContent = currentLineId ? 'Line Details' : 'New Line Entry';
-    // }
-
-
-
-    // // Function to enable form for new line entry
-    // function enableNewLineForm(masterId) {
-    //   currentMasterId = masterId;
-    //   currentLineId = null;
-    //   isEditMode = false;
-
-    //   // Clear form but keep masterId
-    //   document.getElementById('line-entry-form').reset();
-    //   document.querySelector('input[name="masterId"]').value = masterId;
-    //   document.querySelector('input[name="lineId"]').value = '';
-
-    //   updateFormState();
-    //   document.querySelector('.bottom-form h2').textContent = 'New Line Entry';
-    // }
-
-
-
-    // Function to set master edit mode
-    function setMasterEditMode(editMode) {
-      isMasterInEditMode = editMode;
-      // updateFormState();
-
-
-      // // Update visual indication
-      // if (editMode) {
-      //   document.querySelector('.bottom-form').classList.add('edit-mode');
-      // } else {
-      //   document.querySelector('.bottom-form').classList.remove('edit-mode');
-      // }
-    }
-
-
 
     // Function to handle master save/cancel - preserve current line
     function handleMasterSaveCancel() {
-      // console.log('handleMasterSaveCancel called');
-      // console.log('currentMasterId:', currentMasterId);
-      // console.log('currentLineId:', currentLineId);
-
       const currentSelectedLineId = currentLineId;
       setMasterEditMode(false);
 
@@ -1036,14 +794,6 @@
         const masterId = firstRow.getAttribute('data-id');
         highlightCurrentRow(firstRow);
         currentMasterId = masterId;
-
-        // // Load first line data when detail table loads
-        // htmx.ajax('GET', `/gk-lines/${masterId}`, {
-        //   target: '.datagrid-container-detail',
-        //   swap: 'innerHTML'
-        // }).then(() => {
-        //   loadFirstLineData(masterId);
-        // });
       }
     });
 
@@ -1056,20 +806,6 @@
       }
     });
 
-    // // Function to add click handlers to line rows
-    // function addLineClickHandlers() {
-    //   document.querySelectorAll('.datagrid-container-detail tr[data-line]').forEach(row => {
-    //     row.addEventListener('click', function (e) {
-    //       // Only handle click if not clicking on buttons
-    //       if (!e.target.closest('button')) {
-    //         selectLineForEdit(this);
-    //       }
-    //     });
-    //   });
-    // }
-
-
-
     // Override the addRowClickHandlers to include form enabling
     function addRowClickHandlers() {
       document.querySelectorAll('.datagrid-container-master tr[data-id]').forEach(row => {
@@ -1079,30 +815,11 @@
             highlightCurrentRow(this);
             const masterId = this.getAttribute('data-id');
             currentMasterId = masterId;
-
-            // // Load lines for this master and select first line
-            // htmx.ajax('GET', `/gk-lines/${masterId}`, {
-            //   target: '.datagrid-container-detail',
-            //   swap: 'innerHTML'
-            // }).then(() => {
-            //   loadFirstLineData(masterId);
-            // });
           }
         });
       });
     }
 
-  </script>
-
-  <script>
-    // window.onload = function () {
-    //   Swal.fire({
-    //     title: 'Hello!',
-    //     text: 'This alert appears when the page is fully loaded.',
-    //     icon: 'success',
-    //     confirmButtonText: 'Cool'
-    //   });
-    // };
   </script>
 
   <script>
@@ -1116,19 +833,6 @@
         cancelButtonText: 'No, keep it'
       }).then((result) => {
         if (result.isConfirmed) {
-          // // Proceed with the deletion
-          // htmx.ajax('DELETE', '/employees-norefresh/' + id,)
-          //   .catch((error) => {
-          //     Swal.fire({
-          //       title: 'Error!',
-          //       text: 'Failed to delete the transaction. Please try again.',
-          //       icon: 'error',
-          //       confirmButtonText: 'Close'
-          //     });
-          //     console.error('Error during deletion:', error);
-          //   });
-
-
           fetch('/employees-norefresh/' + id, {
             method: 'DELETE',
             // headers: {
@@ -1163,57 +867,6 @@
         }
       });
     }
-
-
-
-
-    // function saveNewEmployee() {
-
-    //   // console.log(new FormData());
-
-    //   const formData = new URLSearchParams();
-    //   for (const pair of new FormData(document.querySelector('.datagrid-container-master form'))) {
-    //     formData.append(pair[0], pair[1]);
-    //   }
-
-    //   console.log(formData);
-      
-    //   return;
-
-    //   fetch('/employees', {
-    //     method: 'POST',
-    //     // headers: {
-    //     //   'Content-Type': 'application/json'
-    //     // }
-    //     body: formData
-    //   })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //       console.log('data: ', data);
-
-    //       // //alert('CONFIRM DELETION OF ID: ' + id);
-    //       // Swal.fire({
-    //       //   title: 'Successfully deleted!',
-    //       //   text: 'Deleted transaction with id ' + id + '.',
-    //       //   icon: 'success',
-    //       //   //timer: 3000,
-    //       //   confirmButtonText: 'Close'
-    //       // }).then((result2) => {
-    //       //   // htmx.trigger(document.querySelector('#datagrid-container-master'), 'load');
-    //       //   htmx.ajax('GET', '/employees', {
-    //       //     target: '.datagrid-container-master',
-    //       //     swap: 'innerHTML'
-    //       //   });
-
-    //       //   //console.log('Zadnji sweet alert zatvoren');
-    //       // });
-    //     })
-    //     .catch(error => {
-    //       console.error('Error:', error);
-    //     });
-    // }
-
-
   </script>
 
 </body>

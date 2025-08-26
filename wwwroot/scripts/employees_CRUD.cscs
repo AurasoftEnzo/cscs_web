@@ -41,7 +41,8 @@ function CreateTableEmployees(){
 }
 
 
-if(!EmployeesTableHasData()){
+if(true){// if(!EmployeesTableHasData()){
+    TruncateTableEmployees();
     InsertDataIntoEmployees();
 }
 
@@ -55,6 +56,23 @@ function EmployeesTableHasData(){
         return false; // table is empty
     }
 }
+
+
+function TruncateTableEmployees(){
+    sqlString = "TRUNCATE TABLE employees";
+    try{
+        sqlResult = SqlNonQuery(sqlString);
+        
+        if(sqlResult == -1){
+            print("Table employees truncated successfully.");
+        }else{
+            print("Error truncating table employees. Rows affected: " + sqlResult);
+        }
+    }catch(ex){
+        print("Error truncating table employees: " + ex.message);
+    }
+}
+
 
 function InsertDataIntoEmployees(){
     sqlString = "INSERT INTO employees (name, surname, age, address, city, email) VALUES " +
