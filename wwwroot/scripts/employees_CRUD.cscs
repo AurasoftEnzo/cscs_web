@@ -208,7 +208,7 @@ function getEmployees(request) {
         employees_newOrder = "desc";
     }
     
-    employees_html += "<th class='frozen-column-id'><a class='link' hx-get='/employees?page=1&sort=id&order=" + employees_newOrder + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Id</a></th>";
+    employees_html += "<th><a class='link' hx-get='/employees?page=1&sort=id&order=" + employees_newOrder + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Id</a></th>";
     
     for(employees_i = 1; employees_i < Size(employees_columns); employees_i++) {
         employees_column = employees_columns[employees_i];
@@ -222,7 +222,7 @@ function getEmployees(request) {
     }
     
     employees_column = "Actions";
-    employees_html += "<th class='frozen-column-right'>" + employees_column + "</th>";
+    employees_html += "<th>" + employees_column + "</th>";
     employees_html += "</tr>";
     employees_html += "</thead>";
 
@@ -238,8 +238,7 @@ function getEmployees(request) {
                 employees_html += "<tr data-id='" + employees_row[0] + "' class='hover:bg-base-300 cursor-pointer' >";
             }
             
-            employees_html += "<td class='frozen-column-id text-right' data-field='id'>" + employees_row[0] + "</td>";
-            
+            employees_html += "<td data-field='id'>" + employees_row[0] + "</td>";
             employees_html += "<td data-field='name' class='text-center'>" + employees_row[1] + "</td>";
             employees_html += "<td data-field='surname' class='text-center'>" + employees_row[2] + "</td>";
             employees_html += "<td data-field='age' class='text-left'>" + employees_row[3] + "</td>";
@@ -247,13 +246,11 @@ function getEmployees(request) {
             employees_html += "<td data-field='city' class='text-center'>" + employees_row[5] + "</td>";
             employees_html += "<td data-field='email' class='text-center'>" + employees_row[6] + "</td>";
         
-            employees_html += "<td class='flex gap-1 frozen-column-right'>";
-
+            employees_html += "<td class='flex gap-1'>";
             employees_html += "<button class='btn btn-info btn-xs action-button' hx-get='/employees/" + employees_row[0] + "/edit' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Edit</button>";
-
             employees_html += "<button class='btn btn-error btn-xs action-button' onclick='confirmDeleteEmployee(" + employees_row[0] + ")'>Delete</button>";
-
             employees_html += "</td>";
+
             employees_html += "</tr>";
         }
     }
