@@ -5,15 +5,13 @@
   <title>GK Transactions Management</title>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <meta charset="utf-8">
-  
+
   <script src='https://unpkg.com/htmx.org@1.9.10'></script>
   <script src='https://cdn.tailwindcss.com'></script>
   <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    
-
     html {
       height: 100%;
       margin: 0;
@@ -41,7 +39,6 @@
       border: 1px solid rgba(0, 0, 0, 0.1);
     }
 
-
     /* 1. Master Table: Expanded height for 5 rows */
     .master-table {
       flex: 1 1 0%;
@@ -56,7 +53,6 @@
       /* border: 1px solid hsl(var(--b3)); */
       /* border: 1px solid red; */
     }
-
 
     .master-table h2 {
       flex-shrink: 0;
@@ -167,119 +163,9 @@
       text-align: left !important;
     }
 
-    /* Specific column widths to prevent wrapping */
-    .datagrid-table th:nth-child(1),
-    .datagrid-table td:nth-child(1) {
-      width: 60px;
-    }
-
-    /* Select */
-    .datagrid-table th:nth-child(2),
-    .datagrid-table td:nth-child(2) {
-      width: 80px;
-    }
-
-    /* ID */
-    .datagrid-table th:nth-child(3),
-    .datagrid-table td:nth-child(3) {
-      width: 100px;
-    }
-
-    /* Age */
-    .datagrid-table th:nth-child(4),
-    .datagrid-table td:nth-child(4) {
-      width: 40px !important;
-    }
-
-    /* Posted */
-    .datagrid-table th:nth-child(5),
-    .datagrid-table td:nth-child(5) {
-      width: 200px;
-    }
-
-    /* Description */
-    .datagrid-table th:nth-child(6),
-    .datagrid-table td:nth-child(6) {
-      width: 60px;
-    }
-
-    /* Year */
-    .datagrid-table th:nth-child(7),
-    .datagrid-table td:nth-child(7) {
-      width: 60px;
-    }
-
-    /* Type */
-    .datagrid-table th:nth-child(8),
-    .datagrid-table td:nth-child(8) {
-      width: 80px;
-    }
-
-    /* Mark */
-    .datagrid-table th:nth-child(9),
-    .datagrid-table td:nth-child(9) {
-      width: 60px;
-    }
-
-    /* Sign */
-    .datagrid-table th:nth-child(10),
-    .datagrid-table td:nth-child(10) {
-      width: 100px;
-    }
-
-    /* Amount NL */
-    .datagrid-table th:nth-child(11),
-    .datagrid-table td:nth-child(11) {
-      width: 100px;
-    }
-
-    /* Amount NP */
-    .datagrid-table th:nth-child(12),
-    .datagrid-table td:nth-child(12) {
-      width: 70px;
-    }
-
-    /* Closed */
-    .datagrid-table th:nth-child(13),
-    .datagrid-table td:nth-child(13) {
-      width: 70px;
-    }
-
-    /* Status */
-    .datagrid-table th:nth-child(14),
-    .datagrid-table td:nth-child(14) {
-      width: 80px;
-    }
-
-    /* Doc Num */
-    .datagrid-table th:nth-child(15),
-    .datagrid-table td:nth-child(15) {
-      width: 100px;
-    }
-
-    /* Doc Date */
-    .datagrid-table th:nth-child(16),
-    .datagrid-table td:nth-child(16) {
-      width: 80px;
-    }
-
-    /* Partner */
-    .datagrid-table th:nth-child(17),
-    .datagrid-table td:nth-child(17) {
-      width: 60px;
-    }
-
-    /* Line */
-    .datagrid-table th:nth-child(18),
-    .datagrid-table td:nth-child(18) {
-      width: 160px;
-    }
 
     /* Actions */
-
     /* Fixed header that doesn't scroll vertically */
-
-
     .datagrid-container-master::-webkit-scrollbar-thumb {
       background: hsl(var(--bc) / 0.3);
       border-radius: 4px;
@@ -517,7 +403,6 @@
 
 <body>
 
-  <!-- Fixed header with controls -->
   <div class="mb-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg fixed-header">
     <div class="flex items-center gap-4">
       <h1 class="text-xl font-bold">Employee list</h1>
@@ -526,13 +411,10 @@
         Add New Employee
       </button>
     </div>
-    <div class="flex items-center gap-2">
-      <!-- Theme toggle removed -->
-    </div>
   </div>
 
   <div class="master-detail-layout">
-    <!-- 1. Employees tabler container -->
+    <!-- Employees table container -->
     <div class="master-table">
       <div class="datagrid-container-master" hx-get="/employees" hx-trigger="load" hx-swap="innerHTML"></div>
     </div>
@@ -540,165 +422,6 @@
 
 
   <script>
-    // Re-process HTMX after dynamic content loads and fix table layout
-    document.addEventListener('htmx:afterSwap', function (evt) {
-      if (evt.target.classList.contains('datagrid-container-master')
-        // ||
-        //   evt.target.classList.contains('datagrid-container-detail')
-
-      ) {
-        htmx.process(evt.target);
-
-        // Fix table layout after content loads
-        setTimeout(function () {
-          const table = evt.target.querySelector('.datagrid-table');
-          if (table) {
-            // Force table layout recalculation to prevent column wrapping
-            table.style.tableLayout = 'auto';
-            // Force a reflow
-            table.offsetHeight;
-            // Switch back to fixed layout
-            table.style.tableLayout = 'fixed';
-          }
-
-          // Add row click handlers for highlighting if this is the master table
-          if (evt.target.classList.contains('datagrid-container-master')) {
-            addRowClickHandlers();
-          }
-        }, 10);
-      }
-    });
-
-    // Additional fix for initial table load
-    document.addEventListener('DOMContentLoaded', function () {
-      // Wait a bit for HTMX to load the initial content
-      setTimeout(function () {
-        const table = document.querySelector('.datagrid-table');
-        if (table) {
-          // Force table layout recalculation
-          table.style.tableLayout = 'auto';
-          table.offsetHeight; // Force reflow
-          table.style.tableLayout = 'fixed';
-        }
-      }, 100);
-    });
-  </script>
-
-
-  <script>
-    // Auto-load details for first master row
-    /*
-    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
-      const firstRow = document.querySelector('.master-table tr[data-id]');
-      if (firstRow) {
-        const id = firstRow.getAttribute('data-id');
-        htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
-      }
-    });
-    */
-    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
-      // console.log('htmx:afterSwap fired');
-      const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
-      // console.log('Found first row:', firstRow);
-      if (firstRow) {
-        const id = firstRow.getAttribute('data-id');
-        // console.log('First row ID:', id);
-
-        //******
-        // htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
-
-        // Temporarily disable auto-highlighting to test manual selection
-        // highlightCurrentRow(firstRow);
-      }
-
-      // Add click handlers to all rows for highlighting
-      // console.log('About to call addRowClickHandlers()');
-      addRowClickHandlers();
-      // console.log('Finished calling addRowClickHandlers()');
-    });
-
-    // Function to highlight current row
-    function highlightCurrentRow(row) {
-      // console.log('highlightCurrentRow called with:', row);
-      // Remove current-row class from all rows
-      document.querySelectorAll('.datagrid-container-master tr.current-row').forEach(r => {
-        // console.log('Removing current-row from:', r);
-        r.classList.remove('current-row');
-      });
-
-      // Add current-row class to clicked row
-      if (row) {
-        // console.log('Adding current-row to:', row);
-        row.classList.add('current-row');
-        // console.log('Row classes after adding current-row:', row.className);
-      }
-    }
-
-    // Function to add click handlers to rows
-    function addRowClickHandlers() {
-      // console.log('=== addRowClickHandlers() called ===');
-      const rows = document.querySelectorAll('.datagrid-container-master tbody tr');
-      // console.log('Adding click handlers to', rows.length, 'rows');
-      rows.forEach((row, index) => {
-        // console.log('Row', index + 1, 'has data-id:', row.getAttribute('data-id'), 'classes:', row.className);
-        row.addEventListener('click', function (e) {
-          // Only highlight if not clicking on buttons or form elements
-          if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
-            // console.log('Row clicked:', index + 1);
-            highlightCurrentRow(this);
-          }
-        });
-      });
-      // console.log('=== addRowClickHandlers() finished ===');
-    }
-
-    // Test function to call manually from console
-    function testRowSelection() {
-      // console.log('=== MANUAL TEST ===');
-      addRowClickHandlers();
-    }
-
-
-  </script>
-  <script>
-    // Function to select a line for editing
-    function selectLineForEdit(rowElement) {
-      const masterId = rowElement.getAttribute('data-id');
-      const lineId = rowElement.getAttribute('data-line');
-      const lineData = {
-        lineId: lineId,
-        account: rowElement.getAttribute('data-account') || '',
-        costCenter: rowElement.getAttribute('data-costcenter') || '',
-        description: rowElement.getAttribute('data-description') || '',
-        dp: rowElement.getAttribute('data-dp') || '',
-        amount: rowElement.getAttribute('data-amount') || '',
-        docId: rowElement.getAttribute('data-docid') || '',
-        docDate: rowElement.getAttribute('data-docdate') || '',
-        partner: rowElement.getAttribute('data-partner') || '',
-        currency: rowElement.getAttribute('data-currency') || '',
-        rate: rowElement.getAttribute('data-rate') || '',
-        amountCurr: rowElement.getAttribute('data-amountcurr') || ''
-      };
-
-      // Highlight selected line
-      highlightCurrentLine(rowElement);
-
-      // Always populate form with line data for viewing/editing
-      populateLineForm(masterId, lineData);
-    }
-
-    // Function to highlight current line in detail table
-    function highlightCurrentLine(row) {
-      // Remove current-line class from all lines
-      document.querySelectorAll('.datagrid-container-detail tr.current-line').forEach(r => {
-        r.classList.remove('current-line');
-      });
-
-      // Add current-line class to clicked row
-      if (row) {
-        row.classList.add('current-line');
-      }
-    }
 
     function showError(message, title = 'Error') {
       Swal.fire({
@@ -711,67 +434,6 @@
       });
     }
 
-
-    // Line form functionality
-    let currentMasterId = null;
-    let currentLineId = null;
-    let isEditMode = false;
-    let isMasterInEditMode = false;
-
-
-    // Function to load first line when master is selected
-    function loadFirstLineData(masterId) {
-      // Wait a bit for the detail table to load, then select first line
-      setTimeout(() => {
-        const firstLineRow = document.querySelector('.datagrid-container-detail tr[data-line]');
-        if (firstLineRow) {
-          selectLineForEdit(firstLineRow);
-        } else {
-          // No lines exist, enable new line form
-          enableNewLineForm(masterId);
-        }
-      }, 100);
-    }
-
-    // Listen for master row selection to enable new line entry
-    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
-      addRowClickHandlers();
-
-      // Enable form for first row if available and load first line
-      const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
-      if (firstRow) {
-        const masterId = firstRow.getAttribute('data-id');
-        highlightCurrentRow(firstRow);
-        currentMasterId = masterId;
-      }
-    });
-
-    // Listen for detail table updates to add line click handlers
-    htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function () {
-      addLineClickHandlers();
-      // Auto-select first line if available
-      if (currentMasterId) {
-        loadFirstLineData(currentMasterId);
-      }
-    });
-
-    // Override the addRowClickHandlers to include form enabling
-    function addRowClickHandlers() {
-      document.querySelectorAll('.datagrid-container-master tr[data-id]').forEach(row => {
-        row.addEventListener('click', function (e) {
-          // Only highlight if not clicking on buttons or form elements
-          if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
-            highlightCurrentRow(this);
-            const masterId = this.getAttribute('data-id');
-            currentMasterId = masterId;
-          }
-        });
-      });
-    }
-
-  </script>
-
-  <script>
     function confirmDeleteEmployee(id) {
       Swal.fire({
         title: 'Are you sure?',
@@ -816,7 +478,232 @@
         }
       });
     }
+
   </script>
+
+
+  <!-- <script>
+    // // Re-process HTMX after dynamic content loads and fix table layout
+    // document.addEventListener('htmx:afterSwap', function (evt) {
+    //   if (evt.target.classList.contains('datagrid-container-master')) {
+    //     htmx.process(evt.target);
+
+    //     // Fix table layout after content loads
+    //     setTimeout(function () {
+    //       // const table = evt.target.querySelector('.datagrid-table');
+    //       // if (table) {
+    //       //   // Force table layout recalculation to prevent column wrapping
+    //       //   table.style.tableLayout = 'auto';
+    //       //   // Force a reflow
+    //       //   table.offsetHeight;
+    //       //   // Switch back to fixed layout
+    //       //   table.style.tableLayout = 'fixed';
+    //       // }
+
+    //       // // Add row click handlers for highlighting if this is the master table
+    //       // if (evt.target.classList.contains('datagrid-container-master')) {
+    //       //   addRowClickHandlers();
+    //       // }
+    //     }, 10);
+    //   }
+    // });
+
+    // // initial table load
+    // document.addEventListener('DOMContentLoaded', function () {
+    //   // Wait a bit for HTMX to load the initial content
+    //   setTimeout(function () {
+    //     const table = document.querySelector('.datagrid-table');
+    //     if (table) {
+    //       // Force table layout recalculation
+    //       table.style.tableLayout = 'auto';
+    //       table.offsetHeight; // Force reflow
+    //       table.style.tableLayout = 'fixed';
+    //     }
+    //   }, 100);
+    // });
+  </script> -->
+
+  <!-- <script>
+    // Auto-load details for first master row
+    /*
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
+      const firstRow = document.querySelector('.master-table tr[data-id]');
+      if (firstRow) {
+        const id = firstRow.getAttribute('data-id');
+        htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+      }
+    });
+    */
+    // htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
+    //   // console.log('htmx:afterSwap fired');
+    //   const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
+    //   // console.log('Found first row:', firstRow);
+    //   if (firstRow) {
+    //     const id = firstRow.getAttribute('data-id');
+    //     // console.log('First row ID:', id);
+
+    //     //******
+    //     // htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+
+    //     // Temporarily disable auto-highlighting to test manual selection
+    //     highlightCurrentRow(firstRow);
+    //   }
+
+    //   // Add click handlers to all rows for highlighting
+    //   // console.log('About to call addRowClickHandlers()');
+    //   // addRowClickHandlers();
+    //   // console.log('Finished calling addRowClickHandlers()');
+    // });
+
+    // // Function to highlight current row
+    // function highlightCurrentRow(row) {
+    //   // console.log('highlightCurrentRow called with:', row);
+    //   // Remove current-row class from all rows
+    //   document.querySelectorAll('.datagrid-container-master tr.current-row').forEach(r => {
+    //     // console.log('Removing current-row from:', r);
+    //     r.classList.remove('current-row');
+    //   });
+
+    //   // Add current-row class to clicked row
+    //   if (row) {
+    //     // console.log('Adding current-row to:', row);
+    //     row.classList.add('current-row');
+    //     // console.log('Row classes after adding current-row:', row.className);
+    //   }
+    // }
+
+    // // Function to add click handlers to rows
+    // function addRowClickHandlers() {
+    //   // console.log('=== addRowClickHandlers() called ===');
+    //   const rows = document.querySelectorAll('.datagrid-container-master tbody tr');
+    //   // console.log('Adding click handlers to', rows.length, 'rows');
+    //   rows.forEach((row, index) => {
+    //     // console.log('Row', index + 1, 'has data-id:', row.getAttribute('data-id'), 'classes:', row.className);
+    //     row.addEventListener('click', function (e) {
+    //       // Only highlight if not clicking on buttons or form elements
+    //       if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
+    //         // console.log('Row clicked:', index + 1);
+    //         highlightCurrentRow(this);
+    //       }
+    //     });
+    //   });
+    //   // console.log('=== addRowClickHandlers() finished ===');
+    // }
+
+    // // Test function to call manually from console
+    // function testRowSelection() {
+    //   // console.log('=== MANUAL TEST ===');
+    //   addRowClickHandlers();
+    // }
+  </script> -->
+
+  <!-- <script>
+    
+    // // Function to select a line for editing
+    // function selectLineForEdit(rowElement) {
+    //   const masterId = rowElement.getAttribute('data-id');
+    //   const lineId = rowElement.getAttribute('data-line');
+    //   const lineData = {
+    //     lineId: lineId,
+    //     account: rowElement.getAttribute('data-account') || '',
+    //     costCenter: rowElement.getAttribute('data-costcenter') || '',
+    //     description: rowElement.getAttribute('data-description') || '',
+    //     dp: rowElement.getAttribute('data-dp') || '',
+    //     amount: rowElement.getAttribute('data-amount') || '',
+    //     docId: rowElement.getAttribute('data-docid') || '',
+    //     docDate: rowElement.getAttribute('data-docdate') || '',
+    //     partner: rowElement.getAttribute('data-partner') || '',
+    //     currency: rowElement.getAttribute('data-currency') || '',
+    //     rate: rowElement.getAttribute('data-rate') || '',
+    //     amountCurr: rowElement.getAttribute('data-amountcurr') || ''
+    //   };
+
+    //   // Highlight selected line
+    //   highlightCurrentLine(rowElement);
+
+    //   // Always populate form with line data for viewing/editing
+    //   populateLineForm(masterId, lineData);
+    // }
+
+
+    // // Function to highlight current line in detail table
+    // function highlightCurrentLine(row) {
+    //   // Remove current-line class from all lines
+    //   document.querySelectorAll('.datagrid-container-detail tr.current-line').forEach(r => {
+    //     r.classList.remove('current-line');
+    //   });
+
+    //   // Add current-line class to clicked row
+    //   if (row) {
+    //     row.classList.add('current-line');
+    //   }
+    // }
+
+    
+
+
+    // // Line form functionality
+    // let currentMasterId = null;
+    // let currentLineId = null;
+    // let isEditMode = false;
+    // let isMasterInEditMode = false;
+
+
+    // // Function to load first line when master is selected
+    // function loadFirstLineData(masterId) {
+    //   // Wait a bit for the detail table to load, then select first line
+    //   setTimeout(() => {
+    //     const firstLineRow = document.querySelector('.datagrid-container-detail tr[data-line]');
+    //     if (firstLineRow) {
+    //       selectLineForEdit(firstLineRow);
+    //     } else {
+    //       // No lines exist, enable new line form
+    //       enableNewLineForm(masterId);
+    //     }
+    //   }, 100);
+    // }
+
+    // // Listen for master row selection to enable new line entry
+    // htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
+    //   addRowClickHandlers();
+
+    //   // Enable form for first row if available and load first line
+    //   const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
+    //   if (firstRow) {
+    //     const masterId = firstRow.getAttribute('data-id');
+    //     highlightCurrentRow(firstRow);
+    //     currentMasterId = masterId;
+    //   }
+    // });
+
+
+
+    // // Listen for detail table updates to add line click handlers
+    // htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function () {
+    //   addLineClickHandlers();
+    //   // Auto-select first line if available
+    //   if (currentMasterId) {
+    //     loadFirstLineData(currentMasterId);
+    //   }
+    // });
+
+
+
+    // // Override the addRowClickHandlers to include form enabling
+    // function addRowClickHandlers() {
+    //   document.querySelectorAll('.datagrid-container-master tr[data-id]').forEach(row => {
+    //     row.addEventListener('click', function (e) {
+    //       // Only highlight if not clicking on buttons or form elements
+    //       if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
+    //         highlightCurrentRow(this);
+    //         const masterId = this.getAttribute('data-id');
+    //         currentMasterId = masterId;
+    //       }
+    //     });
+    //   });
+    // }
+
+  </script> -->
 
 </body>
 
