@@ -1,5 +1,6 @@
 SQLConnectionString(ReadConfig("SqlConnectionString"));
 
+
 if(!TableEmployeesExists()){
     CreateTableEmployees();
 }
@@ -41,7 +42,7 @@ function CreateTableEmployees(){
 }
 
 
-if(true){// if(!EmployeesTableHasData()){
+if(true){// if(!EmployeesTableHasData())
     TruncateTableEmployees();
     InsertDataIntoEmployees();
 }
@@ -56,7 +57,6 @@ function EmployeesTableHasData(){
         return false; // table is empty
     }
 }
-
 
 function TruncateTableEmployees(){
     sqlString = "TRUNCATE TABLE employees";
@@ -73,9 +73,9 @@ function TruncateTableEmployees(){
     }
 }
 
-
 function InsertDataIntoEmployees(){
-    sqlString = "INSERT INTO employees (name, surname, age, address, city, email) VALUES " +
+    sqlString = "INSERT INTO employees " + 
+        "(name, surname, age, address, city, email) VALUES " +
         "('John', 'Doe', 30, '123 Main St', 'Anytown', 'john.doe@example.com'), " +
         "('Jane', 'Smith', 25, '456 Elm St', 'Othertown', 'jane.smith@example.com'), " +
         "('Alice', 'Johnson', 28, '789 Oak St', 'Sometown', 'alice.johnson@example.com'), " +
@@ -115,12 +115,15 @@ function InsertDataIntoEmployees(){
 }
 
 
-
-
 employees_columns = {
-    "Id", "Name", "Surname", "Age", "Address", "City", "Email"
+    "Id",
+    "Name",
+    "Surname",
+    "Age",
+    "Address",
+    "City",
+    "Email"
 };
-
 
 employees_defaultValues = {
     "Id": 0,
@@ -133,6 +136,7 @@ employees_defaultValues = {
 };
 
 
+//get initial html template
 CreateEndpoint("GET", "/", "getRoot");
 function getRoot(){
     root_headers = {"Content-Type": "text/html"};
@@ -140,7 +144,7 @@ function getRoot(){
 }
 
 
-// get employees html table
+// get employees table (partial html) 
 CreateEndpoint("GET", "/employees", "getEmployees");
 function getEmployees(request) {
     
@@ -165,166 +169,112 @@ function getEmployees(request) {
         employees_order = request["QueryParams"]["order"];
     }
     
-    // Search - always exclude zero/null IDs
-    // Search
-    employees_search = "";
-    if (Contains(request["QueryParams"], "search")) {
-        employees_search = request["QueryParams"]["search"];
-    }
-    
     // Fixed page size
     employees_pageSize = 10;
     employees_skip = (employees_page - 1) * employees_pageSize;
         
-    //ALERT after html
+    //alert after html
     employees_alert = "";
     if (Contains(request["QueryParams"], "alertText")) 
     {
         employees_alert = request["QueryParams"]["alertText"];
-    }
-    //print("employees_alert=" + employees_alert);
-
-    // Build SQL query - always exclude zero/null IDs
-    employees_whereClause = " WHERE id IS NOT NULL AND id <> 0";
-    if (employees_search != "") {
-        employees_whereClause += " AND (id LIKE @search OR name LIKE @search OR surname LIKE @search)"; //*****
-    }
+    }    
     
+
     employees_query = "SELECT " +
             "id, name, surname, age, address, city, email " +
-            "FROM employees" + employees_whereClause + " " +
+            "FROM employees " +
             "ORDER BY " + employees_sort + " " + employees_order + " " +
             "OFFSET @skip ROWS FETCH NEXT @pageSize ROWS ONLY";
-
-    employees_countQuery = "SELECT COUNT(*) FROM employees" + employees_whereClause;
-
-    // Execute queries
     employees_sqlParams = {};
     employees_sqlParams.Add({"@skip", employees_skip});
     employees_sqlParams.Add({"@pageSize", employees_pageSize});
-    if (employees_search != "") {
-        employees_sqlParams.Add({"@search", "%" + employees_search + "%"});
-    }
     employees_records = sqlQuery(employees_query, employees_sqlParams);
 
-    employees_countResult = sqlQuery(employees_countQuery, employees_sqlParams);
+    employees_countQuery = "SELECT COUNT(*) FROM employees";
+    employees_countResult = sqlQuery(employees_countQuery);
     employees_totalRecords = employees_countResult[1][0];
-
     employees_totalPages = Math.Ceil(employees_totalRecords / employees_pageSize);
+
 
     // Build HTML
     employees_html = "<div class='datagrid-container-master'>";
-        //start the table
-        employees_html += "<table class='datagrid-table'>";
-        // Add the table header
-        employees_html += "<thead><tr>";
-            // Example for the ID column (sortable)
-            // // Add Select column header
-            // employees_html += "<th class='frozen-column-select'>Select</th>";
-            // Modify ID column header
-            employees_newOrder = "asc";
-            // ... rest of headers ...    
-            if (employees_sort == "id" && employees_order == "asc") {
-                employees_newOrder = "desc";
-            }
-            employees_html += "<th class='frozen-column-id'><a class='link' hx-get='/employees?page=1&sort=id&order=" + employees_newOrder + "&search=" + employees_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>ID</a></th>";
-            // Example for other columns
-            employees_tableHeaders = [
-                
-                ["name", "Name"],
-                ["surname", "Surname"],
-                ["age", "Age"],
-                ["address", "Address"],
-                ["city", "City"],
-                ["email", "Email"]
-            ];
+    employees_html += "<table class='datagrid-table'>";
+    employees_html += "<thead>";
+    employees_html += "<tr>";
 
-            for(employees_i = 0; employees_i < Size(employees_tableHeaders); employees_i++) {
-                employees_headerField = employees_tableHeaders[employees_i][0];
-                employees_headerTitle = employees_tableHeaders[employees_i][1];
+    employees_newOrder = "asc";
+    if (employees_sort == "id" && employees_order == "asc") {
+        employees_newOrder = "desc";
+    }
+    
+    employees_html += "<th class='frozen-column-id'><a class='link' hx-get='/employees?page=1&sort=id&order=" + employees_newOrder + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Id</a></th>";
+    
+    for(employees_i = 1; employees_i < Size(employees_columns); employees_i++) {
+        employees_column = employees_columns[employees_i];
+        
+        employees_newOrder = "asc";
+        if (employees_sort == employees_column && employees_order == "asc") {
+            employees_newOrder = "desc";
+        }
 
-                if (employees_headerField != "") {
-                    employees_newOrder = "asc";
-                    if (employees_sort == employees_headerField && employees_order == "asc") {
-                        employees_newOrder = "desc";
-                    }
-                    employees_html += "<th><a class='link' hx-get='/employees?page=1&sort=" + employees_headerField + "&order=" + employees_newOrder + "&search=" + employees_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>" + employees_headerTitle + "</a></th>";
-                //} else {
-                //    employees_html += "<th>" + employees_headerTitle + "</th>";
-                }
-            }
-            // Change the Actions header to use frozen-column-right
-            employees_headerTitle = "Actions";
-            employees_html += "<th class='frozen-column-right'>" + employees_headerTitle + "</th>";
-        employees_html += "</tr></thead>";
-        // Start the table body
-        employees_html += "<tbody>";
-        // ... your data rows here ...
+        employees_html += "<th><a class='link' hx-get='/employees?page=1&sort=" + employees_column + "&order=" + employees_newOrder + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>" + employees_column + "</a></th>";        
+    }
+    
+    employees_column = "Actions";
+    employees_html += "<th class='frozen-column-right'>" + employees_column + "</th>";
+    employees_html += "</tr>";
+    employees_html += "</thead>";
 
-        if(employees_records != null && Size(employees_records) > 1) {
-            for(employees_i = 1; employees_i < Size(employees_records); employees_i++) {
-                employees_row = employees_records[employees_i];
-                // Skip data-original to avoid HTML corruption issues
-                // Just use data-id which is all we need for row selection
-                
-                // // In the row generation loop, create rows with proper classes from the start:
-                // if (gkTrans_i % 2 == 0) {
-                //     employees_html += "<tr data-id='" + gkTrans_row[0] + "' class='bg-base-200 hover:bg-base-300 cursor-pointer' hx-get='/gk-lines/" + gkTrans_row[0] + "' hx-target='.datagrid-container-detail' hx-swap='innerHTML' onclick='currentMasterId = " + gkTrans_row[0] + "; loadFirstLineData(" + gkTrans_row[0] + ");'>";
-                // } else {
-                //     employees_html += "<tr data-id='" + gkTrans_row[0] + "' class='hover:bg-base-300 cursor-pointer' hx-get='/gk-lines/" + gkTrans_row[0] + "' hx-target='.datagrid-container-detail' hx-swap='innerHTML' onclick='currentMasterId = " + gkTrans_row[0] + "; loadFirstLineData(" + gkTrans_row[0] + ");'>";
-                // }
+    employees_html += "<tbody>";
 
-                // In the row generation loop, create rows with proper classes from the start:
-                if (employees_i % 2 == 0) {
-                    employees_html += "<tr data-id='" + employees_row[0] + "' class='bg-base-200 hover:bg-base-300 cursor-pointer' >";
-                } else {
-                    employees_html += "<tr data-id='" + employees_row[0] + "' class='hover:bg-base-300 cursor-pointer' >";
-                }
-
-                // // Select column
-                // employees_html += "<td class='frozen-column-select'><input type='checkbox' class='checkbox' name='selectedRows' value='" + gkTrans_row[0] + "' title='Select row " + gkTrans_row[0] + "' aria-label='Select row " + gkTrans_row[0] + "'></td>";
-               
-               
-                // ID column
-                employees_html += "<td class='frozen-column-id text-right' data-field='id'>" + employees_row[0] + "</td>";
-                // ... rest of cells ...
-                
-                // Cells with proper data-field attributes
-                employees_html += "<td data-field='name' class='text-center'>" + employees_row[1] + "</td>";
-                employees_html += "<td data-field='surname' class='text-center'>" + employees_row[2] + "</td>";
-                employees_html += "<td data-field='age' class='text-left'>" + employees_row[3] + "</td>";
-                employees_html += "<td data-field='address' class='text-center'>" + employees_row[4] + "</td>";
-                employees_html += "<td data-field='city' class='text-center'>" + employees_row[5] + "</td>";
-                employees_html += "<td data-field='email' class='text-center'>" + employees_row[6] + "</td>";
+    if(employees_records != null && Size(employees_records) > 1) {
+        for(employees_i = 1; employees_i < Size(employees_records); employees_i++) {
+            employees_row = employees_records[employees_i];
             
-                // Actions column
-                // Change the actions cell to use frozen-column-right
-                employees_html += "<td class='flex gap-1 frozen-column-right'>";
-
-                employees_html += "<button class='btn btn-info btn-xs action-button' hx-get='/employees/" + employees_row[0] + "/edit' hx-target='.datagrid-container-master' hx-swap='outerHTML' onclick='setMasterEditMode(true)'>Edit</button>"; //******
-
-                //employees_html += "<button class='btn btn-error btn-sm' hx-delete='/employees/" + gkTrans_row[0] + "' hx-target='.datagrid-container-master' hx-swap='outerHTML' hx-confirm='Are you sure?'>Delete</button>";
-                employees_html += "<button class='btn btn-error btn-xs action-button' onclick='confirmDeleteGlava(" + employees_row[0] + ")'>Delete</button>";
-
-                employees_html += "</td>";
-                employees_html += "</tr>";
+            if (employees_i % 2 == 0) {
+                employees_html += "<tr data-id='" + employees_row[0] + "' class='bg-base-200 hover:bg-base-300 cursor-pointer' >";
+            } else {
+                employees_html += "<tr data-id='" + employees_row[0] + "' class='hover:bg-base-300 cursor-pointer' >";
             }
-        }
-        employees_html += "</tbody></table>";
+            
+            employees_html += "<td class='frozen-column-id text-right' data-field='id'>" + employees_row[0] + "</td>";
+            
+            employees_html += "<td data-field='name' class='text-center'>" + employees_row[1] + "</td>";
+            employees_html += "<td data-field='surname' class='text-center'>" + employees_row[2] + "</td>";
+            employees_html += "<td data-field='age' class='text-left'>" + employees_row[3] + "</td>";
+            employees_html += "<td data-field='address' class='text-center'>" + employees_row[4] + "</td>";
+            employees_html += "<td data-field='city' class='text-center'>" + employees_row[5] + "</td>";
+            employees_html += "<td data-field='email' class='text-center'>" + employees_row[6] + "</td>";
+        
+            employees_html += "<td class='flex gap-1 frozen-column-right'>";
 
-        // Pagination
-        employees_html += "<div class='pagination'>";
-        if(employees_page > 1) {
-            employees_html += "<a class='btn btn-sm' hx-get='/employees?page=" + (employees_page - 1) + "&sort=" + employees_sort + "&order=" + employees_order + 
-                    "&search=" + employees_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Previous</a>";
+            employees_html += "<button class='btn btn-info btn-xs action-button' hx-get='/employees/" + employees_row[0] + "/edit' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Edit</button>";
+
+            employees_html += "<button class='btn btn-error btn-xs action-button' onclick='confirmDeleteEmployee(" + employees_row[0] + ")'>Delete</button>";
+
+            employees_html += "</td>";
+            employees_html += "</tr>";
         }
-        employees_html += "<span class='page-info'>Page " + employees_page + " of " + employees_totalPages + "</span>";
-        if(employees_page < employees_totalPages) {
-            employees_html += "<a class='btn btn-sm' hx-get='/employees?page=" + (employees_page + 1) + "&sort=" + employees_sort + "&order=" + employees_order + 
-                    "&search=" + employees_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Next</a>";
-        }
-        employees_html += "</div>";  
-    employees_html += "</div>"; 
+    }
+    employees_html += "</tbody>";
+    employees_html += "</table>";
+
+    // Pagination
+    employees_html += "<div class='pagination'>";
+    if(employees_page > 1) {
+        employees_html += "<a class='btn btn-sm' hx-get='/employees?page=" + (employees_page - 1) + "&sort=" + employees_sort + "&order=" + employees_order + 
+            "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Previous</a>";
+    }
+    employees_html += "<span class='page-info'>Page " + employees_page + " of " + employees_totalPages + "</span>";
+    if(employees_page < employees_totalPages) {
+        employees_html += "<a class='btn btn-sm' hx-get='/employees?page=" + (employees_page + 1) + "&sort=" + employees_sort + "&order=" + employees_order + 
+            "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Next</a>";
+    }
+
+    employees_html += "</div>";  
+    employees_html += "</div>";
+
 
     employees_html += employees_alert; 
     
@@ -334,22 +284,11 @@ function getEmployees(request) {
 }
 
 
-
-//*****
-
-
-
-
-
-
-
-
 function employees_generateForm(mode, values, id = null, errorHtml = "") {
-    // mode can be "new" or "edit"
     employees_generateForm_isEdit = (mode == "edit");
-    //print("GLAVA isEdit=" + employees_generateForm_isEdit);
+    
     employees_generateForm_html = "<div class='datagrid-container-master'>" +
-           "  <form class='vertical-form eight-column-form'>";
+           "<form class='vertical-form eight-column-form'>";
     
     if (errorHtml != "") {
         employees_generateForm_html += errorHtml;
@@ -358,10 +297,8 @@ function employees_generateForm(mode, values, id = null, errorHtml = "") {
     employees_generateForm_html += "    <div class='grid grid-cols-8 gap-4'>";
     
     for(i = 1; i < Size(employees_columns); i++) {
-        
         employees_generateForm_field = employees_columns[i];
-        //print("field=" + field);
-        //value = Contains(values, field) ? values[field] : employees_defaultValues[field];
+        
         if (Contains(values, employees_generateForm_field))
         {
             employees_generateForm_value = values[employees_generateForm_field];
@@ -370,8 +307,7 @@ function employees_generateForm(mode, values, id = null, errorHtml = "") {
         {
             employees_generateForm_value = employees_defaultValues[employees_generateForm_field];
         }
-                
-      
+
         employees_generateForm_html += "      <div><label>" + employees_generateForm_field + ":</label>" +
                 "        <input class='input input-bordered input-sm w-full' " +
                 "               name='" + employees_generateForm_field + "' " +
@@ -391,7 +327,6 @@ function employees_generateForm(mode, values, id = null, errorHtml = "") {
     employees_generateForm_html += "    </div>" +
             "    <div class='form-actions mt-4'>" +
             "      <button class='btn btn-success btn-sm' " +
-            //"              hx-" + (isEdit ? "put" : "post") + "='/employees" + (isEdit ? "/" + id : "") + "' " +
             "              hx-" + method + "='/employees" + path + "' " +
             "              hx-include='closest form' " +
             "              hx-target='.datagrid-container-master' " +
@@ -408,62 +343,21 @@ function employees_generateForm(mode, values, id = null, errorHtml = "") {
 }
 
 
-
-
-
-
-
-// New employee form
+// Get new employee form (partial html)
 CreateEndpoint("GET", "/employees/new", "getNewEmployeeForm");
-/*function getNewEmployeeForm(args) {
-        newForm_html = "<div class='datagrid-container-master'>" +
-        "  <form class='vertical-form eight-column-form'>" +
-        "    <div class='grid grid-cols-8 gap-4'>" +
-        "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM'></div>" +
-        "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM'></div>" +
-        "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' maxlength='1'></div>" +
-        "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' maxlength='50'></div>" +
-        "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' maxlength='2'></div>" +
-        "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' maxlength='2'></div>" +
-        "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' maxlength='10'></div>" +
-        "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK'></div>" +
-        "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL'></div>" +
-        "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP'></div>" +
-        "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' maxlength='1'></div>" +
-        "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' maxlength='1'></div>" +
-        "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK'></div>" +
-        "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK'></div>" +
-        "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' maxlength='10'></div>" +
-        "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN'></div>" +
-        "    </div>" +
-        "    <div class='form-actions mt-4'>" +
-        "      <button class='btn btn-success btn-sm' hx-post='/employees' hx-include='closest form' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Save</button>" +
-        "      <button class='btn btn-error btn-sm' hx-get='/employees' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Cancel</button>" +
-        "    </div>" +
-        "  </form>" +
-        "</div>";
-
-        newForm_headers = {"Content-Type": "text/html"};
-        return Response(newForm_headers, newForm_html, 200);
-    }
-*/
-
 function getNewEmployeeForm(args) {
     headers = {"Content-Type": "text/html"};
     return Response(headers, employees_generateForm("new", employees_defaultValues), 200);
 }
 
-
 // Create new employee
 CreateEndpoint("POST", "/employees", "createEmployee");
 function createEmployee(args) {
     
-    // Get all form values
     create_fields = [
         "Name", "Surname", "Age", "Address", "City", "Email"
     ];
 
-    //print("Creating new GK transaction with fields: " + create_fields);
     create_values = {};
     for(create_i = 0; create_i < Size(create_fields); create_i++) {
         create_field = create_fields[create_i];
@@ -478,20 +372,8 @@ function createEmployee(args) {
     create_values2["City"] = GetValueFromForm(args["Body"], "City");
     create_values2["Email"] = GetValueFromForm(args["Body"], "Email");
 
-    // Validate required fields
-    //if("GK_GL_BR_TEM" == "" || "GK_GL_DATUM" == "") {
-        
-        // 🔴 Validation failed: Return the form again with error + values
-    //    create_headers = {"Content-Type": "text/html"};
-        //return Response(create_headers, getNewGKTransactionFormWithValues(create_values, "<div class='alert alert-error mb-4'>ID and Date are required</div>"), 200);
-    //}
-
-    //createGKTransaction_GK_GL_BR_TEM = create_values[0];    
-    //createGKTransaction_GK_GL_BR_TEM = create_values2["GK_GL_BR_TEM"];    
-    //print("createGKTransaction GK_GL_BR_TEM = " + createGKTransaction_GK_GL_BR_TEM);
-    if (IsInt(create_values2["age"])==false)
+    if (!IsInt(create_values2["age"]))
     {
-        // 🔴 Validation failed: Return the form again with values + error
         create_headers = {"Content-Type": "text/html"};
         create_employees_alert = "<script>Swal.fire({title: 'ERROR!', text: 'Age must be an integer.', icon: 'error', confirmButtonText: 'Close'});</script>";        
         create_employees_validationError_html = getNewEmployeeFormWithValues(create_values2, create_employees_alert);
@@ -499,33 +381,6 @@ function createEmployee(args) {
         return Response(create_headers, create_employees_validationError_html, 200);
     }
     
-
-    // print("GK_GL_DATUM = " + create_values2["GK_GL_DATUM"]);
-
-    // if (IsDate(create_values2["GK_GL_DATUM"])==false)
-    // {
-    //     print("Provjera GK_GL_DATUM nije prošla");
-
-    //     // 🔴 Validation failed: Return the form again with values + error
-    //     create_headers = {"Content-Type": "text/html"};
-    //     createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATUM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-    //     createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-
-    //     return Response(create_headers, createGKTransaction_validationerror_html, 200);
-    // }
-    // else
-    // {
-    //     print("Provjera GK_GL_DATUM je prošla");
-    // }
-
-    
-    // //print("GK_GL_POSTED.SIZE = " + create_values2["GK_GL_POSTED"].Size);
-    // createGKTransaction_GK_GL_POSTED = create_values2["GK_GL_POSTED"];
-    // print("createGKTransaction_GK_GL_POSTED.size = " + createGKTransaction_GK_GL_POSTED.size);
-
-
-
-    // Build insert query
     create_query = "INSERT INTO employees (";
     create_first = true;
     for(create_i = 0; create_i < Size(create_fields); create_i++) {
@@ -535,31 +390,27 @@ function createEmployee(args) {
         create_query += create_fields[create_i];
         create_first = false;
     }
-    //print("Insert 1.dio: " + create_query);
+    
     create_query += ") VALUES (";
     create_first = true;
     for(create_i = 0; create_i < Size(create_fields); create_i++) {
         if (!create_first) {
             create_query += ", ";
         }
-        //create_query += create_fields[create_i] + "  @" + create_fields[create_i];
+        
         create_query += "@" + create_fields[create_i];
         create_first = false;
     }
     create_query += ")";
 
-    // Execute query
+
     create_sqlParams = {};
     for(create_i = 0; create_i < Size(create_fields); create_i++) {
-        //create_sqlParams.Add({create_fields[create_i], create_values[create_fields[create_i]]});
         create_sqlParams.Add({"@"+create_fields[create_i], create_values[create_i]});
     }
     
     sqlNonQuery(create_query, create_sqlParams);
 
-
-
-    //htmx.trigger("body", "refreshTable");
     create_args2 = {};
     create_args2["QueryParams"] = {"page": 1};
 
@@ -570,39 +421,40 @@ function createEmployee(args) {
     return getEmployees(create_args2);
 }
 
+// Get new employee form with values (partial html)
+function getNewEmployeeFormWithValues(values, errorScript) {
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>" +
+           "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>Name:</label><input class='input input-bordered input-sm w-full' name='Name' value='" + values["Name"] + "'></div>" +
+           "      <div><label>Surname:</label><input class='input input-bordered input-sm w-full' name='Surname' value='" + values["Surname"] + "'></div>" +
+           "      <div><label>Age:</label><input class='input input-bordered input-sm w-full' name='Age' value='" + values["Age"] + "'></div>" +
+           "      <div><label>Address:</label><input class='input input-bordered input-sm w-full' name='Address' value='" + values["Address"] + "'></div>" +
+           "      <div><label>City:</label><input class='input input-bordered input-sm w-full' name='City' value='" + values["City"] + "'></div>" +
+           "      <div><label>Email:</label><input class='input input-bordered input-sm w-full' name='Email' value='" + values["Email"] + "'></div>" +
+           "    </div>" +
+           "    <div class='form-actions mt-4'>" +
+           "      <button class='btn btn-success btn-sm' " +
+           "              hx-post='/employees' " +
+           "              hx-include='closest form' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML'>Save</button>" +
+           "      <button class='btn btn-error btn-sm' " +
+           "              hx-get='/employees' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML'>Cancel</button>" +
+           "    </div>" +
+           "  </form>" +
+           "</div>";
 
-
-
-function IsInt(value)
-{
-    if (value == "")
-    {
-        return false;
-    }
-
-    try
-    {        
-        // Check if value is a valid integer
-        int1 = int(value);
-        str2 = string(int1);
-        if(value != str2){
-            throw "Int Validacija nije prošla.\nvalue = " + value;
-        }
-
-        //print("Int Validacija OK");        
-        return true; 
-    }
-    catch(ex11)
-    {        
-        //print(ex11);
-        return false;
-    }
-
-    return false;
+    html += errorScript;
+    
+    return html;
 }
 
 
-// Edit form
+
+// Get edit employee form (partial html)
 CreateEndpoint("GET", "/employees/{id}/edit", "getEditEmployeeForm");
 function getEditEmployeeForm(args) {
 
@@ -628,8 +480,7 @@ function getEditEmployeeForm(args) {
     return Response(headers, employees_generateForm("edit", values, id), 200);
 }
 
-
-// update employees
+// Update employee
 CreateEndpoint("PUT", "/employees/{id}", "updateEmployee");
 function updateEmployee(args) {
     id = args["RouteValues"]["Id"];
@@ -640,39 +491,20 @@ function updateEmployee(args) {
 
     values = {};
 
-    // print("sizefields: " + Size(fields));  
-    
     for(i = 0; i < Size(fields); i++) {
         field = fields[i];
         values[field] = GetValueFromForm(args["Body"], field);
     }
 
-    // Validate required fields
     errorHtml = "";
     if(!IsInt(values["Age"])) {
-        // 🔴 Return edit form again with error + data
-        
         headers = {"Content-Type": "text/html"};
         edit_employee_alert = "<script>Swal.fire({title: 'ERROR!', text: 'Age must be an integer.', icon: 'error', confirmButtonText: 'Close'});</script>";  
         edit_employee_validationError_html = getEditEmployeeFormWithValues(id, values, edit_employee_alert);
         return Response(headers, edit_employee_validationError_html, 200);
     }
 
-    /*
-    if (IsInt(create_values2["age"])==false)
-    {
-        // 🔴 Validation failed: Return the form again with values + error
-        create_headers = {"Content-Type": "text/html"};
-        create_employees_alert = "<script>Swal.fire({title: 'ERROR!', text: 'Age must be an integer.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        create_employees_validationError_html = getNewEmployeeFormWithValues(create_values2, create_employees_alert);
-                
-        return Response(create_headers, create_employees_validationError_html, 200);
-    }
-    
-    */
 
-
-    // Build update query
     query = "UPDATE employees SET ";
     first = true;
     for(i = 0; i < Size(fields); i++) {
@@ -682,14 +514,12 @@ function updateEmployee(args) {
         query += fields[i] + " = @" + fields[i];
         first = false;
     }
-     query += " WHERE id = @id";
-   
-    // Execute query
+    query += " WHERE id = @id";
+
     sqlParams = {};
     for(i = 0; i < Size(fields); i++) {
         sqlParams.Add({"@"+fields[i], values[i]});
     }
-    // print("Update query: " + query);
     sqlParams.Add({"@id", int(id)});
 
     sqlNonQuery(query, sqlParams);
@@ -703,149 +533,10 @@ function updateEmployee(args) {
         args2["QueryParams"]["page"] = 1;
     }
     
-    //htmx.trigger('body', 'refreshTable'); //it does not work in cdcd language, this is javascript
     return getEmployees(args2);
 }
 
-
-// //new helper functions
-// function getNewGKTransactionFormWithValues(values, errorHtml) {
-//     // Default empty values
-//     defaults = {
-//         "GK_GL_BR_TEM": "0",
-//         "GK_GL_DATUM": "",
-//         "GK_GL_POSTED": "",
-//         "GK_GL_OPIS": "",
-//         "GK_GL_GOD": "",
-//         "GK_GL_TIP": "",
-//         "GK_GL_OZNAKA": "",
-//         "GK_GL_ZNAK": "",
-//         "GK_GL_IZNL": "",
-//         "GK_GL_IZNP": "",
-//         "GK_GL_ZATV_KLAS": "",
-//         "GK_GL_POC_STANJ": "",
-//         "GK_GL_BRDOK": "",
-//         "GK_GL_DATDOK": "",
-//         "GK_GL_PARTNER": "",
-//         "GK_GL_BR_LIN": ""
-//     };
-
-//     // Merge defaults with submitted values
-//     for(key in defaults) {
-//         if (Contains(values, key)) {
-//             defaults[key] = values[key];
-//         }
-//     }
-
-//     html = "<div class='datagrid-container-master'>" +
-//            "  <form class='vertical-form eight-column-form'>" +
-//            "    " + (errorHtml ? errorHtml : "") +
-//            "    <div class='grid grid-cols-8 gap-4'>" +
-//            "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + defaults["GK_GL_BR_TEM"] + "'></div>" +
-//            "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + defaults["GK_GL_DATUM"] + "'></div>" +
-//            "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + defaults["GK_GL_POSTED"] + "' maxlength='1'></div>" +
-//            "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + defaults["GK_GL_OPIS"] + "' maxlength='50'></div>" +
-//            "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + defaults["GK_GL_GOD"] + "' maxlength='2'></div>" +
-//            "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + defaults["GK_GL_TIP"] + "' maxlength='2'></div>" +
-//            "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + defaults["GK_GL_OZNAKA"] + "' maxlength='10'></div>" +
-//            "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + defaults["GK_GL_ZNAK"] + "'></div>" +
-//            "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + defaults["GK_GL_IZNL"] + "'></div>" +
-//            "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + defaults["GK_GL_IZNP"] + "'></div>" +
-//            "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + defaults["GK_GL_ZATV_KLAS"] + "' maxlength='1'></div>" +
-//            "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + defaults["GK_GL_POC_STANJ"] + "' maxlength='1'></div>" +
-//            "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + defaults["GK_GL_BRDOK"] + "'></div>" +
-//            "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + defaults["GK_GL_DATDOK"] + "'></div>" +
-//            "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + defaults["GK_GL_PARTNER"] + "' maxlength='10'></div>" +
-//            "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + defaults["GK_GL_BR_LIN"] + "'></div>" +
-//            "    </div>" +
-//            "    <div class='form-actions mt-4'>" +
-//            "      <button class='btn btn-success btn-sm' " +
-//            "              hx-post='/employees' " +
-//            "              hx-include='closest form' " +
-//            "              hx-target='.datagrid-container-master' " +
-//            "              hx-swap='outerHTML'>Save</button>" +
-//            "      <button class='btn btn-error btn-sm' " +
-//            "              hx-get='/employees' " +
-//            "              hx-target='.datagrid-container-master' " +
-//            "              hx-swap='outerHTML'>Cancel</button>" +
-//            "    </div>" +
-//            "  </form>" +
-//            "</div>";
-
-
-//     headers = {"Content-Type": "text/html"};
-//     return Response(headers, html, 200);
-// }
-
-
-function getNewEmployeeFormWithValues(values, errorScript) {
-    // Default empty values
-    /*defaults = {
-        "GK_GL_BR_TEM": "0",
-        "GK_GL_DATUM": "",
-        "GK_GL_POSTED": "",
-        "GK_GL_OPIS": "",
-        "GK_GL_GOD": "",
-        "GK_GL_TIP": "",
-        "GK_GL_OZNAKA": "",
-        "GK_GL_ZNAK": "",
-        "GK_GL_IZNL": "",
-        "GK_GL_IZNP": "",
-        "GK_GL_ZATV_KLAS": "",
-        "GK_GL_POC_STANJ": "",
-        "GK_GL_BRDOK": "",
-        "GK_GL_DATDOK": "",
-        "GK_GL_PARTNER": "",
-        "GK_GL_BR_LIN": ""
-    };
-*/
-/*
-    // Merge defaults with submitted values
-    for(key in defaults) {
-        if (Contains(values, key)) {
-            defaults[key] = values[key];
-        }
-    }
-*/
-
-   // print("DEFAULTS => " + defaults["GK_GL_BR_TEM"]);//ispiše 0 ako je bilo prazno
-   //print("getNewGKTransactionFormWithValues2 VALUES => " + values["GK_GL_BR_TEM"]);//ispiše 0 ako je bilo prazno
-
-    print(values);
-
-    html = "<div class='datagrid-container-master'>" +
-           "  <form class='vertical-form eight-column-form'>" +
-          
-           "    <div class='grid grid-cols-8 gap-4'>" +
-           "      <div><label>Name:</label><input class='input input-bordered input-sm w-full' name='Name' value='" + values["Name"] + "'></div>" +
-           "      <div><label>Surname:</label><input class='input input-bordered input-sm w-full' name='Surname' value='" + values["Surname"] + "'></div>" +
-           "      <div><label>Age:</label><input class='input input-bordered input-sm w-full' name='Age' value='" + values["Age"] + "'></div>" +
-           "      <div><label>Address:</label><input class='input input-bordered input-sm w-full' name='Address' value='" + values["Address"] + "'></div>" +
-           "      <div><label>City:</label><input class='input input-bordered input-sm w-full' name='City' value='" + values["City"] + "'></div>" +
-           "      <div><label>Email:</label><input class='input input-bordered input-sm w-full' name='Email' value='" + values["Email"] + "'></div>" +
-           "    </div>" +
-           "    <div class='form-actions mt-4'>" +
-           "      <button class='btn btn-success btn-sm' " +
-           "              hx-post='/employees' " +
-           "              hx-include='closest form' " +
-           "              hx-target='.datagrid-container-master' " +
-           "              hx-swap='outerHTML'>Save</button>" +
-           "      <button class='btn btn-error btn-sm' " +
-           "              hx-get='/employees' " +
-           "              hx-target='.datagrid-container-master' " +
-           "              hx-swap='outerHTML'>Cancel</button>" +
-           "    </div>" +
-           "  </form>" +
-           "</div>";
-
-    html += errorScript;
-    //print(html);
-
-    //headers = {"Content-Type": "text/html"};
-    //return Response(headers, html, 200);
-    return html;
-}
-
+// Get edit employee form with values (partial html)
 function getEditEmployeeFormWithValues(id, values, errorHtml) {
     query = "SELECT Name, Surname, Age, Address, City, Email FROM Employees WHERE Id = @id";
 
@@ -860,78 +551,42 @@ function getEditEmployeeFormWithValues(id, values, errorHtml) {
     html = "<div class='datagrid-container-master'>" +
            "  <form class='vertical-form eight-column-form'>";
            
-           html += "    <div class='grid grid-cols-8 gap-4'>" +
-           "      <div><label>Name:</label><input class='input input-bordered input-sm w-full' name='Name' value='" + row[0] + "'></div>" +
-           "      <div><label>Surname:</label><input class='input input-bordered input-sm w-full' name='Surname' value='" + row[1] + "'></div>" +
-           "      <div><label>Age:</label><input class='input input-bordered input-sm w-full' name='Age' value='" + row[2] + "'></div>" +
-           "      <div><label>Address:</label><input class='input input-bordered input-sm w-full' name='Address' value='" + row[3] + "'></div>" +
-           "      <div><label>City:</label><input class='input input-bordered input-sm w-full' name='City' value='" + row[4] + "'></div>" +
-           "      <div><label>Email:</label><input class='input input-bordered input-sm w-full' name='Email' value='" + row[5] + "'></div>" +
-           "    </div>" +
-           "    <div class='form-actions mt-4'>" +
-           "      <button class='btn btn-success btn-sm' " +
-           "              hx-put='/employees/" + id + "' " +
-           "              hx-include='closest form' " +
-           "              hx-target='.datagrid-container-master' " +
-           "              hx-swap='outerHTML' " +
-           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Save</button>" +
-           "      <button class='btn btn-error btn-sm' " +
-           "              hx-get='/employees' " +
-           "              hx-target='.datagrid-container-master' " +
-           "              hx-swap='outerHTML' " +
-           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Cancel</button>" +
-           "    </div>" +
-           "  </form>" +
-           "</div>";
+    html += "    <div class='grid grid-cols-8 gap-4'>" +
+    "      <div><label>Name:</label><input class='input input-bordered input-sm w-full' name='Name' value='" + row[0] + "'></div>" +
+    "      <div><label>Surname:</label><input class='input input-bordered input-sm w-full' name='Surname' value='" + row[1] + "'></div>" +
+    "      <div><label>Age:</label><input class='input input-bordered input-sm w-full' name='Age' value='" + row[2] + "'></div>" +
+    "      <div><label>Address:</label><input class='input input-bordered input-sm w-full' name='Address' value='" + row[3] + "'></div>" +
+    "      <div><label>City:</label><input class='input input-bordered input-sm w-full' name='City' value='" + row[4] + "'></div>" +
+    "      <div><label>Email:</label><input class='input input-bordered input-sm w-full' name='Email' value='" + row[5] + "'></div>" +
+    "    </div>" +
+    "    <div class='form-actions mt-4'>" +
+    "      <button class='btn btn-success btn-sm' " +
+    "              hx-put='/employees/" + id + "' " +
+    "              hx-include='closest form' " +
+    "              hx-target='.datagrid-container-master' " +
+    "              hx-swap='outerHTML' " +
+    "              >Save</button>" +
+    "      <button class='btn btn-error btn-sm' " +
+    "              hx-get='/employees' " +
+    "              hx-target='.datagrid-container-master' " +
+    "              hx-swap='outerHTML' " +
+    "              >Cancel</button>" +
+    "    </div>" +
+    "  </form>" +
+    "</div>";
 
-           if(errorHtml != ""){
-              html += errorHtml;
-           }
-
+    if(errorHtml != ""){
+        html += errorHtml;
+    }
 
     return html;
 }
 
 
-// Use submitted values if present, otherwise original
-function vrfy(field, fallback) {
-    if (Contains(values, field) && values[field] != null){
-        return values[field];
-    } else {
-        return fallback;
-    } 
-} 
 
-
-
-// Delete endpoint (already exists, keep as is)
-// Delete endpoint
+// Delete employee
 CreateEndpoint("DELETE", "/employees/{id}", "deleteEmployee");
 function deleteEmployee(args) {
-    id = args["RouteValues"]["id"];
-    
-    // Execute delete
-    query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
-    sqlParams = {};
-    sqlParams.Add({"@id", int(id)});
-    sqlNonQuery(query, sqlParams);
-    
-    // Return current view (preserve search/sort)
-    args2 = {};
-    args2["QueryParams"] = {"page": 1};
-    /*
-    args2["QueryParams"] = {};
-    if (Contains(args["QueryParams"], "page")) {
-        args2["QueryParams"]["page"] = args["QueryParams"]["page"];
-    } else {
-        args2["QueryParams"]["page"] = 1;
-    }
-    */
-    return getGKTransactions(args2);
-}
-
-CreateEndpoint("DELETE", "/employees-norefresh/{id}", "deleteEmployeeNoRefresh");
-function deleteEmployeeNoRefresh(args) {
     id = args["RouteValues"]["id"];
     
     query = "DELETE FROM employees WHERE id = @id";
@@ -945,3 +600,28 @@ function deleteEmployeeNoRefresh(args) {
 
 
 
+// Check if value is a valid integer
+function IsInt(value)
+{
+    if (value == "")
+    {
+        return false;
+    }
+
+    try
+    {        
+        int1 = int(value);
+        str2 = string(int1);
+        if(value != str2){
+            return false;
+        }
+      
+        return true; 
+    }
+    catch(ex)
+    {
+        return false;
+    }
+
+    return false;
+}

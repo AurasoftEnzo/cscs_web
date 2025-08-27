@@ -12,9 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    /* :root {
-      --b1: #1e90ff;
-    } */
+    
 
     html {
       height: 100%;
@@ -721,49 +719,6 @@
     let isMasterInEditMode = false;
 
 
-    // Function to handle master save/cancel - preserve current line
-    function handleMasterSaveCancel() {
-      const currentSelectedLineId = currentLineId;
-      setMasterEditMode(false);
-
-      // After master table refreshes, restore the current line selection
-      if (currentMasterId && currentSelectedLineId) {
-        // console.log('Attempting to restore line selection after 300ms delay');
-        setTimeout(() => {
-          // Reload the lines for this master
-          fetch(`/gk-lines/${currentMasterId}`)
-            .then(response => response.text())
-            .then(html => {
-              document.querySelector('.datagrid-container-detail').innerHTML = html;
-
-              // Try to select the same line again
-              setTimeout(() => {
-                const lineRow = document.querySelector(`.datagrid-container-detail tr[data-line="${currentSelectedLineId}"]`);
-                // console.log('Looking for line row with id:', currentSelectedLineId);
-                // console.log('Found line row:', lineRow);
-
-                if (lineRow) {
-                  selectLineForEdit(lineRow);
-                } else {
-                  // If line no longer exists, select first line
-                  // console.log('Original line not found, selecting first line');
-                  loadFirstLineData(currentMasterId);
-                }
-              }, 100);
-            })
-            .catch(error => {
-              console.error('Error reloading lines:', error);
-              loadFirstLineData(currentMasterId);
-            });
-        }, 300);
-      } else if (currentMasterId) {
-        // Just reload first line if no specific line was selected
-        setTimeout(() => {
-          loadFirstLineData(currentMasterId);
-        }, 300);
-      }
-    }
-
     // Function to load first line when master is selected
     function loadFirstLineData(masterId) {
       // Wait a bit for the detail table to load, then select first line
@@ -781,12 +736,6 @@
     // Listen for master row selection to enable new line entry
     htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
       addRowClickHandlers();
-
-      // Check if we're back to normal view (not edit mode)
-      const editForm = document.querySelector('.datagrid-container-master form');
-      if (!editForm) {
-        setMasterEditMode(false);
-      }
 
       // Enable form for first row if available and load first line
       const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
@@ -823,7 +772,7 @@
   </script>
 
   <script>
-    function confirmDeleteGlava(id) {
+    function confirmDeleteEmployee(id) {
       Swal.fire({
         title: 'Are you sure?',
         text: 'This action cannot be undone.',
@@ -833,7 +782,7 @@
         cancelButtonText: 'No, keep it'
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch('/employees-norefresh/' + id, {
+          fetch('/employees/' + id, {
             method: 'DELETE',
             // headers: {
             //   'Content-Type': 'application/json'
