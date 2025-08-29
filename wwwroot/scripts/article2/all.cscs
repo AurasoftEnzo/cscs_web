@@ -7,6 +7,36 @@
     // </html>
     // ";
 
+
+print("--------------------------");
+var1 = 5/0;
+var2 = 0/0;
+print(var1);
+print(var2);
+print(typeof(var1));
+print(typeof(var2));
+print("--------------------------");
+
+
+CreateEndpoint("POST", "/test1", "test1");
+function test1(request){
+    // Handle the request here
+    body = request["Body"];
+    jsonObject = DeserializeJson(body);
+    print(jsonObject);
+    print(typeof(jsonObject));
+
+    print(jsonObject["val3"]);
+    print(typeof(jsonObject["val3"]));
+
+    val3 = jsonObject["val3"]; 
+    print(val3);
+    print(typeof(val3));
+
+    return "simple plain text";
+}
+
+
 //Hello World page (simple html)
 CreateEndpoint("GET", "/", "getRootHandlerFunction");
 function getRootHandlerFunction(){
