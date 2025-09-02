@@ -405,35 +405,64 @@ function createGKTransaction(args) {
     }
 
     create_values2 = {};
-    create_values2["GK_GL_BR_TEM"] = GetValueFromForm(args["Body"], "GK_GL_BR_TEM");
-    create_values2["GK_GL_DATUM"] = GetValueFromForm(args["Body"], "GK_GL_DATUM");
-    create_values2["GK_GL_POSTED"] = GetValueFromForm(args["Body"], "GK_GL_POSTED");
-    create_values2["GK_GL_OPIS"] = GetValueFromForm(args["Body"], "GK_GL_OPIS");
-    create_values2["GK_GL_GOD"] = GetValueFromForm(args["Body"], "GK_GL_GOD");
-    create_values2["GK_GL_TIP"] = GetValueFromForm(args["Body"], "GK_GL_TIP");
-    create_values2["GK_GL_OZNAKA"] = GetValueFromForm(args["Body"], "GK_GL_OZNAKA");
-    create_values2["GK_GL_ZNAK"] = GetValueFromForm(args["Body"], "GK_GL_ZNAK");
-    create_values2["GK_GL_IZNL"] = GetValueFromForm(args["Body"], "GK_GL_IZNL");
-    create_values2["GK_GL_IZNP"] = GetValueFromForm(args["Body"], "GK_GL_IZNP");
-    create_values2["GK_GL_ZATV_KLAS"] = GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS");
-    create_values2["GK_GL_POC_STANJ"] = GetValueFromForm(args["Body"], "GK_GL_POC_STANJ");
-    create_values2["GK_GL_BRDOK"] = GetValueFromForm(args["Body"], "GK_GL_BRDOK");
-    create_values2["GK_GL_DATDOK"] = GetValueFromForm(args["Body"], "GK_GL_DATDOK");
-    create_values2["GK_GL_PARTNER"] = GetValueFromForm(args["Body"], "GK_GL_PARTNER");
-    create_values2["GK_GL_BR_LIN"] = GetValueFromForm(args["Body"], "GK_GL_BR_LIN");
+    create_values2["GK_GL_BR_TEM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_TEM"));
+    create_values2["GK_GL_DATUM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATUM"));
+    create_values2["GK_GL_POSTED"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POSTED"));
+    create_values2["GK_GL_OPIS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OPIS"));
+    create_values2["GK_GL_GOD"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_GOD"));
+    create_values2["GK_GL_TIP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_TIP"));
+    create_values2["GK_GL_OZNAKA"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OZNAKA"));
+    create_values2["GK_GL_ZNAK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZNAK"));
+    create_values2["GK_GL_IZNL"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNL"));
+    create_values2["GK_GL_IZNP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNP"));
+    create_values2["GK_GL_ZATV_KLAS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS"));
+    create_values2["GK_GL_POC_STANJ"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POC_STANJ"));
+    create_values2["GK_GL_BRDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BRDOK"));
+    create_values2["GK_GL_DATDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATDOK"));
+    create_values2["GK_GL_PARTNER"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_PARTNER"));
+    create_values2["GK_GL_BR_LIN"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_LIN"));
 
+    createGKTransaction_id = create_values2["GK_GL_BR_TEM"];
 
-    // Validate required fields
-    //if("GK_GL_BR_TEM" == "" || "GK_GL_DATUM" == "") {
-        
-        // 🔴 Validation failed: Return the form again with error + values
-    //    create_headers = {"Content-Type": "text/html"};
-        //return Response(create_headers, getNewGKTransactionFormWithValues(create_values, "<div class='alert alert-error mb-4'>ID and Date are required</div>"), 200);
-    //}
+    if (create_values2["GK_GL_ZNAK"]=="")
+    {
+        create_values2["GK_GL_ZNAK"]="0";//int
+    }
 
-    //createGKTransaction_GK_GL_BR_TEM = create_values[0];    
-    //createGKTransaction_GK_GL_BR_TEM = create_values2["GK_GL_BR_TEM"];    
-    //print("createGKTransaction GK_GL_BR_TEM = " + createGKTransaction_GK_GL_BR_TEM);
+    if (create_values2["GK_GL_IZNL"]=="")
+    {
+        create_values2["GK_GL_IZNL"]="0";//float
+    }
+
+    if (create_values2["GK_GL_IZNP"]=="")
+    {
+        create_values2["GK_GL_IZNP"]="0";//float
+    }
+
+    if (create_values2["GK_GL_BRDOK"]=="")
+    {
+        create_values2["GK_GL_BRDOK"]="0";//int
+    }
+
+    if (create_values2["GK_GL_DATDOK"]=="")
+    {
+        create_values2["GK_GL_DATDOK"]="1900-01-01";
+    }
+
+    if (create_values2["GK_GL_BR_LIN"]=="")
+    {
+        create_values2["GK_GL_BR_LIN"]="0";//int
+    }
+
+    //***************************************************
+    // Promjena zarez u točku za float brojeve
+    //***************************************************
+    create_values2["GK_GL_IZNL"] = create_values2["GK_GL_IZNL"].Replace("," , ".");
+    create_values2["GK_GL_IZNP"] = create_values2["GK_GL_IZNP"].Replace("," , ".");
+
+    //***************************************************
+    // Validate fields
+    //***************************************************  
     if (IsInt(create_values2["GK_GL_BR_TEM"])==false)
     {
         print("Provjera GK_GL_BR_TEM nije prošla");
@@ -449,8 +478,6 @@ function createGKTransaction(args) {
     {
         print("Provjera GK_GL_BR_TEM je prošla");
     }    
-
-    //print("GK_GL_DATUM = " + create_values2["GK_GL_DATUM"]);
 
     if (IsDate(create_values2["GK_GL_DATUM"])==false)
     {
@@ -468,8 +495,302 @@ function createGKTransaction(args) {
         print("Provjera GK_GL_DATUM je prošla");
     }
     
-    createGKTransaction_GK_GL_POSTED = create_values2["GK_GL_POSTED"];
+//*************************************************************************************************************
+//*************************************************************************************************************
+//*************************************************************************************************************
+//*************************************************************************************************************
+//*************************************************************************************************************
+//OD TU
+
+
+    createGKTransaction_posted = create_values2["GK_GL_POSTED"];
+    if(createGKTransaction_posted.Length > 1)
+    {
+        print("Provjera GK_GL_POSTED nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POSTED nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_POSTED je prošla");
+    }
+
+    createGKTransaction_opis = create_values2["GK_GL_OPIS"];
+    if (createGKTransaction_opis.Length > 50)
+    {
+        print("Provjera GK_GL_OPIS nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OPIS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_OPIS je prošla");
+    }
+
+    createGKTransaction_god = create_values2["GK_GL_GOD"];
+    if (createGKTransaction_god.Length > 2)
+    {
+        print("Provjera GK_GL_GOD nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_GOD nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_GOD je prošla");
+    }
+
+    createGKTransaction_tip = create_values2["GK_GL_TIP"];
+    if (createGKTransaction_tip.Length > 2)
+    {
+        print("Provjera GK_GL_TIP nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_TIP nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_TIP je prošla");
+    }
+
+    createGKTransaction_oznaka = create_values2["GK_GL_OZNAKA"];
+    if (createGKTransaction_oznaka.Length > 10)
+    {
+        print("Provjera GK_GL_OZNAKA nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OZNAKA nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_OZNAKA je prošla");
+    }
     
+    if (IsInt(create_values2["GK_GL_ZNAK"])==false)
+    {
+        print("Provjera GK_GL_ZNAK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZNAK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_ZNAK je prošla");
+    }   
+    
+    if (IsFloat(create_values2["GK_GL_IZNL"])==false)
+    {
+        print("Provjera GK_GL_IZNL nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNL nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_IZNL je prošla");
+    } 
+    
+    if (IsFloat(create_values2["GK_GL_IZNP"])==false)
+    {
+        print("Provjera GK_GL_IZNP nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNP nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_IZNP je prošla");
+    }
+    
+
+    createGKTransaction_zatv_klas = create_values2["GK_GL_ZATV_KLAS"];
+    if (createGKTransaction_zatv_klas.Length > 1)
+    {
+        print("Provjera GK_GL_ZATV_KLAS nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZATV_KLAS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_ZATV_KLAS je prošla");
+    }
+
+    createGKTransaction_poc_stanj = create_values2["GK_GL_POC_STANJ"];
+    if (createGKTransaction_poc_stanj.Length > 1)
+    {
+        print("Provjera GK_GL_POC_STANJ nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POC_STANJ nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_POC_STANJ je prošla");
+    }
+    
+    if (IsInt(create_values2["GK_GL_BRDOK"])==false)
+    {
+        print("Provjera GK_GL_BRDOK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BRDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_BRDOK je prošla");
+    }   
+
+
+    if (IsDate(create_values2["GK_GL_DATDOK"])==false)
+    {
+        print("Provjera GK_GL_DATDOK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_DATDOK je prošla");
+    }
+
+    createGKTransaction_partner = create_values2["GK_GL_PARTNER"];
+    if (createGKTransaction_partner.Length > 10)
+    {
+        print("Provjera GK_GL_PARTNER nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_PARTNER nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_PARTNER je prošla");
+    }
+
+    if (IsInt(create_values2["GK_GL_BR_LIN"])==false)
+    {
+        print("Provjera GK_GL_BR_LIN nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_LIN nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_BR_LIN je prošla");
+    }   
+
+    print('INSERT GLAVE: VALIDACIJA JE PROŠLA ZA SVA POLJA OK');
+
+  
+    //*********************************************************
+    //*********************************************************
+    //SELECT COUNT(*) GLAVA sa GK_GL_BR_TEM = id
+    createGKTransaction_query = "SELECT COUNT(*) "+
+        " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+
+    createGKTransaction_sqlParams = {};
+    createGKTransaction_sqlParams.Add({"@id", int(createGKTransaction_id)});
+
+    createGKTransaction_sqlResult = sqlQuery(createGKTransaction_query, createGKTransaction_sqlParams);
+
+    //ako ima redaka return error
+    createGKTransaction_recordExist = false;
+    if( (createGKTransaction_sqlResult == null) || 
+        (Size(createGKTransaction_sqlResult) < 2) ) 
+    {
+        createGKTransaction_recordExist = false;
+    }
+    else
+    {
+        if (createGKTransaction_sqlResult[1][0] == 0)
+        {
+            createGKTransaction_recordExist = false;
+        }
+        else
+        {
+            createGKTransaction_recordExist = true;
+        }
+    }
+
+    if (createGKTransaction_recordExist)
+    {        
+        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " postoji: nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " već postoji.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " postoji je prošla");
+    }    
+    //***********************************
+
+
+
+
 
     // Build insert query
     create_query = "INSERT INTO NKGKGLTM (";
@@ -769,8 +1090,6 @@ function updateGKTransaction(args) {
     updateGKTransaction_values["GK_GL_PARTNER"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_PARTNER"));
     updateGKTransaction_values["GK_GL_BR_LIN"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_LIN"));
 
-    // print("XXXX - " + updateGKTransaction_values);
-
     if (updateGKTransaction_values["GK_GL_ZNAK"]=="")
     {
         updateGKTransaction_values["GK_GL_ZNAK"]="0";//int
@@ -800,6 +1119,12 @@ function updateGKTransaction(args) {
     {
         updateGKTransaction_values["GK_GL_BR_LIN"]="0";//int
     }
+
+    //***************************************************
+    // Promjena zarez u točku za float brojeve
+    //***************************************************
+    updateGKTransaction_values["GK_GL_IZNL"] = updateGKTransaction_values["GK_GL_IZNL"].Replace("," , ".");
+    updateGKTransaction_values["GK_GL_IZNP"] = updateGKTransaction_values["GK_GL_IZNP"].Replace("," , ".");
 
     //***************************************************
     // Validate fields
@@ -1141,11 +1466,11 @@ function updateGKTransaction(args) {
     }
     else
     {
-        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + "postoji je prošla");
+        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " postoji je prošla");
     }    
     //***********************************
 
-print("BEFORE UPDATE QUERY");
+    print("BEFORE UPDATE GLAVE");
     // Build update query
     updateGKTransaction_query = "UPDATE NKGKGLTM SET ";
     updateGKTransaction_first = true;
@@ -1165,7 +1490,8 @@ print("BEFORE UPDATE QUERY");
     }    
     updateGKTransaction_sqlParams.Add({"@id", int(updateGKTransaction_id)});
 
-    print("UPDATE GLAVE query: " + updateGKTransaction_query);
+    print("BEFORE UPDATE GLAVE: query = " + updateGKTransaction_query);
+    print("BEFORE UPDATE GLAVE: params = " + updateGKTransaction_sqlParams);
 
     // Execute query
     sqlNonQuery(updateGKTransaction_query, updateGKTransaction_sqlParams);
@@ -1179,10 +1505,13 @@ print("BEFORE UPDATE QUERY");
     } else {
         updateGKTransaction_args2["QueryParams"]["page"] = 1;
     }
+                                
+    updateGKTransaction_alert = "<script>Swal.fire({title: 'Successfully updated!', text: 'GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " .', icon: 'success', confirmButtonText: 'Close'});</script>";        
+    updateGKTransaction_args2["QueryParams"]["alertText"] = updateGKTransaction_alert;
 
     print ('UPDATE GLAVE: Refresh tablu sa GLAVAMA');
     //htmx.trigger('body', 'refreshTable'); //it does not work in cdcd language, this is javascript
-    return getGKTransactions(updateGKTransaction_args2);
+    return getGKTransactions(updateGKTransaction_args2);    
 }
 
 
