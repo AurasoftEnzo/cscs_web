@@ -10,5 +10,7 @@
         public string TemplatesDirectory { get; set; }
 
         //public string PreprocessSripts { get; set; }
+
+        public string StaticFilesDirectory { get; set; }
     }
 }

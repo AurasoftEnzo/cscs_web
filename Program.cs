@@ -152,6 +152,7 @@
 
 
 using CSCS_Web_Enzo_1;
+using Microsoft.Extensions.FileProviders;
 using System;
 using System.Runtime;
 
@@ -176,7 +177,12 @@ var cscsConfig = builder.Configuration.GetSection("CSCSConfig").Get<CSCSConfig>(
 
 
 var serverApp = builder.Build();
-serverApp.UseStaticFiles();
+
+serverApp.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(cscsConfig.StaticFilesDirectory)
+});
+//serverApp.UseStaticFiles();
 
 //--CORS
 serverApp.UseCors();

@@ -1,0 +1,13 @@
+CreateEndpoint("GET", "/", "getRoot");
+function getRoot(){
+
+    responseHeaders = {
+        "Content-Type": "text/html"
+    };
+
+    responseBody = "<html><body><h1>Hello, world!</h1><script src=\"/test2.js\"/></body></html>";
+
+    return Response(responseHeaders, responseBody, 200);
+}
+
+
