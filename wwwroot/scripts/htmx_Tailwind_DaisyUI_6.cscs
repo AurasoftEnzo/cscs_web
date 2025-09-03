@@ -398,11 +398,11 @@ function createGKTransaction(args) {
         "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
     ];
     //print("Creating new GK transaction with fields: " + create_fields);
-    create_values = {};
-    for(create_i = 0; create_i < Size(create_fields); create_i++) {
-        create_field = create_fields[create_i];
-        create_values[create_i]= GetValueFromForm(args["Body"], create_field);
-    }
+    // create_values = {};
+    // for(create_i = 0; create_i < Size(create_fields); create_i++) {
+    //     create_field = create_fields[create_i];
+    //     create_values[create_i]= GetValueFromForm(args["Body"], create_field);
+    // }
 
     create_values2 = {};
     create_values2["GK_GL_BR_TEM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_TEM"));
@@ -426,7 +426,7 @@ function createGKTransaction(args) {
 
     if (create_values2["GK_GL_ZNAK"]=="")
     {
-        create_values2["GK_GL_ZNAK"]="0";//int
+        create_values2["GK_GL_ZNAK"]="0";//smallint
     }
 
     if (create_values2["GK_GL_IZNL"]=="")
@@ -451,7 +451,7 @@ function createGKTransaction(args) {
 
     if (create_values2["GK_GL_BR_LIN"]=="")
     {
-        create_values2["GK_GL_BR_LIN"]="0";//int
+        create_values2["GK_GL_BR_LIN"]="0";//smallint
     }
 
     //***************************************************
@@ -495,13 +495,6 @@ function createGKTransaction(args) {
         print("Provjera GK_GL_DATUM je prošla");
     }
     
-//*************************************************************************************************************
-//*************************************************************************************************************
-//*************************************************************************************************************
-//*************************************************************************************************************
-//*************************************************************************************************************
-//OD TU
-
 
     createGKTransaction_posted = create_values2["GK_GL_POSTED"];
     if(createGKTransaction_posted.Length > 1)
@@ -588,7 +581,7 @@ function createGKTransaction(args) {
         print("Provjera GK_GL_OZNAKA je prošla");
     }
     
-    if (IsInt(create_values2["GK_GL_ZNAK"])==false)
+    if (IsSmallInt(create_values2["GK_GL_ZNAK"])==false)
     {
         print("Provjera GK_GL_ZNAK nije prošla");
 
@@ -721,7 +714,7 @@ function createGKTransaction(args) {
         print("Provjera GK_GL_PARTNER je prošla");
     }
 
-    if (IsInt(create_values2["GK_GL_BR_LIN"])==false)
+    if (IsSmallInt(create_values2["GK_GL_BR_LIN"])==false)
     {
         print("Provjera GK_GL_BR_LIN nije prošla");
 
@@ -817,10 +810,15 @@ function createGKTransaction(args) {
     // Execute query
     create_sqlParams = {};
     for(create_i = 0; create_i < Size(create_fields); create_i++) {
-        //create_sqlParams.Add({create_fields[create_i], create_values[create_fields[create_i]]});
-        create_sqlParams.Add({"@"+create_fields[create_i], create_values[create_i]});
+        ////create_sqlParams.Add({create_fields[create_i], create_values[create_fields[create_i]]});
+        //create_sqlParams.Add({"@"+create_fields[create_i], create_values[create_i]});
+        current_field_name = create_fields[create_i];        
+        create_sqlParams.Add({"@"+create_fields[create_i], create_values2[current_field_name]});
     }
-    //print("NOVA GLAVA SQL=" + create_query);
+    
+    print("INSERT GLAVA SQL query=" + create_query);
+    print("INSERT GLAVA SQL params=" + create_sqlParams);
+
     sqlNonQuery(create_query, create_sqlParams);
 
 
@@ -838,31 +836,221 @@ function createGKTransaction(args) {
 
 function IsInt(value)
 {
-    if (value == "")
-    {
-        return false;
-    }
-
     try
-    {        
-        // Check if value is a valid integer
-        int1 = int(value);
-        str2 = string(int1);
-        if(value != str2){
-            throw "Int Validacija nije prošla.\nvalue = " + value;
+    {
+        if (value=="")
+        {
+            return false;    
         }
 
-        //print("Int Validacija OK");        
-        return true; 
+        //da li je samo minus na početku
+        if ( (value.Length == 1) && (Substring(value, 0, 1) == "-") )
+        {
+            return false;
+        }
+
+        if (Substring(value, 0, 1) == "-")
+        {
+            broj = Substring(value, 1, value.Length-1);
+        }
+        else
+        {
+            broj = value;
+        }
+
+        prvaZnamenkaBroja = Substring(broj, 0, 1);    
+
+        //broj je value bez minusa na početku
+
+        broj = RemoveLeadingZeros(broj);
+
+        //broj je bez nula na početku
+
+        if ((broj.Length == 0) && (prvaZnamenkaBroja == "0"))
+        {
+            broj = "0";
+        }
+
+        //prođi kroz sve znakove i provjeri da li su u rasponu 0-9
+        bout = true;
+        for (i = 0; i < broj.Length; i++)
+        {
+            znak = Substring(broj, i, 1);        
+
+            b0 = (znak == "0");
+            b1 = (znak == "1");
+            b2 = (znak == "2");
+            b3 = (znak == "3");
+            b4 = (znak == "4");
+            b5 = (znak == "5");
+            b6 = (znak == "6");
+            b7 = (znak == "7");
+            b8 = (znak == "8");
+            b9 = (znak == "9");
+        
+            if (b0 || b1 || b2 || b3 || b4 || b5 || b6 || b7 || b8 || b9)
+            {
+                //sve ok            
+            }
+            else
+            {            
+                //return false;
+                bout = false;
+                break;            
+            }
+        }
+
+        if (bout == false)
+        {
+            return false;
+        }    
+
+        if (broj.Length > 10)
+        {
+            return false;
+        }
+
+        //testiramo da li je broj < -2147483648
+        if (Substring(value, 0, 1) == "-")
+        {
+            if (broj.Length == 10)
+            {      
+                if (broj > "2147483648")  
+                {
+                    return false;
+                }                        
+            }           
+        }
+        else //testiramo da li je broj > 2147483647
+        {      
+            if (broj.Length == 10)
+            {      
+                if (broj > "2147483647")  
+                {
+                    return false;
+                }            
+            }
+        }
+
+        return true;
     }
-    catch(ex11)
-    {        
-        //print(ex11);
+    catch(ex111)
+    {
         return false;
     }
 
     return false;
 }
+
+
+function IsSmallInt(value)
+{
+    try
+    {
+        if (value=="")
+        {
+            return false;    
+        }
+
+        //da li je samo minus na početku
+        if ( (value.Length == 1) && (Substring(value, 0, 1) == "-") )
+        {
+            return false;
+        }
+
+        if (Substring(value, 0, 1) == "-")
+        {
+            broj = Substring(value, 1, value.Length-1);
+        }
+        else
+        {
+            broj = value;
+        }
+
+        prvaZnamenkaBroja = Substring(broj, 0, 1);    
+
+        //broj je value bez minusa na početku
+
+        broj = RemoveLeadingZeros(broj);
+
+        //broj je bez nula na početku
+
+        if ((broj.Length == 0) && (prvaZnamenkaBroja == "0"))
+        {
+            broj = "0";
+        }
+
+        //prođi kroz sve znakove i provjeri da li su u rasponu 0-9
+        bout = true;
+        for (i = 0; i < broj.Length; i++)
+        {
+            znak = Substring(broj, i, 1);        
+
+            b0 = (znak == "0");
+            b1 = (znak == "1");
+            b2 = (znak == "2");
+            b3 = (znak == "3");
+            b4 = (znak == "4");
+            b5 = (znak == "5");
+            b6 = (znak == "6");
+            b7 = (znak == "7");
+            b8 = (znak == "8");
+            b9 = (znak == "9");
+        
+            if (b0 || b1 || b2 || b3 || b4 || b5 || b6 || b7 || b8 || b9)
+            {
+                //sve ok            
+            }
+            else
+            {            
+                //return false;
+                bout = false;
+                break;            
+            }
+        }
+
+        if (bout == false)
+        {
+            return false;
+        }    
+
+        if (broj.Length > 5)
+        {
+            return false;
+        }
+
+        //testiramo da li je broj < -32768
+        if (Substring(value, 0, 1) == "-")
+        {
+            if (broj.Length == 5)
+            {      
+                if (broj > "32768")  
+                {
+                    return false;
+                }                        
+            }        
+        }
+        else //testiramo da li je broj > 32767
+        {      
+            if (broj.Length == 5)
+            {      
+                if (broj > "32767")  
+                {
+                    return false;
+                }            
+            }
+        }
+
+        return true;
+    }
+    catch(ex111)
+    {
+        return false;
+    }
+    
+    return false;
+}
+
 
 function IsDate(value)
 {
@@ -961,6 +1149,9 @@ function IsFloat(value)
     return false;
 }
 
+
+
+
 // Edit form
 CreateEndpoint("GET", "/gk-transactions/{id}/edit", "getEditGKTransactionForm");
 /*
@@ -1044,7 +1235,8 @@ function getEditGKTransactionForm(args) {
     
     values = {};
     for(i = 0; i < Size(gk_masterFields); i++) {
-        values[gk_masterFields[i]] = transaction[1][i];
+        //values[gk_masterFields[i]] = transaction[1][i];
+        values[gk_masterFields[i]] = StrTrim(transaction[1][i]);
     }    
 
     headers = {"Content-Type": "text/html"};
@@ -1092,7 +1284,7 @@ function updateGKTransaction(args) {
 
     if (updateGKTransaction_values["GK_GL_ZNAK"]=="")
     {
-        updateGKTransaction_values["GK_GL_ZNAK"]="0";//int
+        updateGKTransaction_values["GK_GL_ZNAK"]="0";//smallint
     }
 
     if (updateGKTransaction_values["GK_GL_IZNL"]=="")
@@ -1117,7 +1309,7 @@ function updateGKTransaction(args) {
 
     if (updateGKTransaction_values["GK_GL_BR_LIN"]=="")
     {
-        updateGKTransaction_values["GK_GL_BR_LIN"]="0";//int
+        updateGKTransaction_values["GK_GL_BR_LIN"]="0";//smallint
     }
 
     //***************************************************
@@ -1254,7 +1446,7 @@ function updateGKTransaction(args) {
         print("Provjera GK_GL_OZNAKA je prošla");
     }
     
-    if (IsInt(updateGKTransaction_values["GK_GL_ZNAK"])==false)
+    if (IsSmallInt(updateGKTransaction_values["GK_GL_ZNAK"])==false)
     {
         print("Provjera GK_GL_ZNAK nije prošla");
 
@@ -1388,7 +1580,7 @@ function updateGKTransaction(args) {
         print("Provjera GK_GL_PARTNER je prošla");
     }
 
-    if (IsInt(updateGKTransaction_values["GK_GL_BR_LIN"])==false)
+    if (IsSmallInt(updateGKTransaction_values["GK_GL_BR_LIN"])==false)
     {
         print("Provjera GK_GL_BR_LIN nije prošla");
 
