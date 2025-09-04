@@ -18,6 +18,8 @@ namespace CSCS_Web_Enzo_1
         public static Interpreter Interpreter { get; set; } = new Interpreter();
 
 
+        //public static CSCS_GUI CSCS_GUI { get; set; } = new CSCS_GUI();
+
 
         // Interpreter Manager
         static InterpreterManagerModule InterpreterManagerModule { get; set; } = new InterpreterManagerModule();
@@ -51,6 +53,11 @@ namespace CSCS_Web_Enzo_1
 
 
 
+            //???
+            //CSCS_GUI.Init(Interpreter);
+
+
+
             //CSCS.InterpreterManager
 
             //// **REMOVE**
@@ -74,7 +81,7 @@ namespace CSCS_Web_Enzo_1
 
 
 
-            //skriptu izvršit
+            //run script
             try
             {
                 Console.WriteLine(

@@ -39,3 +39,46 @@ function func3(){
 
 
 
+// function func1(){
+//     localVar = 100;
+//     for(i = 0; i < 4; i++){
+//         sleep(1000);
+//         localVar += 1;
+//     }
+//     return localVar;
+// }
+// function func2(){
+//     localVar = 200;
+//     for(i = 0; i < 5; i++){
+//         sleep(1000);
+//         localVar += 1;
+//     }
+//     return localVar;
+// }
+// function func3(){
+//     localVar = 300;
+//     for(i = 0; i < 6; i++){
+//         sleep(1000);
+//         localVar += 1;
+//     }
+//     return localVar;
+// }
+
+// print("start");
+
+// thr1 = newThread(func1());
+// thr2 = newThread(func2());
+// thr3 = newThread(func3());
+
+// print("test");
+
+// res1 = threadResult(thr1);
+// print("thr1-----");
+// res2 = threadResult(thr2);
+// print("thr2-----");
+// res3 = threadResult(thr3);
+// print("thr3-----");
+
+// print("got result thread1", res1);
+// print("got result thread2", res2);
+// print("got result thread3", res3);

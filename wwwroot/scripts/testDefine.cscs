@@ -1,0 +1,52 @@
+
+// DEFINE var1 type a size 4;
+// var1 = "asdasdasd";
+// // print(var1);
+// var1 = var1 + 10;
+// print(var1);
+
+
+
+//--------------------------------
+
+
+// CreateEndpoint("GET", "/1", "func1");
+// CreateEndpoint("GET", "/2", "func2");
+// CreateEndpoint("GET", "/3", "func3");
+
+
+
+// function func1(){
+//     localVar = 100;
+//     print("init localVar in FUNC 1: " + localVar);
+
+//     for(i = 0; i < 3; i++){
+//         sleep(5000);
+
+//         localVar += 1;
+//         print("localVar in FUNC 1 changed: " + localVar);
+//     }
+//     return 201;
+// }
+// function func2(){
+//     localVar = 200;
+//     print("init localVar in FUNC 2: " + localVar);
+
+//     for(i = 0; i < 4; i++){
+//         sleep(2000);
+//         localVar += 1;
+//         print("localVar in FUNC 2 changed: " + localVar);
+//     }
+//     return 202;
+// }
+// function func3(){
+//     localVar = 300;
+//     print("init localVar in FUNC 3: " + localVar);
+
+//     for(i = 0; i < 5; i++){
+//         sleep(1000);
+//         localVar += 1;
+//         print("localVar in FUNC 3 changed: " + localVar);
+//     }
+//     return 203;
+// }

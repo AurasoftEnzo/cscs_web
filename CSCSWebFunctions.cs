@@ -31,59 +31,25 @@ namespace CSCS_Web_Enzo_1
             interpreter.RegisterFunction("CreateEndpoint", new CreateEndpointFunction());
             interpreter.RegisterFunction("Response", new ResponseFunction());
 
-            //--
-
             interpreter.RegisterFunction("ReadConfig", new ReadConfigFunction());
-            
             //interpreter.RegisterFunction("TemplatesPath", new TemplatesPathFunction());
             //interpreter.RegisterFunction("ScriptsPath", new ScriptsPathFunction());
 
-            //--
-
             interpreter.RegisterFunction("DeserializeJson", new DeserializeJsonFunction());
             interpreter.RegisterFunction("SerializeJson", new SerializeJsonFunction());
-
             interpreter.RegisterFunction("Sql2Json", new Sql2JsonFunction());
 
-            //--
-
             interpreter.RegisterFunction("LoadTemplate", new LoadTemplateFunction());
-
             interpreter.RegisterFunction("FillTemplateFromDictionary", new FillTemplateFromDictionaryFunction());
             interpreter.RegisterFunction("FillTemplatePlaceholder", new FillTemplatePlaceholderFunction());
             //interpreter.RegisterFunction("FillTemplateFromDEFINEs", new FillTemplateFromDEFINEsFunction());
-            
             interpreter.RegisterFunction("RenderCondition", new RenderConditionFunction());
-
             interpreter.RegisterFunction("RenderHtml", new RenderHtmlFunction());
 
-            //--
-
-            interpreter.RegisterFunction("testFunc", new testFuncFunction());
             interpreter.RegisterFunction("GetValueFromForm", new GetValueFromFormFunction());
-
-            //--
-
-
         }
     }
 
-    
-
-    class testFuncFunction : ParserFunction
-    {
-        protected override Variable Evaluate(ParsingScript script)
-        {
-            List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 1, m_name);
-
-            var var1 = Utils.GetSafeVariable(args, 0);
-
-            //Uri.UnescapeDataString(var1.String);
-
-            return Variable.EmptyInstance;
-        }   
-    }
     
     
     class ReadConfigFunction : ParserFunction
@@ -149,17 +115,12 @@ namespace CSCS_Web_Enzo_1
         private async Task<Variable> ExecScriptFunctionAsync(HttpContext context,
             string scriptFunctionName, string httpMethod)
         {
-            // Prepare arguments for the CSCS script function
-            //var args = new List<Variable>();
-
             // Create a request object containing all parts of the request
             var requestData = new Variable(Variable.VarType.ARRAY);
 
-            //requestData.AddVariable(new Variable(httpMethod));
             requestData.SetHashVariable("HttpMethod", new Variable(context.Request.Method));
             requestData.SetHashVariable("RequestPath", new Variable(context.Request.Path));
-            // ???
-
+            
             // Add route parameters
             var routeParams = new Variable(Variable.VarType.ARRAY);
             foreach (var (key, value) in context.Request.RouteValues)
@@ -184,7 +145,7 @@ namespace CSCS_Web_Enzo_1
             }
             requestData.SetHashVariable("Headers", headers);
 
-            // Add body (for POST/PUT)
+            // Add body
             var body = Variable.EmptyInstance;
             if (context.Request.ContentLength > 0)
             {
@@ -193,23 +154,21 @@ namespace CSCS_Web_Enzo_1
                     using var reader = new StreamReader(context.Request.Body);
                     var bodyContent = await reader.ReadToEndAsync();
 
-                    requestData.SetHashVariable("Body", body = new Variable(bodyContent));
+                    requestData.SetHashVariable("Body", new Variable(bodyContent));
                 }
-                catch
+                catch(Exception ex)
                 {
-                    // /* Handle error */ !!!!!!!
+                    Console.WriteLine(ex.Message);
+                    requestData.SetHashVariable("Body", Variable.EmptyInstance);
                 }
             }
             else
             {
-                requestData.SetHashVariable("Body", body = Variable.EmptyInstance);
+                requestData.SetHashVariable("Body", Variable.EmptyInstance);
             }
 
 
-            //requestData.AddVariable(body);
-
             // Execute the CSCS script function with all request data
-            //return CSCSWebApplication.Interpreter.Run(scriptFunctionName, new List<Variable> { requestData });
             try
             {
                 return CSCSWebApplication.Interpreter.Run(scriptFunctionName, requestData);
@@ -219,7 +178,6 @@ namespace CSCS_Web_Enzo_1
                 Console.WriteLine(ex.Message);
                 return new Variable("Server error.");
             }
-            
         }
 
         protected override Variable Evaluate(ParsingScript script)
@@ -277,8 +235,7 @@ namespace CSCS_Web_Enzo_1
             }
 
             // Handle different response types
-            //if (result.Type == Variable.VarType.ARRAY || result.Type == Variable.VarType.DICTIONARY)
-            if (result.Type == Variable.VarType.ARRAY  /* || result.Type == Variable.VarType.DICTIONARY*/)
+            if (result.Type == Variable.VarType.ARRAY)
             {
                 List<string> keys = result.GetKeys();
                 List<string> lowerKeys = keys.Select(p => p.ToLower()).ToList();
@@ -286,10 +243,6 @@ namespace CSCS_Web_Enzo_1
                 if (lowerKeys.Contains("headers"))
                 {
                     Variable headersVariable = result.GetVariable("headers");
-
-                    //List<string> headersKeys = headersVariable.GetKeys();
-                    //List<string> lowerHeadersKeys = headersKeys.Select(p => p.ToLower()).ToList();
-
 
                     // Set content type
                     Variable contentType = headersVariable.GetVariable("content-type");
@@ -302,7 +255,6 @@ namespace CSCS_Web_Enzo_1
                         context.Response.ContentType = "text/plain"; // Default content type
                     }
 
-
                     // status code
                     Variable statusCode = result.GetVariable("statusCode");
                     if (statusCode != null && statusCode.Type == Variable.VarType.NUMBER)
@@ -313,15 +265,6 @@ namespace CSCS_Web_Enzo_1
                     {
                         context.Response.StatusCode = 200; // Default status code
                     }
-
-
-                    //// add body and send to client
-                    //if (keys.Contains("body"))
-                    //{
-                    //    var bodyString = result.GetVariable("body").AsString();
-                    //    await context.Response.WriteAsync(bodyString);
-                    //}
-
 
                     // body
                     Variable body = result.GetVariable("body");
@@ -343,25 +286,17 @@ namespace CSCS_Web_Enzo_1
             }
         }
     }
-    
-    
+        
     class ResponseFunction : ParserFunction
     {
         protected override Variable Evaluate(ParsingScript script)
         {
             List<Variable> args = script.GetFunctionArgs();
             Utils.CheckArgs(args.Count, 3, m_name);
-
-
-
+            
             var headers = Utils.GetSafeVariable(args, 0);
             var body = Utils.GetSafeVariable(args, 1);
             var statusCode = Utils.GetSafeVariable(args, 2);
-
-
-            //var headers = args.FirstOrDefault(p => p.ParamName.ToLower() == "headers");
-            //var body = args.LastOrDefault(p => p.CurrentAssign.ToLower() == "body");
-            //var statusCode = args.LastOrDefault(p => p.CurrentAssign.ToLower() == "statuscode");
 
             var finalObject = new Variable(Variable.VarType.ARRAY);
 
@@ -485,8 +420,6 @@ namespace CSCS_Web_Enzo_1
 
                         jsonStringBuilder.Append("\n" + Indent(indent + 1) + $"{(isList ? "" : $"\"{keysStrings.ElementAt(itemIndex).Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\t", "\\t")}\" : ") + itemValue},");
                     }
-
-                    
                 }
 
 
@@ -1152,31 +1085,31 @@ namespace CSCS_Web_Enzo_1
 
     #region PATH functions
 
-    class TemplatesPathFunction : ParserFunction
-    {
-        protected override Variable Evaluate(ParsingScript script)
-        {
-            List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 0, m_name);
+    //class TemplatesPathFunction : ParserFunction
+    //{
+    //    protected override Variable Evaluate(ParsingScript script)
+    //    {
+    //        List<Variable> args = script.GetFunctionArgs();
+    //        Utils.CheckArgs(args.Count, 0, m_name);
 
-            string htmlTemplatesPath = CSCSWebApplication.CSCSConfig.TemplatesDirectory;
+    //        string htmlTemplatesPath = CSCSWebApplication.CSCSConfig.TemplatesDirectory;
 
-            return new Variable(htmlTemplatesPath);
-        }
-    }
+    //        return new Variable(htmlTemplatesPath);
+    //    }
+    //}
     
-    class ScriptsPathFunction : ParserFunction
-    {
-        protected override Variable Evaluate(ParsingScript script)
-        {
-            List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 0, m_name);
+    //class ScriptsPathFunction : ParserFunction
+    //{
+    //    protected override Variable Evaluate(ParsingScript script)
+    //    {
+    //        List<Variable> args = script.GetFunctionArgs();
+    //        Utils.CheckArgs(args.Count, 0, m_name);
 
-            string cscsScriptsDirectoryPath = CSCSWebApplication.CSCSConfig.ScriptsDirectory;
+    //        string cscsScriptsDirectoryPath = CSCSWebApplication.CSCSConfig.ScriptsDirectory;
 
-            return new Variable(cscsScriptsDirectoryPath);
-        }
-    }
+    //        return new Variable(cscsScriptsDirectoryPath);
+    //    }
+    //}
 
     #endregion
 
