@@ -16,3 +16,4 @@ packages/
 *.v2
 *.vsidx
 *.vsidx
+wwwroot/scripts/ignore
