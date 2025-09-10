@@ -143,7 +143,7 @@ function gk_generateForm(mode, values, id = null, errorHtml = "") {
 CreateEndpoint("GET", "/", "getRoot");
 function getRoot(){
     root_headers = {"Content-Type": "text/html"};
-    return Response(root_headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "htmx_tailwind_daisyUI\\" + "htmx_Tailwind_DaisyUI_6.html")), 200);
+    return Response(root_headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "htmx_tailwind_daisyUI\\" + "htmx_Tailwind_DaisyUI_8.html")), 200);
 }
 
 
@@ -2217,12 +2217,21 @@ function getGKLines(requestLinije) {
             htmld += "<td data-field='GK_LN_OPIS' class='text-left'>" + safestr(rowx[3]) + "</td>";
 
             // Debit / Credit (based on GK_LN_DP)
+            // if (rowx[4] == "D") {
+            //     htmld += "<td class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+            //     htmld += "<td class='text-right'></td>";
+            // } else {
+            //     htmld += "<td class='text-right'></td>";
+            //     htmld += "<td class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+            // }
+
+            // Debit / Credit (based on GK_LN_DP)
             if (rowx[4] == "D") {
-                htmld += "<td class='text-right'>" + formatNumber(rowx[5]) + "</td>";
-                htmld += "<td class='text-right'></td>";
+                htmld += "<td data-field='data-debit' class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+                htmld += "<td data-field='data-credit' class='text-right'></td>";
             } else {
-                htmld += "<td class='text-right'></td>";
-                htmld += "<td class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+                htmld += "<td data-field='data-debit' class='text-right'></td>";
+                htmld += "<td data-field='data-credit' class='text-right'>" + formatNumber(rowx[5]) + "</td>";
             }
 
             // Doc ID
@@ -2246,7 +2255,8 @@ function getGKLines(requestLinije) {
             // Actions column with same styling as master table
             htmld += "<td class='flex gap-1 frozen-column-right'>";
             // htmld += "<button class='btn btn-info btn-xs action-button' hx-get='/gk-lines/" + id + "/" + lineId + "/edit' hx-target='this' hx-swap='outerHTML'>Edit</button>";
-            htmld += "<button class='btn btn-error btn-xs action-button' hx-delete='/gk-lines/" + id + "/" + lineId + "' hx-confirm='Delete line?' hx-target='closest tr' hx-swap='outerHTML'>Del</button>";
+            //htmld += "<button class='btn btn-error btn-xs action-button' hx-delete='/gk-lines/" + id + "/" + lineId + "' hx-confirm='Delete line?' hx-target='closest tr' hx-swap='outerHTML'>Del</button>";
+            htmld += "<button class='btn btn-error btn-xs action-button' onclick='confirmDeleteLine(" + id + ", " + lineId + ")'>Delete</button>";
             htmld += "</td>";
 
             htmld += "</tr>";
@@ -2681,6 +2691,7 @@ function updateLine(args) {
 // Delete line endpoint
 CreateEndpoint("DELETE", "/gk-lines/{id}/{line}", "deleteLine");
 function deleteLine(args) {
+    print('deleteLine');
     masterId = args["RouteValues"]["id"];
     lineId = args["RouteValues"]["line"];
     
@@ -2694,6 +2705,28 @@ function deleteLine(args) {
     args2 = {};
     args2["RouteValues"] = {"id": int(masterId)};
     return getGKLines(args2);
+}
+
+// Delete line endpoint
+CreateEndpoint("DELETE", "/gk-lines-norefresh/{id}/{line}", "deleteLineNoRefresh");
+function deleteLineNoRefresh(args) {
+    //print('deleteLineNoRefresh');
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+    
+    queryDelete = "DELETE FROM NKGKLNTM WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
+    sqlParams = {};
+    sqlParams.Add({"@masterId", int(masterId)});
+    sqlParams.Add({"@lineId", int(lineId)});
+    sqlNonQuery(queryDelete, sqlParams);
+
+    // Reload detail table
+    //args2 = {};
+    //args2["RouteValues"] = {"id": int(masterId)};
+    //return getGKLines(args2);
+
+    headers = {"Content-Type": "application/json"};
+    return Response(headers, '{"Result" : "Success"}', 200);
 }
 
 function safeStr(valu) {

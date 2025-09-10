@@ -756,7 +756,7 @@
   <script>
     // Re-process HTMX after dynamic content loads and fix table layout
     document.addEventListener('htmx:afterSwap', function (evt) {
-      console.log('document htmx:afterSwap fired');
+      //console.log('document htmx:afterSwap fired');
       if (evt.target.classList.contains('datagrid-container-master') ||
         evt.target.classList.contains('datagrid-container-detail')) {
         htmx.process(evt.target);
@@ -807,7 +807,7 @@
     });
     */
     htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
-       console.log('master htmx:afterSwap 1 fired');
+       //console.log('master htmx:afterSwap 1 fired');
       const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
       // console.log('Found first row:', firstRow);
       if (firstRow) {
@@ -871,28 +871,64 @@
   <script>
     // Function to select a line for editing
     function selectLineForEdit(rowElement) {
+      //console.log('selectLineForEdit');
+      //console.log('rowElement:', rowElement);
       const masterId = rowElement.getAttribute('data-id');
       const lineId = rowElement.getAttribute('data-line');
       const lineData = {
         lineId: lineId,
-        account: rowElement.getAttribute('data-account') || '',
-        costCenter: rowElement.getAttribute('data-costcenter') || '',
-        description: rowElement.getAttribute('data-description') || '',
-        dp: rowElement.getAttribute('data-dp') || '',
-        amount: rowElement.getAttribute('data-amount') || '',
-        docId: rowElement.getAttribute('data-docid') || '',
-        docDate: rowElement.getAttribute('data-docdate') || '',
-        partner: rowElement.getAttribute('data-partner') || '',
-        currency: rowElement.getAttribute('data-currency') || '',
-        rate: rowElement.getAttribute('data-rate') || '',
-        amountCurr: rowElement.getAttribute('data-amountcurr') || ''
+        //account: rowElement.getAttribute('data-account') || '',
+        // costCenter: rowElement.getAttribute('data-costcenter') || '',
+        // description: rowElement.getAttribute('data-description') || '',
+        // dp: rowElement.getAttribute('data-dp') || '',
+        // amount: rowElement.getAttribute('data-amount') || '',
+        // docId: rowElement.getAttribute('data-docid') || '',
+        // docDate: rowElement.getAttribute('data-docdate') || '',
+        // partner: rowElement.getAttribute('data-partner') || '',
+        // currency: rowElement.getAttribute('data-currency') || '',
+        // rate: rowElement.getAttribute('data-rate') || '',
+        // amountCurr: rowElement.getAttribute('data-amountcurr') || ''      
+
+        account: rowElement.querySelector('[data-field="GK_LN_KONTO"]')?.textContent.trim() || '',
+        costCenter: rowElement.querySelector('[data-field="GK_LN_OBJED"]')?.textContent.trim() || '',
+        description: rowElement.querySelector('[data-field="GK_LN_OPIS"]')?.textContent.trim() || '',
+        debit: rowElement.querySelector('[data-field="data-debit"]')?.textContent.trim() || '',
+        credit: rowElement.querySelector('[data-field="data-credit"]')?.textContent.trim() || '',
+        dp: '',
+        amount: '0',
+        docId: rowElement.querySelector('[data-field="GK_LN_BRDOK"]')?.textContent.trim() || '',
+        docDate: rowElement.querySelector('[data-field="GK_LN_DATDOK"]')?.textContent.trim() || '',
+        partner: rowElement.querySelector('[data-field="GK_LN_PARTNR"]')?.textContent.trim() || '',
+        currency: rowElement.querySelector('[data-field="GK_LN_SIFDVZ"]')?.textContent.trim() || '',
+        rate: rowElement.querySelector('[data-field="GK_LN_TECAJ"]')?.textContent.trim() || '',
+        amountCurr: rowElement.querySelector('[data-field="GK_LN_IZNDEV"]')?.textContent.trim() || ''
       };
+
+      if (lineData.debit!="")
+      {
+        lineData.dp = "D";
+        lineData.amount = lineData.debit;
+      }
+      if (lineData.credit!="")
+      {
+        lineData.dp = "P";
+        lineData.amount = lineData.credit;
+      }
+
+      lineData.amount = lineData.amount.replace(',', '.');
+
+      if (lineData.docDate == '1900-01-01') {
+        lineData.docDate = '';
+      }
+
+      //console.log('lineData:', lineData);
 
       // Highlight selected line
       highlightCurrentLine(rowElement);
 
       // Always populate form with line data for viewing/editing
       populateLineForm(masterId, lineData);
+      setStyleToElementsOnLineForm();
     }
 
     // Function to highlight current line in detail table
@@ -928,6 +964,19 @@
 
     // Clear form function
     function clearLineForm() {
+      // Check if we are in edit mode
+      const editForm = document.querySelector('.datagrid-container-master form');
+      if (!editForm) {
+        Swal.fire({
+          title: 'Edit Mode',
+          text: 'You cannot clear a line form because the transaction is not in edit mode!',
+          icon: 'warning',
+          showCancelButton: false,
+          confirmButtonText: 'OK'          
+        });        
+        return;        
+      }
+
       document.getElementById('line-entry-form').reset();
       document.querySelector('input[name="masterId"]').value = '';
       document.querySelector('input[name="lineId"]').value = '';
@@ -1014,6 +1063,7 @@
 
     // Function to populate form for editing
     function populateLineForm(masterId, lineData) {
+      
       currentMasterId = masterId;
       currentLineId = lineData.lineId;
       isEditMode = !!lineData.lineId;
@@ -1034,6 +1084,22 @@
 
       updateFormState();
       document.querySelector('.bottom-form h2').textContent = currentLineId ? 'Line Details' : 'New Line Entry';
+    }
+
+
+    function setStyleToElementsOnLineForm()
+    {
+      // Select all input and select elements inside the line entry form
+      const elements = document.querySelectorAll('#line-entry-form input, #line-entry-form select');
+        elements.forEach(el => {
+          //console.log(el + "***" + el.value);
+        // If value is not blank, set text color to black
+        if (el.value && el.value.trim() !== '') {
+          el.style.color = 'black';
+        } else {
+          el.style.color = 'gray'; // Reset to default if blank
+        }
+      });
     }
 
     // Function to enable form for new line entry
@@ -1127,7 +1193,7 @@
 
     // Listen for master row selection to enable new line entry
     htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
-      console.log('master htmx:afterSwap 2 fired');
+      //console.log('master htmx:afterSwap 2 fired');
       addRowClickHandlers();
 
       // Check if we're back to normal view (not edit mode)
@@ -1155,7 +1221,7 @@
 
     // Listen for detail table updates to add line click handlers
     htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function () {
-      console.log('Detail afterSwap, adding line click handlers');
+      //console.log('Detail afterSwap, adding line click handlers');
       addLineClickHandlers();
       // Auto-select first line if available
       console.log('Current master ID:', currentMasterId);
@@ -1313,6 +1379,97 @@
   //   }
   // }
   //});
+  </script>
+  <script>
+    function confirmDeleteLine(masterId, lineId) {
+      // Check if we are in edit mode
+      const editForm = document.querySelector('.datagrid-container-master form');
+      if (!editForm) {
+        Swal.fire({
+          title: 'Edit Mode',
+          text: 'You cannot delete a line because the transaction is not in edit mode!',
+          icon: 'warning',
+          showCancelButton: false,
+          confirmButtonText: 'OK'          
+        });
+        return;
+      }
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'No, keep it'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // // Proceed with the deletion
+          // htmx.ajax('DELETE', '/gk-line/' + id,)
+          //   .catch((error) => {
+          //     Swal.fire({
+          //       title: 'Error!',
+          //       text: 'Failed to delete the line. Please try again.',
+          //       icon: 'error',
+          //       confirmButtonText: 'Close'
+          //     });
+          //     console.error('Error during deletion:', error);
+          //   });
+
+          fetch('/gk-lines-norefresh/' + masterId + "/" + lineId, {
+            method: 'DELETE',
+            // headers: {
+            //   'Content-Type': 'application/json'
+            // }
+          })
+            .then(response => response.json())
+            .then(data => {
+              // console.log('Success:', data);
+
+              //alert('CONFIRM DELETION OF ID: ' + id);
+              Swal.fire({
+                title: 'Successfully deleted!',
+                text: 'Deleted line in transaction with id ' + masterId + ' and line id ' + lineId + '.',
+                icon: 'success',
+                //timer: 3000,
+                confirmButtonText: 'Close'
+              }).then((result2) => {
+                // Reload the data grid
+                htmx.ajax('GET', '/gk-lines/' + masterId, {
+                  target: '.datagrid-container-detail',
+                  swap: 'innerHTML'
+                });
+
+                //console.log('Zadnji sweet alert zatvoren');
+              });
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+
+
+
+
+        }
+      });
+    }
+  </script>
+
+  <script>
+    // Function to clear the form fields
+    // function clearBottomFormFields() {
+    //   console.log('clearBottomFormFields');
+
+      
+
+    //   console.log('Clear');
+    //   //line-entry-form
+    //   //const form = document.querySelector('.bottom-form form');      
+    //   const form = document.getElementById('line-entry-form');//by form ID
+    //   if (form) {
+    //     form.reset();
+    //   }
+    // }
   </script>
 </body>
 
