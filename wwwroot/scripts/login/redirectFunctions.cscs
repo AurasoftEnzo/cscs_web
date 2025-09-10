@@ -1,0 +1,13 @@
+function RedirectToLogin() {
+    redirectScript = "<script>window.location.href='/';</script>";
+    headers = {"Content-Type": "text/html"};
+    // Invalidate session cookie
+    headers["Set-Cookie"] = "sessionId=; path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax";
+    return Response(headers, redirectScript, 303);
+}
+
+function RedirectToMainMenu() {
+    redirectScript = "<script>window.location.href='/main-menu';</script>";
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, redirectScript, 303);
+}

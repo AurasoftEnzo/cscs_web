@@ -1,0 +1,11 @@
+//-- endpoint to log window close event -------
+CreateEndpoint("POST", "/windowClosed", "windowClosedHandler");
+function windowClosedHandler(args) {
+    sessionId = GetSessionIdFromCookie(args);
+
+    data = DeserializeJson(args["Body"]);
+
+    console.log("Window closed:", data);
+
+    return;
+}

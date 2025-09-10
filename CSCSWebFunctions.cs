@@ -59,20 +59,26 @@ namespace CSCS_Web_Enzo_1
             List<Variable> args = script.GetFunctionArgs();
             Utils.CheckArgs(args.Count, 1, m_name);
 
-            var configKey = Utils.GetSafeString(args, 0);
+            var configKey = Utils.GetSafeString(args, 0).ToLower();
 
             switch (configKey)
             {
-                case "SqlConnectionString":
+                case "sqlconnectionstring":
                     return new Variable(CSCSWebApplication.CSCSConfig.SQLConnectionString);
 
-                case "ScriptsDirectory":
+                case "scriptsdirectory":
                     return new Variable(CSCSWebApplication.CSCSConfig.ScriptsDirectory);
-                case "TemplatesDirectory":
+                case "templatesdirectory":
                     return new Variable(CSCSWebApplication.CSCSConfig.TemplatesDirectory);
                 
-                case "StartScript":
+                case "startscript":
                     return new Variable(CSCSWebApplication.CSCSConfig.StartScript);
+                
+                case "jwtsecretkey":
+                    return new Variable(CSCSWebApplication.CSCSConfig.JwtSecretKey);
+                
+                case "commondb":
+                    return new Variable(CSCSWebApplication.CSCSConfig.CommonDB);
 
                 default:
                     Console.WriteLine($"Unknown config key: {configKey}");
@@ -254,6 +260,14 @@ namespace CSCS_Web_Enzo_1
                     {
                         context.Response.ContentType = "text/plain"; // Default content type
                     }
+                    
+                    // Set Set-Cookie
+                    Variable setCookie = headersVariable.GetVariable("set-cookie");
+                    if (setCookie != null && setCookie.Type == Variable.VarType.STRING)
+                    {
+                        context.Response.Headers.Append("Set-Cookie", setCookie.String);// = contentType.AsString();
+                    }
+
 
                     // status code
                     Variable statusCode = result.GetVariable("statusCode");

@@ -12,5 +12,8 @@
         //public string PreprocessSripts { get; set; }
 
         public string StaticFilesDirectory { get; set; }
+
+        public string JwtSecretKey { get; set; }
+        public string CommonDB { get; set; }
     }
 }

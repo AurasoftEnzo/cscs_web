@@ -1,0 +1,447 @@
+SQLConnectionString(ReadConfig("SQLConnectionString"));
+
+/*
+
+CREATE TABLE SessionStore (
+    SessionId NVARCHAR(128) PRIMARY KEY,
+    Data NVARCHAR(MAX) NOT NULL, -- JSON string of key-value pairs
+    CreatedAt smalldatetime DEFAULT GETDATE(),
+    UpdatedAt smalldatetime DEFAULT GETDATE(),
+    ExpiresAt smalldatetime NOT NULL -- e.g., 30 minutes from creation
+);
+
+-- Optional: Index on ExpiresAt for cleanup
+CREATE INDEX IX_SessionStore_ExpiresAt ON SessionStore(ExpiresAt);
+
+*/
+
+// include(ReadConfig("ScriptsDirectory") + "login\\endpoints.cscs");
+// include(ReadConfig("ScriptsDirectory") + "login\\redirectFunctions.cscs");
+// include(ReadConfig("ScriptsDirectory") + "login\\sessionFunctions.cscs");
+// include(ReadConfig("ScriptsDirectory") + "login\\rest.cscs");
+// include(ReadConfig("ScriptsDirectory") + "login\\JWT.cscs");
+
+
+
+
+
+
+
+
+///--------------------------- Endpoints ---------------------------
+///--------------------------- Endpoints ---------------------------
+///--------------------------- Endpoints ---------------------------
+
+
+
+CreateEndpoint("GET", "/", "showLoginStep1");
+function showLoginStep1(args) {
+    sessionId = GetSessionIdFromCookie(args);
+    if (sessionId != null) {
+        sd = GetSessionData(sessionId);
+        if(HasAllData(sd)){
+            return RedirectToMainMenu();
+        }
+    }
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\step1-company-year.html")), 200);
+}
+
+CreateEndpoint("POST", "/api/validate-company-year", "validateCompanyYear");
+function validateCompanyYear(args) {
+    companyCode = GetValueFromForm(args["Body"], "CompanyCode");
+    yearStr = GetValueFromForm(args["Body"], "FiscalYear");
+
+    if (companyCode == null || companyCode == "") {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Company code is required</div>", 200);
+    }
+
+    if (yearStr == null || yearStr == "") {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Fiscal year is required</div>", 200);
+    }
+
+    fiscalYear = int(yearStr);
+    currentYear = int(Now("yyyy"));
+    if (fiscalYear < 1900 || fiscalYear > currentYear + 5) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Invalid fiscal year</div>", 200);
+    }
+
+    query = "SELECT sy_cc_desc, sy_cc_dbase FROM " + ReadConfig("CommonDB") + ".dbo.NKSYCCYR WHERE sy_cc_user = @code AND sy_cc_year = @year";
+    sqlParams = {};
+    sqlParams.Add({"@code", companyCode});
+    sqlParams.Add({"@year", fiscalYear});
+
+    result = sqlQuery(query, sqlParams);
+
+    if (result == null || Size(result) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>No database found for this company/year</div>", 200);
+    }
+
+    companyName = strTrim(result[1][0]);
+    databaseName = strTrim(result[1][1]);
+
+    // // Save to session
+    sessionId = GetSessionIdFromCookie(args);
+    if (sessionId == null) {
+        sessionId = GenerateSessionId();
+    }
+
+    SetSession(sessionId, "CompanyCode", companyCode);
+    SetSession(sessionId, "FiscalYear", fiscalYear);
+    SetSession(sessionId, "CompanyName", companyName);
+    SetSession(sessionId, "DatabaseName", databaseName);
+
+    // Load and fill template
+    htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\step2-user-credentials.html");
+
+    valuesDict = {};
+    valuesDict["companyName"] = companyName;
+    valuesDict["companyCode"]  = companyCode;
+    valuesDict["fiscalYear"] = fiscalYear;
+
+    FillTemplateFromDictionary(htmlHndl, valuesDict);
+
+    headers = {"Content-Type": "text/html"};
+    headers["Set-Cookie"] = "sessionId=" + sessionId + "; path=/; HttpOnly; SameSite=Lax";
+    
+    // Render next step
+    return Response(headers, RenderHtml(htmlHndl), 200);
+}
+
+CreateEndpoint("POST", "/api/authenticate", "authenticateUser");
+function authenticateUser(args) {
+    
+    sessionId = GetSessionIdFromCookie(args);
+
+    if(sessionId == null) {
+        redirectScript = "<script>window.location.href='/';</script>";
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, redirectScript, 303);
+    }
+    
+    sd = GetSessionData(sessionId);
+    if(HasAllData(sd)){
+        return RedirectToMainMenu();
+    }
+
+    companyCode = ExtractSessionEntry(sd, "CompanyCode");
+    fiscalYear  = ExtractSessionEntry(sd, "FiscalYear");
+    databaseName = ExtractSessionEntry(sd, "DatabaseName");
+
+    if (companyCode == null || fiscalYear == null || databaseName == null) {
+        redirectScript = "<script>window.location.href='/';</script>";
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, redirectScript, 303);
+    }
+
+    userCode = GetValueFromForm(args["Body"], "UserCode");
+    password = GetValueFromForm(args["Body"], "Password");
+
+    if (userCode == null || userCode == "") {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>User code is required</div>", 200);
+    }
+
+    if (password == null || password == "") {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Password is required</div>", 200);
+    }
+
+    // Authenticate user
+    query = "SELECT kpsy_user_naziv, kpsy_user_scty FROM " + databaseName + ".dbo.KPSYUSER WHERE kpsy_user_code = @code AND kpsy_user_pswd = @pswd";
+    sqlParams = {};
+    sqlParams.Add({"@code", userCode});
+    sqlParams.Add({"@pswd", password});
+
+    result = sqlQuery(query, sqlParams);
+
+    if (result == null || Size(result) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Invalid user code or password</div>", 200);
+    }
+
+    userName = strTrim(result[1][0]);
+    userRole = strTrim(result[1][1]);
+
+    // Save to session (for server-side validation)
+    SetSession(sessionId, "UserCode", userCode);
+    SetSession(sessionId, "UserName", userName);
+    SetSession(sessionId, "UserRole", userRole);
+
+    redirectScript = "<script>window.location.href='/main-menu';</script>";
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, redirectScript, 303);
+}
+
+CreateEndpoint("GET", "/main-menu", "showMainMenu");
+function showMainMenu(args) {
+
+    sessionId = GetSessionIdFromCookie(args);
+    sd = GetSessionData(sessionId);
+    if(!HasAllData(sd)){
+        return RedirectToLogin();
+    }
+    
+    // Load and fill template
+    htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\main-menu.html");
+
+    valuesDict = {};
+    valuesDict["UserName"]    = sd["UserName"];
+    valuesDict["UserRole"]    = sd["UserRole"];
+    valuesDict["CompanyName"] = sd["CompanyName"];
+    valuesDict["FiscalYear"]  = sd["FiscalYear"];
+
+    FillTemplateFromDictionary(htmlHndl, valuesDict);
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, RenderHtml(htmlHndl), 200);
+}
+
+CreateEndpoint("GET", "/logout", "logout");
+function logout(args) {
+    sessionId = GetSessionIdFromCookie(args);
+    ClearSessionById(sessionId);
+    
+    return RedirectToLogin();
+}
+
+
+
+
+
+
+///---------------- Redirect Functions -----------------------
+///---------------- Redirect Functions -----------------------
+///---------------- Redirect Functions -----------------------
+
+
+function RedirectToLogin() {
+    redirectScript = "<script>window.location.href='/';</script>";
+    headers = {"Content-Type": "text/html"};
+    // Invalidate session cookie
+    headers["Set-Cookie"] = "sessionId=; path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax";
+    return Response(headers, redirectScript, 303);
+}
+
+function RedirectToMainMenu() {
+    redirectScript = "<script>window.location.href='/main-menu';</script>";
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, redirectScript, 303);
+}
+
+
+
+
+
+
+
+///---------------- Session Functions -----------------------
+///---------------- Session Functions -----------------------
+///---------------- Session Functions -----------------------
+
+
+
+function GetSessionIdFromCookie(args) {
+    headers = args["Headers"];
+    cookies = headers.Contains("Cookie") ? headers["Cookie"] : "";
+
+    // Try to extract session ID
+    sessionCookie = ExtractCookie(cookies, "sessionId");
+    return sessionCookie;
+}
+
+function GenerateSessionId() {
+    // Simple timestamp + random
+    ts = Now("yyyyMMddHHmmss");
+    rnd = Math.Round(Math.Random() * 10000);
+    return ts + "_" + rnd;
+}
+
+function ExtractCookie(cookieHeader, name) {
+    if (cookieHeader == null || cookieHeader == ""){
+        return null;
+    }
+
+    returnValue = null;
+
+    parts = cookieHeader.Split(";");
+    for(i = 0; i < Size(parts); i++) {
+        part = strTrim(parts[i]);
+        kv = part.Split("=");
+        if (Size(kv) == 2 && kv[0] == name) {
+            returnValue = kv[1];
+            break;
+        }
+    }
+
+    return returnValue;
+}
+
+
+function SetSession(sessionId, key, value) {
+    // Get current session data from DB
+    existing = GetSessionRowFromDb(sessionId);
+    if (existing == null) {
+        // Create new session
+        dataDict = {};
+    } else {
+        dataDict = DeserializeJson(existing[1]); // Data column
+    }
+
+    // Update or add key
+    dataDict[key] = value;
+
+    // Serialize
+    jsonData = SerializeJson(dataDict);
+    now = Now("yyyy-MM-dd HH:mm:ss");
+
+    query = "MERGE " + ReadConfig("CommonDB") + ".dbo.SessionStore AS target " +
+            "USING (SELECT @sessionId AS SessionId) AS source " +
+            "ON target.SessionId = source.SessionId " +
+            "WHEN MATCHED THEN " +
+            "    UPDATE SET Data = @data, UpdatedAt = @now, ExpiresAt = DATEADD(MINUTE, 30, @now) " +
+            "WHEN NOT MATCHED THEN " +
+            "    INSERT (SessionId, Data, CreatedAt, UpdatedAt, ExpiresAt) " +
+            "    VALUES (@sessionId, @data, @now, @now, DATEADD(MINUTE, 30, @now));";
+
+    sqlParams = {};
+    sqlParams.Add({"@sessionId", sessionId});
+    sqlParams.Add({"@data", jsonData});
+    sqlParams.Add({"@now", now});
+
+    sqlNonQuery(query, sqlParams);
+}
+
+
+function CheckSession(sessionId) {
+    if (sessionId == null){
+        return false;
+    }
+
+    row = GetSessionRowFromDb(sessionId);
+    if (row == null) {
+        return false;
+    }
+
+    // Check if expired
+    expiresAt = row[2]; // ExpiresAt column
+    now = Now("yyyy-MM-dd HH:mm:ss");
+
+    if (now > expiresAt) {
+        ClearSessionById(sessionId);
+        return false;
+    }
+
+    return true;
+}
+
+function GetSessionData(sessionId) {
+    if(!CheckSession(sessionId)) {
+        return {};
+    }
+
+    row = GetSessionRowFromDb(sessionId);
+    if (row == null) {
+        return {};
+    }
+
+    // Update access time
+    RefreshSessionExpiry(sessionId);
+
+    // Parse data and return full dict
+    dataJson = row[1]; // Data column
+    dict = DeserializeJson(dataJson);
+    return dict;
+}
+
+function ExtractSessionEntry(sessionData, key, defaultValue = null) {
+    if (sessionData.Contains(key)) {
+        return sessionData[key];
+    }
+    return defaultValue;
+}
+
+function HasAllData(sessionData) {
+    hasAllData = true;
+    requiredKeys = ["CompanyCode", "FiscalYear", "CompanyName", "DatabaseName", "UserCode", "UserName", "UserRole"];
+    for(i = 0; i < Size(requiredKeys); i++) {
+        if (!sessionData.Keys.Contains(requiredKeys[i]) || sessionData[requiredKeys[i]] == null) {
+            hasAllData = false;
+            break;
+        }
+    }
+    return hasAllData;
+}
+
+// Helper: Fetch full session row
+function GetSessionRowFromDb(sessionId) {
+    query = "SELECT SessionId, Data, Convert(nvarchar, ExpiresAt, 20) FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE SessionId = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", sessionId});
+    result = sqlQuery(query, sqlParams);
+    return (result != null && Size(result) > 1) ? result[1] : null;
+}
+
+// Helper: Refresh UpdatedAt and extend expiry
+function RefreshSessionExpiry(sessionId) {
+    query = "UPDATE " + ReadConfig("CommonDB") + ".dbo.SessionStore SET UpdatedAt = GETDATE(), ExpiresAt = DATEADD(MINUTE, 30, GETDATE()) WHERE SessionId = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", sessionId});
+    sqlNonQuery(query, sqlParams);
+}
+
+
+function ClearSessionById(sessionId) {
+    query = "DELETE FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE SessionId = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", sessionId});
+    sqlNonQuery(query, sqlParams);
+}
+
+
+
+
+
+// You can call this via a scheduled task or cron job.
+CreateEndpoint("GET", "/admin/cleanup-sessions", "CleanupExpiredSessions");
+function CleanupExpiredSessions(args) {
+    // Optional: Add auth check
+    if (GetSession(args, "UserRole") != "admin") {
+        return Response({"Content-Type": "text/html"}, "<h1>Unauthorized</h1>", 403);
+    }
+
+    query = "DELETE FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE ExpiresAt < GETDATE()";
+    sqlNonQuery(query, {});
+
+    return Response({"Content-Type": "text/html"}, "<p>Cleanup complete. Expired sessions removed.</p>", 200);
+}
+
+
+
+
+
+
+
+
+
+///---------------- rest -----------------------
+///---------------- rest -----------------------
+///---------------- rest -----------------------
+
+
+//-- endpoint to log window close event -------
+CreateEndpoint("POST", "/windowClosed", "windowClosedHandler");
+function windowClosedHandler(args) {
+    sessionId = GetSessionIdFromCookie(args);
+
+    data = DeserializeJson(args["Body"]);
+
+    console.log("Window closed:", data);
+
+    return;
+}
