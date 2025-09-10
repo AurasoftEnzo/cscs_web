@@ -968,7 +968,7 @@
       const editForm = document.querySelector('.datagrid-container-master form');
       if (!editForm) {
         Swal.fire({
-          title: 'Edit Mode',
+          title: 'Edit Mode Error',
           text: 'You cannot clear a line form because the transaction is not in edit mode!',
           icon: 'warning',
           showCancelButton: false,
@@ -1025,14 +1025,117 @@
     // Save line button click handler
     document.getElementById('save-line-btn').addEventListener('click', function () {
       if (!currentMasterId) {
-        alert('Please select a master transaction first');
-        return;
+        Swal.fire({
+          title: 'No Selected Transaction Error',
+          text: 'Please select a master transaction first!',
+          icon: 'warning',
+          showCancelButton: false,
+          confirmButtonText: 'OK'          
+        });        
+        return; 
       }
 
       if (!isMasterInEditMode) {
-        alert('Master transaction must be in edit mode to save lines');
-        return;
+        Swal.fire({
+          title: 'Edit Mode Error',
+          text: 'Master transaction must be in edit mode to save lines!',
+          icon: 'warning',
+          showCancelButton: false,
+          confirmButtonText: 'OK'          
+        });        
+        return; 
       }
+
+      console.log('OK');
+
+      const form = document.getElementById('line-entry-form');
+
+      const GK_LN_KONTO = form.elements['GK_LN_KONTO'];
+      const GK_LN_OBJED = form.elements['GK_LN_OBJED'];
+      const GK_LN_OPIS = form.elements['GK_LN_OPIS'];
+      const GK_LN_DP = form.elements['GK_LN_DP'];
+      const GK_LN_IZNOS = form.elements['GK_LN_IZNOS'];
+      const GK_LN_BRDOK = form.elements['GK_LN_BRDOK'];
+      const GK_LN_DATDOK = form.elements['GK_LN_DATDOK'];
+      const GK_LN_PARTNR = form.elements['GK_LN_PARTNR'];
+      const GK_LN_SIFDVZ = form.elements['GK_LN_SIFDVZ'];
+      const GK_LN_TECAJ = form.elements['GK_LN_TECAJ'];
+      const GK_LN_IZNDEV = form.elements['GK_LN_IZNDEV'];
+
+      console.log("UPDATE VALUES:");
+      console.log("currentMasterId: " + currentMasterId);
+      console.log("currentLineId: " + currentLineId);      
+      console.log("GK_LN_KONTO: " + GK_LN_KONTO.value); 
+      console.log("GK_LN_OBJED: " + GK_LN_OBJED.value); 
+      console.log("GK_LN_OPIS: " + GK_LN_OPIS.value); 
+      console.log("GK_LN_DP: " + GK_LN_DP.value); 
+      console.log("GK_LN_IZNOS: " + GK_LN_IZNOS.value); 
+      console.log("GK_LN_BRDOK: " + GK_LN_BRDOK.value); 
+      console.log("GK_LN_DATDOK: " + GK_LN_DATDOK.value); 
+      console.log("GK_LN_PARTNR: " + GK_LN_PARTNR.value); 
+      console.log("GK_LN_SIFDVZ: " + GK_LN_SIFDVZ.value); 
+      console.log("GK_LN_TECAJ: " + GK_LN_TECAJ.value); 
+      console.log("GK_LN_IZNDEV: " + GK_LN_IZNDEV.value);
+
+      if (GK_LN_IZNOS.value == "")
+      {        
+        GK_LN_IZNOS.value = "0"; //float
+      }
+
+      if (GK_LN_BRDOK.value == "")
+      {
+        GK_LN_BRDOK.value = "0"; //int
+      }
+
+      if (GK_LN_DATDOK.value == "")
+      {        
+        GK_LN_DATDOK.value = "1900-01-01"; //date
+      }
+
+      if (GK_LN_TECAJ.value == "")
+      {        
+        GK_LN_TECAJ.value = "0"; //float
+      }
+
+      if (GK_LN_IZNDEV.value == "")
+      {        
+        GK_LN_IZNDEV.value = "0"; //float
+      }
+
+      //***************************************************
+      // Promjena zarez u točku za float brojeve
+      //***************************************************
+      GK_LN_KONTO.value = GK_LN_KONTO.value.toString().replaceAll(',', '.');
+      GK_LN_TECAJ.value = GK_LN_TECAJ.value.toString().replaceAll(',', '.');
+      GK_LN_IZNDEV.value = GK_LN_IZNDEV.value.toString().replaceAll(',', '.');
+
+
+
+      // if (currentMasterId == "")
+      // {
+      //   Swal.fire({
+      //     title: 'No Selected Transaction Error',
+      //     text: 'Please select a master transaction first!',
+      //     icon: 'warning',
+      //     showCancelButton: false,
+      //     confirmButtonText: 'OK'          
+      //   });        
+      //   return; 
+      // }
+
+      // if (currentLineId == "")
+      // {
+      //   Swal.fire({
+      //     title: 'No Selected Line Error',
+      //     text: 'Please select a line first!',
+      //     icon: 'warning',
+      //     showCancelButton: false,
+      //     confirmButtonText: 'OK'          
+      //   });        
+      //   return;
+      // }
+
+
 
       const formData = new FormData(document.getElementById('line-entry-form'));
       const url = currentLineId ?
@@ -1455,22 +1558,7 @@
     }
   </script>
 
-  <script>
-    // Function to clear the form fields
-    // function clearBottomFormFields() {
-    //   console.log('clearBottomFormFields');
-
-      
-
-    //   console.log('Clear');
-    //   //line-entry-form
-    //   //const form = document.querySelector('.bottom-form form');      
-    //   const form = document.getElementById('line-entry-form');//by form ID
-    //   if (form) {
-    //     form.reset();
-    //   }
-    // }
-  </script>
+ 
 </body>
 
 </html>
