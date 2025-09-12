@@ -1,0 +1,90 @@
+{
+  "sales": {
+    "title": "Sales",
+    "icon": "fas fa-shopping-cart",
+    "order": 10,
+    "submodules": {
+      "orders": {
+        "title": "Orders",
+        "path": "/sales/orders",
+        "script": "modules/sales/orders/main.cscs",
+        "requiredRole": "SALES_VIEW"
+      },
+      "invoices": {
+        "title": "Invoices",
+        "path": "/sales/invoices",
+        "script": "modules/sales/invoices/main.cscs",
+        "requiredRole": "SALES_INVOICE"
+      },
+      "returns": {
+        "title": "Returns",
+        "path": "/sales/returns",
+        "script": "modules/sales/returns/main.cscs",
+        "requiredRole": "SALES_RETURN"
+      }
+    }
+  },
+  "purchases": {
+    "title": "Purchases",
+    "icon": "fas fa-truck",
+    "order": 20,
+    "submodules": {
+      "orders": {
+        "title": "Purchase Orders",
+        "path": "/purchases/orders",
+        "script": "modules/purchases/orders/main.cscs",
+        "requiredRole": "PURCHASES_ORDER"
+      },
+      "bills": {
+        "title": "Bills",
+        "path": "/purchases/bills",
+        "script": "modules/purchases/bills/main.cscs",
+        "requiredRole": "PURCHASES_BILL"
+      }
+    }
+  },
+  "hr": {
+    "title": "Human Resources",
+    "icon": "fas fa-users",
+    "order": 30,
+    "submodules": {
+      "employees": {
+        "title": "Employees",
+        "path": "/hr/employees",
+        "script": "modules/hr/employees/main.cscs",
+        "requiredRole": "HR_EMPLOYEE"
+      },
+      "payroll": {
+        "title": "Payroll",
+        "path": "/hr/payroll",
+        "script": "modules/hr/payroll/main.cscs",
+        "requiredRole": "HR_PAYROLL"
+      }
+    }
+  },
+  "gl": {
+    "title": "General Ledger",
+    "icon": "fas fa-book",
+    "order": 40,
+    "submodules": {
+      "journal": {
+        "title": "Journal Entries",
+        "path": "/gl/journal",
+        "script": "modules/gl/journal/main.cscs",
+        "requiredRole": "GL_JOURNAL"
+      },
+      "ledger": {
+        "title": "General Ledger",
+        "path": "/gl/ledger",
+        "script": "modules/gl/ledger/main.cscs",
+        "requiredRole": "GL_LEDGER"
+      },
+      "trial-balance": {
+        "title": "Trial Balance",
+        "path": "/gl/trial-balance",
+        "script": "modules/gl/trial-balance/main.cscs",
+        "requiredRole": "GL_REPORT"
+      }
+    }
+  }
+}
