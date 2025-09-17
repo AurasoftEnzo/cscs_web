@@ -2175,29 +2175,64 @@ function vrfy(field, fallback) {
 
 CreateEndpoint("DELETE", "/gk-transactions-norefresh/{id}", "deleteGKTransactionNoRefresh");
 function deleteGKTransactionNoRefresh(args) {
-    //print("U funkciji: deleteGKTransactionNoRefresh");
-    id = args["RouteValues"]["id"];
+    exMessage = "";
+    try
+    {        
+        //print("U funkciji: deleteGKTransactionNoRefresh");
+        id = args["RouteValues"]["id"];
+
+        query = "SELECT COUNT(*) FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
+        sqlParams = {};
+        sqlParams.Add({"@id", int(id)});
+
+        sqlResult = sqlQuery(query, sqlParams);
+
+        //ako ima redaka return error
+        recordExist = false;
+        if( (sqlResult == null) || 
+            (Size(sqlResult) < 2) ) 
+        {
+            recordExist = false;
+        }
+        else
+        {
+            if (sqlResult[1][0] == 0)
+            {
+                recordExist = false;
+            }
+            else
+            {
+                recordExist = true;
+            }
+        }
+
+        if (recordExist)
+        {
+            // If there are detail lines, prevent deletion
+            headers = {"Content-Type": "application/json"};
+            return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete transaction with existing lines."}', 400);    
+        }
+        //******************************************
+
+        // Execute delete
+        query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+        sqlParams = {};
+        sqlParams.Add({"@id", int(id)});
+        rowsAffected = sqlNonQuery(query, sqlParams);
     
-    // Execute delete
-    query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
-    sqlParams = {};
-    sqlParams.Add({"@id", int(id)});
-    sqlNonQuery(query, sqlParams);
-    
-    // Return current view (preserve search/sort)
-    args2 = {};
-    args2["QueryParams"] = {"page": 1};
-    /*
-    args2["QueryParams"] = {};
-    if (Contains(args["QueryParams"], "page")) {
-        args2["QueryParams"]["page"] = args["QueryParams"]["page"];
-    } else {
-        args2["QueryParams"]["page"] = 1;
+        if (rowsAffected > 0)
+        {
+            headers = {"Content-Type": "application/json"};
+            return Response(headers, '{"Result" : "Success", "Message" : ""}', 200);
+        }
     }
-    */
-    //return getGKTransactions(args2);
-    headers = {"Content-Type": "application/json"};
-    return Response(headers, '{"Result" : "Success"}', 200);
+    catch(ex1111)
+    {
+        print("Error occurred while deleting transaction: " + ex1111);
+        exMessage = ex1111;
+    }
+    headers = {"Content-Type": "application/json"};   
+    return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete transaction. ' + exMessage + '"}', 200);
 }
 
 function formatForDisplay(dateStr) {
@@ -3095,32 +3130,38 @@ function deleteLine(args) {
 CreateEndpoint("DELETE", "/gk-lines-norefresh/{id}/{line}", "deleteLineNoRefresh");
 function deleteLineNoRefresh(args) {
     //print('deleteLineNoRefresh');
-    masterId = args["RouteValues"]["id"];
-    lineId = args["RouteValues"]["line"];
+    exMessage = "";
+    try
+    {
+        masterId = args["RouteValues"]["id"];
+        lineId = args["RouteValues"]["line"];
     
-    queryDelete = "DELETE FROM NKGKLNTM WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
-    sqlParams = {};
-    sqlParams.Add({"@masterId", int(masterId)});
-    sqlParams.Add({"@lineId", int(lineId)});
-    rowsAffected = sqlNonQuery(queryDelete, sqlParams);
+        queryDelete = "DELETE FROM NKGKLNTM WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
+        sqlParams = {};
+        sqlParams.Add({"@masterId", int(masterId)});
+        sqlParams.Add({"@lineId", int(lineId)});
+        rowsAffected = sqlNonQuery(queryDelete, sqlParams);
 
-    print("rowsAffected=" + rowsAffected);
+        //print("rowsAffected=" + rowsAffected);
 
-    // Reload detail table
-    //args2 = {};
-    //args2["RouteValues"] = {"id": int(masterId)};
-    //return getGKLines(args2);
-
-    headers = {"Content-Type": "application/json"};
-    if (rowsAffected > 0)
-    {
-        jsonString = '{"Result" : "Success"}';
+        headers = {"Content-Type": "application/json"};
+        if (rowsAffected > 0)
+        {
+            jsonString = '{"Result" : "Success", "Message": ""}';
+        }
+        else
+        {
+            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+        }
+        return Response(headers, jsonString, 200);
     }
-    else
+    catch(ex2222)
     {
-        jsonString = '{"Result" : "Failed"}';
+        print("Error occurred while deleting line: " + ex2222);
+        exMessage = ex2222;
     }
-    return Response(headers, jsonString, 200);
+    headers = {"Content-Type": "application/json"};   
+    return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete line. ' + exMessage + '"}', 200);
 }
 
 function safeStr(valu) {

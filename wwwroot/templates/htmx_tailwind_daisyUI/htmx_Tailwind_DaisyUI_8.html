@@ -1626,65 +1626,71 @@
   </script>
 
   <script>
-    function confirmDeleteGlava(id) {
-      Swal.fire({
-        title: 'Are you sure?',
-        text: 'This action cannot be undone.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'No, keep it'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // // Proceed with the deletion
-          // htmx.ajax('DELETE', '/gk-transactions-norefresh/' + id,)
-          //   .catch((error) => {
-          //     Swal.fire({
-          //       title: 'Error!',
-          //       text: 'Failed to delete the transaction. Please try again.',
-          //       icon: 'error',
-          //       confirmButtonText: 'Close'
-          //     });
-          //     console.error('Error during deletion:', error);
-          //   });
+    function confirmDeleteGlava(id) 
+    {
+        try
+        {
+          Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, keep it'
+          }).then((result) => {
+            if (result.isConfirmed) 
+            {       
 
+              fetch('/gk-transactions-norefresh/' + id, {
+                method: 'DELETE',
+                // headers: {
+                //    'Content-Type': 'application/json'
+                // }
+              })
+                .then(response => response.json())
+                  .then(data => {
+                    //console.log('Success:'+ data);
 
-          fetch('/gk-transactions-norefresh/' + id, {
-            method: 'DELETE',
-            // headers: {
-            //    'Content-Type': 'application/json'
-            // }
-          })
-            .then(response => response.json())
-            .then(data => {
-              //console.log('Success:'+ data);
+                    if (data.Result == "Failed")
+                    {
+                      Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to delete the transaction. ' + data.Message,
+                        icon: 'error',
+                        confirmButtonText: 'Close'
+                      });
 
-              //alert('CONFIRM DELETION OF ID: ' + id);
-              Swal.fire({
-                title: 'Successfully deleted!',
-                text: 'Deleted transaction with id ' + id + '. ',
-                icon: 'success',
-                //timer: 3000,
-                confirmButtonText: 'Close'
-              }).then((result2) => {
-                // htmx.trigger(document.querySelector('#datagrid-container-master'), 'load');
-                htmx.ajax('GET', '/gk-transactions', {
-                  target: '.datagrid-container-master',
-                  swap: 'innerHTML'
-                });
+                      return;
+                    }
 
-                //console.log('Zadnji sweet alert zatvoren');
-              });
-            })
-            .catch(error => {
-              console.error('Error:', error);
-            });
+                    //alert('CONFIRM DELETION OF ID: ' + id);
+                    Swal.fire({
+                      title: 'Successfully deleted!',
+                      text: 'Deleted transaction with id ' + id + '. ',
+                      icon: 'success',
+                      //timer: 3000,
+                      confirmButtonText: 'Close'
+                      }).then((result2) => {
+                        
+                        htmx.ajax('GET', '/gk-transactions', {
+                          target: '.datagrid-container-master',
+                          swap: 'innerHTML'
+                        });
 
+                        //console.log('Zadnji sweet alert zatvoren');
+                      });
+                  })
+                  .catch(error => {
+                    console.error('Error:', error);
+                  });
 
-
-
+            }
+          });
         }
-      });
+        catch(error)
+        {
+          console.error('Error:', error);
+        }
     }
 
     // Theme toggle functionality
@@ -1729,98 +1735,92 @@
     //});
   </script>
   <script>
-    function confirmDeleteLine(masterId, lineId) {
-      // Check if we are in edit mode
-      const editForm = document.querySelector('.datagrid-container-master form');
-      if (!editForm) {
+    function confirmDeleteLine(masterId, lineId) 
+    {
+      try
+      {
+        // Check if we are in edit mode
+        const editForm = document.querySelector('.datagrid-container-master form');
+        if (!editForm) {
+          Swal.fire({
+            title: 'Edit Mode',
+            text: 'You cannot delete a line because the transaction is not in edit mode!',
+            icon: 'warning',
+            showCancelButton: false,
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+
         Swal.fire({
-          title: 'Edit Mode',
-          text: 'You cannot delete a line because the transaction is not in edit mode!',
+          title: 'Are you sure?',
+          text: 'This action cannot be undone.',
           icon: 'warning',
-          showCancelButton: false,
-          confirmButtonText: 'OK'
-        });
-        return;
-      }
+          showCancelButton: true,
+          confirmButtonText: 'Yes, delete it!',
+          cancelButtonText: 'No, keep it'
+        }).then((result) => {
+          if (result.isConfirmed) {
 
-      Swal.fire({
-        title: 'Are you sure?',
-        text: 'This action cannot be undone.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'No, keep it'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // // Proceed with the deletion
-          // htmx.ajax('DELETE', '/gk-line/' + id,)
-          //   .catch((error) => {
-          //     Swal.fire({
-          //       title: 'Error!',
-          //       text: 'Failed to delete the line. Please try again.',
-          //       icon: 'error',
-          //       confirmButtonText: 'Close'
-          //     });
-          //     console.error('Error during deletion:', error);
-          //   });
+            fetch('/gk-lines-norefresh/' + masterId + "/" + lineId, {
+              method: 'DELETE',
+              // headers: {
+              //   'Content-Type': 'application/json'
+              // }
+            })
+              .then(response => response.json())
+                .then(data => {
+                  console.log('Result:', data.Result);
 
-          fetch('/gk-lines-norefresh/' + masterId + "/" + lineId, {
-            method: 'DELETE',
-            // headers: {
-            //   'Content-Type': 'application/json'
-            // }
-          })
-            .then(response => response.json())
-            .then(data => {
-              console.log('Result:', data.Result);
+                  if (data.Result != "Success")
+                  {
+                    console.log("Delete line failed.")
 
-              if (data.Result != "Success")
-              {
-                console.log("Delete line failed.")
+                    Swal.fire({
+                      title: 'FAILED!',
+                      text: 'Delete line failed in transaction with id ' + masterId + ' and line id ' + lineId + '. ' + data.Message,
+                      icon: 'error',                  
+                      confirmButtonText: 'Close'
+                    }).then((result2) => {
+                      // Reload the data grid
+                      htmx.ajax('GET', '/gk-lines/' + masterId, {
+                        target: '.datagrid-container-detail',
+                        swap: 'innerHTML'
+                      });
+                                
+                    });
 
-                Swal.fire({
-                  title: 'FAILED!',
-                  text: 'Delete line failed in transaction with id ' + masterId + ' and line id ' + lineId + '.',
-                  icon: 'error',                  
-                  confirmButtonText: 'Close'
-                }).then((result2) => {
+                    return;
+                  }
+              
+                  Swal.fire({
+                    title: 'Successfully deleted!',
+                    text: 'Deleted line in transaction with id ' + masterId + ' and line id ' + lineId + '.',
+                    icon: 'success',
+                    //timer: 3000,
+                    confirmButtonText: 'Close'
+                  }).then((result2) => {
                     // Reload the data grid
                     htmx.ajax('GET', '/gk-lines/' + masterId, {
                       target: '.datagrid-container-detail',
                       swap: 'innerHTML'
                     });
-                                
-                  });
-
-                return;
-              }
-              
-              Swal.fire({
-                title: 'Successfully deleted!',
-                text: 'Deleted line in transaction with id ' + masterId + ' and line id ' + lineId + '.',
-                icon: 'success',
-                //timer: 3000,
-                confirmButtonText: 'Close'
-              }).then((result2) => {
-                // Reload the data grid
-                htmx.ajax('GET', '/gk-lines/' + masterId, {
-                  target: '.datagrid-container-detail',
-                  swap: 'innerHTML'
-                });
 
                 
-                //console.log('Zadnji sweet alert zatvoren');
-              });
-            })
-            .catch(error => {
-              console.error('Error:', error);
-            });
+                    //console.log('Zadnji sweet alert zatvoren');
+                  });
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                });
 
-
-
-
-        }
-      });
+          }
+        });
+      }
+      catch(error)
+      {
+          console.error('Error:', error);
+      }
     }
   </script>
   <script>
