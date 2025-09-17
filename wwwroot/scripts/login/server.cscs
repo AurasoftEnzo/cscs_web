@@ -27,7 +27,6 @@ CREATE INDEX IX_SessionStore_ExpiresAt ON SessionStore(ExpiresAt);
 
 
 
-
 ///--------------------------- Endpoints ---------------------------
 ///--------------------------- Endpoints ---------------------------
 ///--------------------------- Endpoints ---------------------------
@@ -178,28 +177,145 @@ function authenticateUser(args) {
     return Response(headers, redirectScript, 303);
 }
 
+// CreateEndpoint("GET", "/main-menu", "showMainMenu");
+// function showMainMenu(args) {
+
+//     sessionId = GetSessionIdFromCookie(args);
+//     sd = GetSessionData(sessionId);
+//     if(!HasAllData(sd)){
+//         return RedirectToLogin();
+//     }
+    
+//     // Load and fill template
+//     htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\main-menu.html");
+
+//     valuesDict = {};
+//     valuesDict["UserName"]    = sd["UserName"];
+//     valuesDict["UserRole"]    = sd["UserRole"];
+//     valuesDict["CompanyName"] = sd["CompanyName"];
+//     valuesDict["FiscalYear"]  = sd["FiscalYear"];
+
+//     FillTemplateFromDictionary(htmlHndl, valuesDict);
+
+//     headers = {"Content-Type": "text/html"};
+//     return Response(headers, RenderHtml(htmlHndl), 200);
+// }
+
 CreateEndpoint("GET", "/main-menu", "showMainMenu");
 function showMainMenu(args) {
-
     sessionId = GetSessionIdFromCookie(args);
     sd = GetSessionData(sessionId);
-    if(!HasAllData(sd)){
+    if (!HasAllData(sd)) {
         return RedirectToLogin();
     }
-    
-    // Load and fill template
+
+    userRole = ExtractSessionEntry(sd, "UserRole");
+
+    // Load allowed modules
+    allowedModules = BuildUserMenu(userRole, sd["DatabaseName"]);
+
+
+    // Load template
     htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\main-menu.html");
 
+    // Inject values
     valuesDict = {};
-    valuesDict["UserName"]    = sd["UserName"];
-    valuesDict["UserRole"]    = sd["UserRole"];
+    valuesDict["UserName"] = sd["UserName"];
+    valuesDict["UserRole"] = sd["UserRole"];
     valuesDict["CompanyName"] = sd["CompanyName"];
-    valuesDict["FiscalYear"]  = sd["FiscalYear"];
+    valuesDict["FiscalYear"] = sd["FiscalYear"];
+
+    menuList = "";
+    for (moduleKey : allowedModules.Keys) {
+        module = allowedModules[moduleKey];
+        menuList += "<li class='menu-title'><span>" + module["title"] + "</span></li>";
+        for (subKey : module["submodules"].Keys) {
+            sub = module["submodules"][subKey];
+            menuList += "<li><a href='" + sub["path"] + "' hx-get='" + sub["path"] + "' hx-target='#content-area' hx-swap='innerHTML'><i class='" + module["icon"] + "'></i> " + sub["title"] + "</a></li>";
+        }
+    }
+
+    /*
+        // {{#each menuItems}}
+        
+                <li class="menu-title"><span>{{this.title}}</span></li>
+        
+            // {{#each this.submodules}}
+            
+                <li>
+                    <a href="{{this.path}}" hx-get="{{this.path}}" hx-target="#content-area" hx-swap="innerHTML">
+                        <i class="{{../icon}}"></i> {{this.title}}
+                    </a>
+                </li>
+
+            // {{/each}}
+        // {{/each}}
+    */
+
+    valuesDict["MenuList"] = menuList;
+
+    // valuesDict["menuItems"] = SerializeJson(allowedModules);  // Use built-in Serialize for JSON
 
     FillTemplateFromDictionary(htmlHndl, valuesDict);
 
     headers = {"Content-Type": "text/html"};
     return Response(headers, RenderHtml(htmlHndl), 200);
+}
+
+function BuildUserMenu(userRoleCode, databaseName) {
+    // Load module config
+    configFile = ReadConfig("ScriptsDirectory") + "login\\modules.json";
+    jsonText = ReadFile(configFile).Join("");
+    // print(jsonText);
+    allModules = DeserializeJson(jsonText);
+    // print(allModules);
+
+    return allModules;
+
+    //...
+
+    // Query NKSYROLL to get all permissions for this role
+    query = "SELECT SYRL_PROGNAME FROM " + databaseName + ".dbo.NKSYROLL WHERE SYRL_CODE = @role";
+    sqlParams = {};
+    sqlParams.Add({"@role", userRoleCode});
+
+    result = sqlQuery(query, sqlParams);
+    if (result == null || Size(result) <= 1) {
+        return {};  // No permissions
+    }
+
+    allowedKeys = {};
+    for(i = 1; i < Size(result); i++) {  // Skip header row
+        key = strTrim(result[i][0]);
+        allowedKeys[key] = true;
+    }
+
+    // Filter modules
+    allowedModules = {};
+    for(moduleKey : allModules.Keys) {
+        // print("Processing module: " + moduleKey);
+        module = allModules[moduleKey];
+        allowedSubs = {};
+
+        for(subKey : module["submodules"].Keys) {
+            sub = module["submodules"][subKey];
+            requiredRole = sub["requiredRole"];
+
+            if (allowedKeys.Contains(requiredRole)) {
+                allowedSubs[subKey] = sub;
+            }
+        }
+
+        if (Size(allowedSubs) > 0) {
+            allowedModules[moduleKey] = Copy(module);
+            allowedModules[moduleKey]["submodules"] = allowedSubs;
+        }
+    }
+
+
+    // print("Allowed modules: " + allowedModules);
+
+    return allowedModules;
 }
 
 CreateEndpoint("GET", "/logout", "logout");
@@ -211,8 +327,42 @@ function logout(args) {
 }
 
 
+CreateEndpoint("GET", "/sales/orders", "showOrders");
+function showOrders(args) {
+    // Reuse session to get tenant DB
+    sessionId = GetSessionIdFromCookie(args);
+    sd = GetSessionData(sessionId);
+    if (!HasAllData(sd) /* || !UserHasPermission(sd["UserRole"], "SALES_VIEW") */ ) {
+        return RedirectToLogin();
+    }
+
+    // Switch to tenant DB
+    dbName = sd["DatabaseName"];
+    // connStr = Replace(ReadConfig("TenantDbTemplate"), "{DBNAME}", dbName);
+    // SQLConnectionString(connStr);
+
+    // Fetch data
+    result = sqlQuery("SELECT TOP 10 * FROM " + dbName + ".dbo.SalesOrders");
+
+    // Render
+    htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\orders\\view.html");
 
 
+    FillTemplateFromDictionary(htmlHndl, {"orders": Serialize(result)});
+
+
+    return Response({"Content-Type": "text/html"}, RenderHtml(htmlHndl), 200);
+}
+
+function UserHasPermission(userRole, requiredKey) {
+    SQLConnectionString(ReadConfig("CommonDBConnectionString"));
+    query = "SELECT COUNT(*) FROM NKSYROLL WHERE ROLG_CODE = @role AND ROLL_KEY = @key";
+    sqlParams = {};
+    sqlParams.Add({"@role", userRole});
+    sqlParams.Add({"@key", requiredKey});
+    result = sqlQuery(query, sqlParams);
+    return (int(result[1][0]) > 0);
+}
 
 
 ///---------------- Redirect Functions -----------------------
