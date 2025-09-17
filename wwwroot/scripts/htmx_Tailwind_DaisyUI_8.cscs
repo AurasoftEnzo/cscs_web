@@ -1139,13 +1139,77 @@ function IsFloat(value)
     {
         // Check if value is a valid float
         value2 = value.Replace("," , ".");
-        float1 = double(value2);
-        str2 = string(float1);
-        str3 = str2.Replace("," , ".");
-        //print(str2);
-        //print(str3);
-        if(value2 != str3){
-            throw "Float Validacija nije prošla.\nvalue = " + value;
+	
+	    //Check count of dots
+	    countDots = 0;
+	    for(i=0; i<value2.Length; i++)
+	    {
+	        znak = Substring(value2, i, 1);  
+	        if (znak == ".")
+	        {
+		        countDots++;
+	        }
+	    }
+	    //print("CountDots = " + countDots);
+	    if (countDots > 1)
+	    {
+	        return false;	
+	    } 
+
+	    //Remove minus on the beginning if it exists
+	    value3 = "";
+	    if (value2.Length > 0)
+	    {
+	        znak = Substring(value2, 0, 1);
+	        if (znak == "-")
+	        {
+		        value3 = Substring(value2, 1, value2.Length - 1);
+	        }
+	        else
+	        {
+ 		        value3 = value2;
+	        }
+	    }
+	
+	    //value3 contains the number without minus
+	    if (value3.Length == 0)
+	    {
+	        return false;
+	    }
+
+	    //check digits and dot
+	    bout = true;
+	    for(i=0; i<value3.Length; i++)
+	    {
+	        znak = Substring(value3, i, 1);  
+	   
+	        b0 = (znak == "0");
+            b1 = (znak == "1");
+            b2 = (znak == "2");
+            b3 = (znak == "3");
+            b4 = (znak == "4");
+            b5 = (znak == "5");
+            b6 = (znak == "6");
+            b7 = (znak == "7");
+            b8 = (znak == "8");
+            b9 = (znak == "9");
+            bdot = (znak == ".");
+        
+           if (b0 || b1 || b2 || b3 || b4 || b5 || b6 || b7 || b8 || b9 || bdot)
+           {
+                //sve ok            
+           }
+           else
+           {            
+                //return false;
+                bout = false;
+                break;            
+           }
+	    }
+
+	    if (bout == false)
+        {
+            return false;
         }
 
         //print("Float Validacija OK");
@@ -2526,85 +2590,199 @@ function createLine(args) {
         "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
     };
 
-    createLine_values = {};    
-    createLine_values["GK_LN_KONTO"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_KONTO"));
-    createLine_values["GK_LN_OBJED"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_OBJED"));
-    createLine_values["GK_LN_OPIS"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_OPIS"));
-    createLine_values["GK_LN_DP"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_DP"));
-    createLine_values["GK_LN_IZNOS"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_IZNOS"));
-    createLine_values["GK_LN_BRDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_BRDOK"));
-    createLine_values["GK_LN_DATDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_DATDOK"));
-    createLine_values["GK_LN_PARTNR"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_PARTNR"));
-    createLine_values["GK_LN_SIFDVZ"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_SIFDVZ"));
-    createLine_values["GK_LN_TECAJ"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_TECAJ"));
-    createLine_values["GK_LN_IZNDEV"] = StrTrim(GetValueFromForm(args["Body"], "GK_LN_IZNDEV"));
+    dataObject = DeserializeJson(args["Body"]);
 
-    if (createLine_values["GK_LN_IZNOS"]=="")
+    konto = dataObject["GK_LN_KONTO"];    
+    objed = dataObject["GK_LN_OBJED"];
+    opis = dataObject["GK_LN_OPIS"];
+    dp = dataObject["GK_LN_DP"];
+    iznos = dataObject["GK_LN_IZNOS"];
+    brdok = dataObject["GK_LN_BRDOK"];
+    datdok = dataObject["GK_LN_DATDOK"];
+    partnr = dataObject["GK_LN_PARTNR"];
+    sifdvz = dataObject["GK_LN_SIFDVZ"];
+    tecaj = dataObject["GK_LN_TECAJ"];
+    izndev = dataObject["GK_LN_IZNDEV"];
+
+print("1) iznos: " + iznos);
+
+    if (iznos == "")
     {
-        createLine_values["GK_LN_IZNOS"]="0";//float
+        iznos = "0"; //float
+    } 
+
+    if (brdok == "")
+    {
+        brdok = "0"; //int
     }
-    if (createLine_values["GK_LN_BRDOK"]=="")
+
+    if (datdok == "")
     {
-        createLine_values["GK_LN_BRDOK"]="0";//int
+        datdok = "1900-01-01"; //date
     }
-    if (createLine_values["GK_LN_DATDOK"]=="")
+
+    if (tecaj == "")
     {
-        createLine_values["GK_LN_DATDOK"]="1900-01-01";//date
+        tecaj = "0"; //float
     }
-    if (createLine_values["GK_LN_TECAJ"]=="")
+
+    if (izndev == "")
     {
-        createLine_values["GK_LN_TECAJ"]="0";//float
-    }
-    if (createLine_values["GK_LN_IZNDEV"]=="")
-    {
-        createLine_values["GK_LN_IZNDEV"]="0";//float
+        izndev = "0"; //float
     }
 
     //***************************************************
     // Promjena zarez u točku za float brojeve
     //***************************************************
-    createLine_values["GK_LN_IZNOS"] = createLine_values["GK_LN_IZNOS"].Replace("," , ".");
-    createLine_values["GK_LN_TECAJ"] = createLine_values["GK_LN_TECAJ"].Replace("," , ".");
-    createLine_values["GK_LN_IZNDEV"] = createLine_values["GK_LN_IZNDEV"].Replace("," , ".");
-
-    //***************************************************
-    // Validate
-    //***************************************************
-    //createLine_konto = createLine_values["GK_LN_KONTO"];
-    //createLine_iznos = createLine_values["GK_LN_IZNOS"];
-
-    print("Account: " + createLine_values["GK_LN_KONTO"]);
-    print("Amount: " + createLine_values["GK_LN_IZNOS"]);
-
-    // if (createLine_konto == "" || createLine_iznos == "0") {
-
-    //     headers = {"Content-Type": "text/html"};
-    //     return Response(headers, "<td colspan='13'><div class='alert alert-error'>Account and Amount required</div></td>", 200);
-    // }
-
-
-    if (createLine_values["GK_LN_KONTO"] == "") 
+    iznos = iznos.Replace("," , ".");
+print("2) iznos: " + iznos);    
+    tecaj = tecaj.Replace("," , ".");
+    izndev = izndev.Replace("," , ".");
+    
+    //********************************************
+    //VALIDACIJA
+    //******************************************** 
+    if (!IsInt(masterId))  
     {
-        print("Provjera GK_LN_KONTO nije prošla");
-
-        // 🔴 Validation failed: Return the form again with values + error
-        createLine_headers = {"Content-Type": "text/html"};
-        //createLine_alert = "<td colspan='13'><div><script>Swal.fire({title: 'ERROR!', text: 'GK_LN_KONTO nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script></div></td>";        
-        //createLine_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_LN_KONTO nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        //createLine_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-
-        
-
-        print("ALERT KONTO");              
-
-        // Regenerate the new line form row
-        args2 = {};
-        args2["RouteValues"] = {"id": int(masterId)};
-        //newLineFormResponse = getNewLineForm(args2);
-
-        //return Response(createLine_headers, createLine_alert, 200);
-        return getNewLineForm(args2);
+        // 🔴 Validation failed: Return the error
+        print("Provjera masterId nije prošla");
+        return;        
     }
+    else
+    {
+        print("Provjera masterId je prošla");
+    }
+
+    if(konto.Length > 15)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_KONTO nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_KONTO je prošla");
+    }
+
+    if(objed.Length > 6)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_OBJED nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_OBJED je prošla");
+    }
+
+    if(opis.Length > 50)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_OPIS nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_OPIS je prošla");
+    }   
+
+    //if((dp != "D") && (dp != "P"))  
+    if(dp.Length > 1)
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_DP nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_DP je prošla");
+    }   
+
+    // IZNOS je float, može biti i negativan broj
+    if(!IsFloat(iznos))  
+    {
+print("3) iznos: " + iznos);        
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_IZNOS nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_IZNOS je prošla");
+    }
+
+    if(!IsInt(brdok))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_BRDOK nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_BRDOK je prošla");
+    }
+
+    // DATDOK je date
+    if(!IsDate(datdok))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_DATDOK nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_DATDOK je prošla");
+    }
+
+    if(partnr.Length > 10)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_PARTNR nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_PARTNR je prošla");
+    }
+
+    if(sifdvz.Length > 3)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_SIFDVZ nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_SIFDVZ je prošla");
+    }
+
+    // TECAJ je float
+    if(!IsFloat(tecaj))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_TECAJ nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_TECAJ je prošla");
+    }
+
+    // IZNDEV je float
+    if(!IsFloat(izndev))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_IZNDEV nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_IZNDEV je prošla");
+    }
+    //********************************************
+    print("createLine: Nakon validacije");
+
+
 
     // Get next line number
     querydd = "SELECT ISNULL(MAX(GK_LN_BR_LIN), 0) + 1 FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
@@ -2620,7 +2798,10 @@ function createLine(args) {
     // Build INSERT
     queryde = "INSERT INTO NKGKLNTM (GK_LN_BR_TEM, GK_LN_BR_LIN, " + fieldsx.Join(", ") + ") VALUES (@masterId, @lineId, ";
     for(ig = 0; ig < Size(fieldsx); ig++) {
-        if (ig > 0) queryde += ", ";
+        if (ig > 0) 
+        {
+            queryde += ", ";
+        }
         queryde += "@" + fieldsx[ig];
     }
     queryde += ")";
@@ -2630,7 +2811,9 @@ function createLine(args) {
     sqlParams.Add({"@masterId", int(masterId)});
     sqlParams.Add({"@lineId", int(lineId)});
     for(ih = 0; ih < Size(fieldsx); ih++) {
-        sqlParams.Add({"@" + fieldsx[ih], GetValueFromForm(args["Body"], fieldsx[ih])});
+        fieldName = fieldsx[ih];
+        fieldValue = dataObject[fieldName]; 
+        sqlParams.Add({"@" + fieldName, fieldValue});
     }
 
     print("BEFORE INSERT LINE query: " + queryde);
@@ -2638,37 +2821,232 @@ function createLine(args) {
 
     sqlNonQuery(queryde, sqlParams);
 
+    // ovo ne jer ide na klijentu reload detail table
     // Reload detail table
-    args2 = {};
-    args2["RouteValues"] = {"id": int(masterId)};
-    return getGKLines(args2);
+    // args2 = {};
+    // args2["RouteValues"] = {"id": int(masterId)};
+    // return getGKLines(args2);
 }
 
 // Update line endpoint
 CreateEndpoint("PUT", "/gk-lines/{id}/{line}", "updateLine");
 function updateLine(args) {
+    print("U funkciji: updateLine");
+
     masterId = args["RouteValues"]["id"];
     lineId = args["RouteValues"]["line"];
     
-    fieldsx = [
+    fieldsx = {
         "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
         "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
         "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
-    ];
+    };
 
-    // Validate
-    konto = GetValueFromForm(args["Body"], "GK_LN_KONTO");
-    iznos = GetValueFromForm(args["Body"], "GK_LN_IZNOS");
+    dataObject = DeserializeJson(args["Body"]);
 
-    if (konto == "" || iznos == "") {
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, "<div class='alert alert-error'>Account and Amount required</div>", 400);
+    konto = dataObject["GK_LN_KONTO"];    
+    objed = dataObject["GK_LN_OBJED"];
+    opis = dataObject["GK_LN_OPIS"];
+    dp = dataObject["GK_LN_DP"];
+    iznos = dataObject["GK_LN_IZNOS"];
+    brdok = dataObject["GK_LN_BRDOK"];
+    datdok = dataObject["GK_LN_DATDOK"];
+    partnr = dataObject["GK_LN_PARTNR"];
+    sifdvz = dataObject["GK_LN_SIFDVZ"];
+    tecaj = dataObject["GK_LN_TECAJ"];
+    izndev = dataObject["GK_LN_IZNDEV"];
+
+    if (iznos == "")
+    {
+        iznos = "0"; //float
+    } 
+
+    if (brdok == "")
+    {
+        brdok = "0"; //int
     }
+
+    if (datdok == "")
+    {
+        datdok = "1900-01-01"; //date
+    }
+
+    if (tecaj == "")
+    {
+        tecaj = "0"; //float
+    }
+
+    if (izndev == "")
+    {
+        izndev = "0"; //float
+    }
+
+    //***************************************************
+    // Promjena zarez u točku za float brojeve
+    //***************************************************
+    iznos = iznos.Replace("," , ".");
+    tecaj = tecaj.Replace("," , ".");
+    izndev = izndev.Replace("," , ".");
+    
+    //********************************************
+    //VALIDACIJA
+    //******************************************** 
+    if (!IsInt(masterId))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera masterId nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera masterId je prošla");
+    }
+
+    if (!IsSmallInt(lineId))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera lineId nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera lineId je prošla");
+    }
+
+    if(konto.Length > 15)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_KONTO nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_KONTO je prošla");
+    }
+
+    if(objed.Length > 6)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_OBJED nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_OBJED je prošla");
+    }
+
+    if(opis.Length > 50)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_OPIS nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_OPIS je prošla");
+    }   
+
+    //if((dp != "D") && (dp != "P"))  
+    if(dp.Length > 1)
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_DP nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_DP je prošla");
+    }   
+
+    // IZNOS je float, može biti i negativan broj
+    if(!IsFloat(iznos))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_IZNOS nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_IZNOS je prošla");
+    }
+
+    if(!IsInt(brdok))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_BRDOK nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_BRDOK je prošla");
+    }
+
+    // DATDOK je date
+    if(!IsDate(datdok))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_DATDOK nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_DATDOK je prošla");
+    }
+
+    if(partnr.Length > 10)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_PARTNR nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_PARTNR je prošla");
+    }
+
+    if(sifdvz.Length > 3)  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_SIFDVZ nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_SIFDVZ je prošla");
+    }
+
+    // TECAJ je float
+    if(!IsFloat(tecaj))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_TECAJ nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_TECAJ je prošla");
+    }
+
+    // IZNDEV je float
+    if(!IsFloat(izndev))  
+    {
+        // 🔴 Validation failed: Return the error
+        print("Provjera GK_LN_IZNDEV nije prošla");
+        return;        
+    }
+    else
+    {
+        print("Provjera GK_LN_IZNDEV je prošla");
+    }
+    //********************************************
+    print("updateLine: Nakon validacije");
 
     // Build UPDATE
     queryUpdate = "UPDATE NKGKLNTM SET ";
     for(i = 0; i < Size(fieldsx); i++) {
-        if (i > 0) queryUpdate += ", ";
+        if (i > 0) {
+            queryUpdate += ", ";
+        }
         queryUpdate += fieldsx[i] + " = @" + fieldsx[i];
     }
     queryUpdate += " WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
@@ -2678,14 +3056,20 @@ function updateLine(args) {
     sqlParams.Add({"@masterId", int(masterId)});
     sqlParams.Add({"@lineId", int(lineId)});
     for(i = 0; i < Size(fieldsx); i++) {
-        sqlParams.Add({"@" + fieldsx[i], GetValueFromForm(args["Body"], fieldsx[i])});
+        fieldName = fieldsx[i];
+        fieldValue = dataObject[fieldName];        
+        sqlParams.Add({"@" + fieldName, fieldValue});
     }
+
+    print("BEFORE UPDATE LINE query: " + queryUpdate);
+    print("BEFORE UPDATE LINE params: " + sqlParams);
+
     sqlNonQuery(queryUpdate, sqlParams);
 
     // Reload detail table
-    args2 = {};
-    args2["RouteValues"] = {"id": int(masterId)};
-    return getGKLines(args2);
+    // args2 = {};
+    // args2["RouteValues"] = {"id": int(masterId)};
+    // return getGKLines(args2);
 }
 
 // Delete line endpoint
@@ -2702,9 +3086,9 @@ function deleteLine(args) {
     sqlNonQuery(queryDelete, sqlParams);
 
     // Reload detail table
-    args2 = {};
-    args2["RouteValues"] = {"id": int(masterId)};
-    return getGKLines(args2);
+    // args2 = {};
+    // args2["RouteValues"] = {"id": int(masterId)};
+    // return getGKLines(args2);
 }
 
 // Delete line endpoint
@@ -2718,7 +3102,9 @@ function deleteLineNoRefresh(args) {
     sqlParams = {};
     sqlParams.Add({"@masterId", int(masterId)});
     sqlParams.Add({"@lineId", int(lineId)});
-    sqlNonQuery(queryDelete, sqlParams);
+    rowsAffected = sqlNonQuery(queryDelete, sqlParams);
+
+    print("rowsAffected=" + rowsAffected);
 
     // Reload detail table
     //args2 = {};
@@ -2726,7 +3112,15 @@ function deleteLineNoRefresh(args) {
     //return getGKLines(args2);
 
     headers = {"Content-Type": "application/json"};
-    return Response(headers, '{"Result" : "Success"}', 200);
+    if (rowsAffected > 0)
+    {
+        jsonString = '{"Result" : "Success"}';
+    }
+    else
+    {
+        jsonString = '{"Result" : "Failed"}';
+    }
+    return Response(headers, jsonString, 200);
 }
 
 function safeStr(valu) {
