@@ -22,7 +22,8 @@ function getRootHandlerFunction(){
     responseHeaders = {"Content-Type": "text/html"};
     statusCode = 200;
 
-    return Response(responseHeaders, responseBody, statusCode);
+    // return Response(responseHeaders, responseBody, statusCode);
+    return {"headers": responseHeaders, "body": responseBody, "statusCode": statusCode};
 }
 
 //testing links page (html from template)

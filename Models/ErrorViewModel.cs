@@ -1,4 +1,4 @@
-namespace CSCS_Web_Enzo_1.Models;
+namespace cscs_web.Models;
 
 public class ErrorViewModel
 {

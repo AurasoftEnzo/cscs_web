@@ -1,7 +1,7 @@
 ﻿//using SplitAndMerge;
 //using System.Collections.Generic;
 
-//namespace CSCS_Web_Enzo_1.CSCS.Template
+//namespace cscs_web.CSCS.Template
 //{
 //    //public class RenderTemplateFunction : ParserFunction
 //    //{

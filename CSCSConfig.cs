@@ -1,4 +1,4 @@
-﻿namespace CSCS_Web_Enzo_1
+﻿namespace cscs_web
 {
     public class CSCSConfig
     {

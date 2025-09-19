@@ -7,8 +7,9 @@ using Microsoft.Data.SqlClient;
 using CSCSMath;
 using SplitAndMerge;
 using CSCS.InterpreterManager;
+using cscs_web;
 
-namespace CSCS_Web_Enzo_1
+namespace cscs_web
 {
     public static class CSCSWebApplication
     {
@@ -36,6 +37,7 @@ namespace CSCS_Web_Enzo_1
 
 
         static CSCSWebFunctions CSCSWebFunctions { get; set; } = new CSCSWebFunctions(Interpreter);
+        static TasFunctions TasFunctions { get; set; } = new TasFunctions(Interpreter);
         //new CSCSWebFunctions();
 
         //CSCSWebFunctions = 
@@ -120,7 +122,8 @@ namespace CSCS_Web_Enzo_1
             //preprocess this file
             var tokenSet = GetPreprocessTokens();
             var scriptsDirStr = CSCSConfig.ScriptsDirectory;
-            Utils.PreprocessScriptFile(fileName, tokenSet, scriptsDirStr);
+            //// uncomment for two(three)-pass
+            //Utils.PreprocessScriptFile(fileName, tokenSet, scriptsDirStr);
 
             Variable result = null;
             try

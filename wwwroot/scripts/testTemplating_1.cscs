@@ -64,7 +64,7 @@ function getHandler1(request){
 
         //--- Loading HTML Template ----------------------------------------------------------------------------
 
-        htmlHndl = LoadHtmlTemplate("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\templates\\template1.html");
+        htmlHndl = LoadHtmlTemplate("C:\\Users\\User\\Documents\\GitHub\\cscs_web\\CSCS-web-1\\wwwroot\\templates\\template1.html");
         if(htmlHndl < 1){
             return "Server error occured.\nTry again later.";
         }
@@ -132,7 +132,7 @@ function getHandler1(request){
         valuesDictionary["companyName"] = "Aura Soft d.o.o.";
         valuesDictionary["companyAddress"] = "Kapetana Lazarića 1d, 52000 Pazin";
 
-        valuesDictionary["bodyParagraphText"] = ReadFile("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\textFiles\\LoremIpsum.txt");
+        valuesDictionary["bodyParagraphText"] = ReadFile("C:\\Users\\User\\Documents\\GitHub\\cscs_web\\CSCS-web-1\\wwwroot\\textFiles\\LoremIpsum.txt");
         valuesDictionary["bodyParagraphText"] = valuesDictionary["bodyParagraphText"][0];
 
         // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n" + 
@@ -218,7 +218,7 @@ function getHandler1(request){
         }
         
         // // NE DELA ZBOG TEGA JER JE TO ARRAY OD 1 STRINGA
-        valuesDictionary["bodyEndJavascript2"] = ReadFile("C:\\Users\\User\\Documents\\GitHub\\CSCS_Web_Enzo_1\\CSCS-web-1\\wwwroot\\js\\site.js");
+        valuesDictionary["bodyEndJavascript2"] = ReadFile("C:\\Users\\User\\Documents\\GitHub\\cscs_web\\CSCS-web-1\\wwwroot\\js\\site.js");
         valuesDictionary["bodyEndJavascript2"] = valuesDictionary["bodyEndJavascript2"][0];
 
         //-----------------------------------------------------------------------------------

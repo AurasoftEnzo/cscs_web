@@ -1,4 +1,4 @@
-//using CSCS_Web_Enzo_1;
+//using cscs_web;
 
 //var builder = WebApplication.CreateBuilder(args);
 
@@ -44,8 +44,8 @@
 
 //------------------------------------------------------------
 
-//using CSCS_Web_Enzo_1;
-//using CSCS_Web_Enzo_1.CSCS.Template;
+//using cscs_web;
+//using cscs_web.CSCS.Template;
 //using Microsoft.AspNetCore.Builder;
 //using Microsoft.Extensions.DependencyInjection;
 
@@ -90,9 +90,9 @@
 //-----------------------------------------------
 
 //using CSCS;
-//using CSCS_Web_Enzo_1;
-//using CSCS_Web_Enzo_1.CSCS;
-//using CSCS_Web_Enzo_1.CSCS.Template;
+//using cscs_web;
+//using cscs_web.CSCS;
+//using cscs_web.CSCS.Template;
 //using Microsoft.AspNetCore.Builder;
 //using Microsoft.Extensions.DependencyInjection;
 //using SplitAndMerge;
@@ -151,7 +151,7 @@
 //----------------------------------------------------
 
 
-using CSCS_Web_Enzo_1;
+using cscs_web;
 using Microsoft.Extensions.FileProviders;
 using System;
 using System.Runtime;

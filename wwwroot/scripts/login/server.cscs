@@ -22,6 +22,13 @@ CREATE INDEX IX_SessionStore_ExpiresAt ON SessionStore(ExpiresAt);
 // include(ReadConfig("ScriptsDirectory") + "login\\JWT.cscs");
 
 
+// include("endpoints.cscs");
+// include("redirectFunctions.cscs");
+// include("sessionFunctions.cscs");
+// include("rest.cscs");
+// // include("JWT.cscs");
+
+
 
 
 
@@ -33,7 +40,7 @@ CREATE INDEX IX_SessionStore_ExpiresAt ON SessionStore(ExpiresAt);
 
 
 
-CreateEndpoint("GET", "/", "showLoginStep1");
+CreateEndpoint("GET", "/login", "showLoginStep1");
 function showLoginStep1(args) {
     sessionId = GetSessionIdFromCookie(args);
     if (sessionId != null) {
@@ -235,22 +242,22 @@ function showMainMenu(args) {
         }
     }
 
-    /*
-        // {{#each menuItems}}
+    
+    // // {{#each menuItems}}
+    
+    //         <li class="menu-title"><span>{{this.title}}</span></li>
+    
+    //     // {{#each this.submodules}}
         
-                <li class="menu-title"><span>{{this.title}}</span></li>
-        
-            // {{#each this.submodules}}
-            
-                <li>
-                    <a href="{{this.path}}" hx-get="{{this.path}}" hx-target="#content-area" hx-swap="innerHTML">
-                        <i class="{{../icon}}"></i> {{this.title}}
-                    </a>
-                </li>
+    //         <li>
+    //             <a href="{{this.path}}" hx-get="{{this.path}}" hx-target="#content-area" hx-swap="innerHTML">
+    //                 <i class="{{../icon}}"></i> {{this.title}}
+    //             </a>
+    //         </li>
 
-            // {{/each}}
-        // {{/each}}
-    */
+    //     // {{/each}}
+    // // {{/each}}
+    
 
     valuesDict["MenuList"] = menuList;
 
@@ -332,7 +339,8 @@ function showOrders(args) {
     // Reuse session to get tenant DB
     sessionId = GetSessionIdFromCookie(args);
     sd = GetSessionData(sessionId);
-    if (!HasAllData(sd) /* || !UserHasPermission(sd["UserRole"], "SALES_VIEW") */ ) {
+    // if (!HasAllData(sd) || !UserHasPermission(sd["UserRole"], "SALES_VIEW") ) {
+    if (!HasAllData(sd) ) {
         return RedirectToLogin();
     }
 
@@ -595,3 +603,5 @@ function windowClosedHandler(args) {
 
     return;
 }
+
+
