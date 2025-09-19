@@ -698,7 +698,8 @@
 
     <!-- 1. MASTER TABLE (3-4 rows) -->
     <div class="master-table">
-      <div class="datagrid-container-master" hx-get="/gk-transactions" hx-trigger="load" hx-swap="innerHTML"></div>
+      <!-- <div class="datagrid-container-master" hx-get="/gk-transactions" hx-trigger="load" hx-swap="innerHTML"></div> -->
+       <div class="datagrid-container-master"></div>
     </div>
 
     <!-- 2. DETAIL TABLE (fills space) -->
@@ -752,6 +753,29 @@
     </div>
 
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      try
+      {
+        htmx.ajax('GET', '/gk-transactions', {
+          target: document.querySelector('.datagrid-container-master'),
+          swap: 'innerHTML'
+        });
+      }
+      catch(error)
+      {
+          console.error('Error:', error);
+
+          Swal.fire({
+            title: "Loading master table error",
+            text: "Something went wrong.",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          }); 
+      }
+    });
+  </script>
 
   <script>
     // Re-process HTMX after dynamic content loads and fix table layout
@@ -1025,131 +1049,120 @@
 
     // Save line button click handler
     document.getElementById('save-line-btn').addEventListener('click', function () {
-      if (!currentMasterId) {
-        Swal.fire({
-          title: 'No Selected Transaction Error',
-          text: 'Please select a master transaction first!',
-          icon: 'warning',
-          showCancelButton: false,
-          confirmButtonText: 'OK'
-        });
-        return;
-      }
-
-      if (!isMasterInEditMode) {
-        Swal.fire({
-          title: 'Edit Mode Error',
-          text: 'Master transaction must be in edit mode to save lines!',
-          icon: 'warning',
-          showCancelButton: false,
-          confirmButtonText: 'OK'
-        });
-        return;
-      }
-
-      // if (!currentLineId) {
-      //   Swal.fire({
-      //     title: 'No Selected Line Error',
-      //     text: 'Please select a line first!',
-      //     icon: 'warning',
-      //     showCancelButton: false,
-      //     confirmButtonText: 'OK'          
-      //   });        
-      //   return; 
-      // }
-
-      console.log('OK');
-
-      const form = document.getElementById('line-entry-form');
-
-      //INPUT ELEMENTI
-      const GK_LN_KONTO = form.elements['GK_LN_KONTO'];
-      const GK_LN_OBJED = form.elements['GK_LN_OBJED'];
-      const GK_LN_OPIS = form.elements['GK_LN_OPIS'];
-      const GK_LN_DP = form.elements['GK_LN_DP'];
-      const GK_LN_IZNOS = form.elements['GK_LN_IZNOS'];
-      const GK_LN_BRDOK = form.elements['GK_LN_BRDOK'];
-      const GK_LN_DATDOK = form.elements['GK_LN_DATDOK'];
-      const GK_LN_PARTNR = form.elements['GK_LN_PARTNR'];
-      const GK_LN_SIFDVZ = form.elements['GK_LN_SIFDVZ'];
-      const GK_LN_TECAJ = form.elements['GK_LN_TECAJ'];
-      const GK_LN_IZNDEV = form.elements['GK_LN_IZNDEV'];
-
-      // console.log("UPDATE VALUES:");
-      // console.log("currentMasterId: " + currentMasterId);
-      // console.log("currentLineId: " + currentLineId);      
-      // console.log("GK_LN_KONTO: " + GK_LN_KONTO.value); 
-      // console.log("GK_LN_OBJED: " + GK_LN_OBJED.value); 
-      // console.log("GK_LN_OPIS: " + GK_LN_OPIS.value); 
-      // console.log("GK_LN_DP: " + GK_LN_DP.value); 
-      // console.log("GK_LN_IZNOS: " + GK_LN_IZNOS.value); 
-      // console.log("GK_LN_BRDOK: " + GK_LN_BRDOK.value); 
-      // console.log("GK_LN_DATDOK: " + GK_LN_DATDOK.value); 
-      // console.log("GK_LN_PARTNR: " + GK_LN_PARTNR.value); 
-      // console.log("GK_LN_SIFDVZ: " + GK_LN_SIFDVZ.value); 
-      // console.log("GK_LN_TECAJ: " + GK_LN_TECAJ.value); 
-      // console.log("GK_LN_IZNDEV: " + GK_LN_IZNDEV.value);
-
-      if (GK_LN_IZNOS.value == "") {
-        GK_LN_IZNOS.value = "0"; //float
-      }
-
-      if (GK_LN_BRDOK.value == "") {
-        GK_LN_BRDOK.value = "0"; //int
-      }
-
-      if (GK_LN_DATDOK.value == "") {
-        GK_LN_DATDOK.value = "1900-01-01"; //date
-      }
-
-      if (GK_LN_TECAJ.value == "") {
-        GK_LN_TECAJ.value = "0"; //float
-      }
-
-      if (GK_LN_IZNDEV.value == "") {
-        GK_LN_IZNDEV.value = "0"; //float
-      }
-
-      //***************************************************
-      // Promjena zarez u točku za float brojeve
-      //***************************************************
-      GK_LN_KONTO.value = GK_LN_KONTO.value.toString().replaceAll(',', '.');
-      GK_LN_TECAJ.value = GK_LN_TECAJ.value.toString().replaceAll(',', '.');
-      GK_LN_IZNDEV.value = GK_LN_IZNDEV.value.toString().replaceAll(',', '.');
-
-      console.log("UPDATE VALUES:");
-      console.log("currentMasterId: " + currentMasterId);
-      console.log("currentLineId: " + currentLineId);
-      console.log("GK_LN_KONTO: " + GK_LN_KONTO.value.toString());
-      console.log("GK_LN_OBJED: " + GK_LN_OBJED.value.toString());
-      console.log("GK_LN_OPIS: " + GK_LN_OPIS.value.toString());
-      console.log("GK_LN_DP: " + GK_LN_DP.value.toString());
-      console.log("GK_LN_IZNOS: " + GK_LN_IZNOS.value.toString());
-      console.log("GK_LN_BRDOK: " + GK_LN_BRDOK.value.toString());
-      console.log("GK_LN_DATDOK: " + GK_LN_DATDOK.value.toString());
-      console.log("GK_LN_PARTNR: " + GK_LN_PARTNR.value.toString());
-      console.log("GK_LN_SIFDVZ: " + GK_LN_SIFDVZ.value.toString());
-      console.log("GK_LN_TECAJ: " + GK_LN_TECAJ.value.toString());
-      console.log("GK_LN_IZNDEV: " + GK_LN_IZNDEV.value.toString());
-
-      //***************************************************
-      // VALIDACIJA
-      //***************************************************
-      console.log("POČETAK VALIDACIJE");
-
-      if (!isInt(currentMasterId))
+      try
       {
-        Swal.fire({
-          title: "Validation error",
-          text: "Transaction ID is not valid. (currentMasterId)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });        
-        return;
-      }
+        if (!currentMasterId) {
+          Swal.fire({
+            title: 'No Selected Transaction Error',
+            text: 'Please select a master transaction first!',
+            icon: 'warning',
+            showCancelButton: false,
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
 
-      if (currentLineId)
-      {
+        if (!isMasterInEditMode) {
+          Swal.fire({
+            title: 'Edit Mode Error',
+            text: 'Master transaction must be in edit mode to save lines!',
+            icon: 'warning',
+            showCancelButton: false,
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+
+        const form = document.getElementById('line-entry-form');
+
+        //INPUT ELEMENTI
+        const GK_LN_KONTO = form.elements['GK_LN_KONTO'];
+        const GK_LN_OBJED = form.elements['GK_LN_OBJED'];
+        const GK_LN_OPIS = form.elements['GK_LN_OPIS'];
+        const GK_LN_DP = form.elements['GK_LN_DP'];
+        const GK_LN_IZNOS = form.elements['GK_LN_IZNOS'];
+        const GK_LN_BRDOK = form.elements['GK_LN_BRDOK'];
+        const GK_LN_DATDOK = form.elements['GK_LN_DATDOK'];
+        const GK_LN_PARTNR = form.elements['GK_LN_PARTNR'];
+        const GK_LN_SIFDVZ = form.elements['GK_LN_SIFDVZ'];
+        const GK_LN_TECAJ = form.elements['GK_LN_TECAJ'];
+        const GK_LN_IZNDEV = form.elements['GK_LN_IZNDEV'];
+
+        // console.log("UPDATE VALUES:");
+        // console.log("currentMasterId: " + currentMasterId);
+        // console.log("currentLineId: " + currentLineId);      
+        // console.log("GK_LN_KONTO: " + GK_LN_KONTO.value); 
+        // console.log("GK_LN_OBJED: " + GK_LN_OBJED.value); 
+        // console.log("GK_LN_OPIS: " + GK_LN_OPIS.value); 
+        // console.log("GK_LN_DP: " + GK_LN_DP.value); 
+        // console.log("GK_LN_IZNOS: " + GK_LN_IZNOS.value); 
+        // console.log("GK_LN_BRDOK: " + GK_LN_BRDOK.value); 
+        // console.log("GK_LN_DATDOK: " + GK_LN_DATDOK.value); 
+        // console.log("GK_LN_PARTNR: " + GK_LN_PARTNR.value); 
+        // console.log("GK_LN_SIFDVZ: " + GK_LN_SIFDVZ.value); 
+        // console.log("GK_LN_TECAJ: " + GK_LN_TECAJ.value); 
+        // console.log("GK_LN_IZNDEV: " + GK_LN_IZNDEV.value);
+
+        if (GK_LN_IZNOS.value == "") {
+          GK_LN_IZNOS.value = "0"; //float
+        }
+
+        if (GK_LN_BRDOK.value == "") {
+          GK_LN_BRDOK.value = "0"; //int
+        }
+
+        if (GK_LN_DATDOK.value == "") {
+          GK_LN_DATDOK.value = "1900-01-01"; //date
+        }
+
+        if (GK_LN_TECAJ.value == "") {
+          GK_LN_TECAJ.value = "0"; //float
+        }
+
+        if (GK_LN_IZNDEV.value == "") {
+          GK_LN_IZNDEV.value = "0"; //float
+        }
+
+        //***************************************************
+        // Promjena zarez u točku za float brojeve
+        //***************************************************
+        GK_LN_KONTO.value = GK_LN_KONTO.value.toString().replaceAll(',', '.');
+        GK_LN_TECAJ.value = GK_LN_TECAJ.value.toString().replaceAll(',', '.');
+        GK_LN_IZNDEV.value = GK_LN_IZNDEV.value.toString().replaceAll(',', '.');
+
+        console.log("UPDATE VALUES:");
+        console.log("currentMasterId: " + currentMasterId);
+        console.log("currentLineId: " + currentLineId);
+        console.log("GK_LN_KONTO: " + GK_LN_KONTO.value.toString());
+        console.log("GK_LN_OBJED: " + GK_LN_OBJED.value.toString());
+        console.log("GK_LN_OPIS: " + GK_LN_OPIS.value.toString());
+        console.log("GK_LN_DP: " + GK_LN_DP.value.toString());
+        console.log("GK_LN_IZNOS: " + GK_LN_IZNOS.value.toString());
+        console.log("GK_LN_BRDOK: " + GK_LN_BRDOK.value.toString());
+        console.log("GK_LN_DATDOK: " + GK_LN_DATDOK.value.toString());
+        console.log("GK_LN_PARTNR: " + GK_LN_PARTNR.value.toString());
+        console.log("GK_LN_SIFDVZ: " + GK_LN_SIFDVZ.value.toString());
+        console.log("GK_LN_TECAJ: " + GK_LN_TECAJ.value.toString());
+        console.log("GK_LN_IZNDEV: " + GK_LN_IZNDEV.value.toString());
+
+        //***************************************************
+        // VALIDACIJA
+        //***************************************************
+        console.log("POČETAK VALIDACIJE");
+
+        if (!isInt(currentMasterId))
+        {
+          Swal.fire({
+            title: "Validation error",
+            text: "Transaction ID is not valid. (currentMasterId)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });        
+          return;
+        }
+
+        if (currentLineId)
+        {
           if (!isInt(currentLineId))
           {
             Swal.fire({
@@ -1160,255 +1173,272 @@
             });
             return;
           }
-      }
+        }
 
-      let konto = GK_LN_KONTO.value.toString();
-      if (konto.length>15) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Account length cannot be greater than 15 characters. (GK_LN_KONTO)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_KONTO.focus();
-        return;
-      }
-
-      let objed = GK_LN_OBJED.value.toString();
-      if (objed.length>6) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Cost center cannot be greater than 6 characters. (GK_LN_OBJED)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_OBJED.focus();
-        return;
-      }
-
-      let opis = GK_LN_OPIS.value.toString();
-      if (opis.length>50) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Description cannot be greater than 50 characters. (GK_LN_OPIS)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_OPIS.focus();
-        return;
-      }
-
-      let dp = GK_LN_DP.value.toString();
-      if (dp.length>1) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "DP cannot be greater than 1 character. (GK_LN_DP)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_DP.focus();
-        return;
-      }
-
-      let iznos = GK_LN_IZNOS.value.toString();
-      if (!isFloat(iznos)) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Amount must be a valid float number. (GK_LN_IZNOS)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_IZNOS.focus();
-        return;
-      }
-
-      let brdok = GK_LN_BRDOK.value.toString();
-      if (!isInt(brdok)) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Document number must be a valid integer. (GK_LN_BRDOK)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_BRDOK.focus();
-        return;
-      }
-
-      let datdok = GK_LN_DATDOK.value.toString();
-      if (!isDate(datdok)) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Document date must be a valid date. (GK_LN_DATDOK)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_DATDOK.focus();
-        return;
-      }
-
-      let partnr = GK_LN_PARTNR.value.toString();
-      if (partnr.length>10) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Partner cannot be greater than 10 characters. (GK_LN_PARTNR)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_PARTNR.focus();
-        return;
-      }
-
-      let sifdvz = GK_LN_SIFDVZ.value.toString();
-      if (sifdvz.length>3) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Currency cannot be greater than 3 characters. (GK_LN_SIFDVZ)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_SIFDVZ.focus();
-        return;
-      }
-
-      let tecaj = GK_LN_TECAJ.value.toString();
-      if (!isFloat(tecaj)) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Exchange rate must be a valid float number. (GK_LN_TECAJ)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_TECAJ.focus();
-        return;
-      }
-
-      let izndev = GK_LN_IZNDEV.value.toString();
-      if (!isFloat(izndev)) {              
-        Swal.fire({
-          title: "Validation error",
-          text: "Amount/currency must be a valid float number. (GK_LN_IZNDEV)",
-          icon: 'error',
-          confirmButtonText: 'OK'         
-        });
-
-        GK_LN_IZNDEV.focus();
-        return;
-      }
-
-      //**************************************************
-      console.log("KRAJ VALIDACIJE");
-      //**************************************************
-
-
-      const formData = new FormData(document.getElementById('line-entry-form'));
-      const url = currentLineId ?
-        `/gk-lines/${currentMasterId}/${currentLineId}` :
-        `/gk-lines/${currentMasterId}`;
-      const method = currentLineId ? 'PUT' : 'POST';
-
-      console.log("URL " + url);
-      console.log("Method " + method);
-      // console.log("Form Data: ", Object.fromEntries(formData));
-      console.log("Form Data: ", formData);
-
-      // fetch(url, {
-      //   method: method,
-      //   body: formData
-      // })
-      //   // .then(response => response.text())
-      //   // .then(html => {
-      //   .then( () => {
-      //     // Refresh the detail table
-      //     htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
-      //       target: '.datagrid-container-detail',
-      //       swap: 'innerHTML'
-      //     }).then(() => {
-      //       // Reload first line data to refresh the form
-      //       loadFirstLineData(currentMasterId);
-      //     });
-      //   })
-      //   .catch(error => {
-      //     console.error('Error saving line:', error);
-      //     alert('Error saving line');
-      //   });
-
-      formDataObject = Object.fromEntries(formData);
-
-      fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formDataObject)
-      })
-        // .then(response => response.text())
-        // .then(html => {
-        .then(() => {
-          // Refresh the detail table
-          htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
-            target: '.datagrid-container-detail',
-            swap: 'innerHTML'
-          }).then(() => {
-            // Reload first line data to refresh the form
-            loadFirstLineData(currentMasterId);
+        let konto = GK_LN_KONTO.value.toString();
+        if (konto.length>15) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Account length cannot be greater than 15 characters. (GK_LN_KONTO)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
           });
-        })
-        .catch(error => {
-          console.error('Error saving line:', error);
-          alert('Error saving line');
-        });
+
+          GK_LN_KONTO.focus();
+          return;
+        }
+
+        let objed = GK_LN_OBJED.value.toString();
+        if (objed.length>6) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Cost center cannot be greater than 6 characters. (GK_LN_OBJED)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_OBJED.focus();
+          return;
+        }
+
+        let opis = GK_LN_OPIS.value.toString();
+        if (opis.length>50) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Description cannot be greater than 50 characters. (GK_LN_OPIS)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_OPIS.focus();
+          return;
+        }
+
+        let dp = GK_LN_DP.value.toString();
+        if (dp.length>1) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "DP cannot be greater than 1 character. (GK_LN_DP)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_DP.focus();
+          return;
+        }
+
+        let iznos = GK_LN_IZNOS.value.toString();
+        if (!isFloat(iznos)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Amount must be a valid float number. (GK_LN_IZNOS)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_IZNOS.focus();
+          return;
+        }
+
+        let brdok = GK_LN_BRDOK.value.toString();
+        if (!isInt(brdok)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Document number must be a valid integer. (GK_LN_BRDOK)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_BRDOK.focus();
+          return;
+        }
+
+        let datdok = GK_LN_DATDOK.value.toString();
+        if (!isDate(datdok)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Document date must be a valid date. (GK_LN_DATDOK)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_DATDOK.focus();
+          return;
+        }
+
+        let partnr = GK_LN_PARTNR.value.toString();
+        if (partnr.length>10) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Partner cannot be greater than 10 characters. (GK_LN_PARTNR)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_PARTNR.focus();
+          return;
+        }
+
+        let sifdvz = GK_LN_SIFDVZ.value.toString();
+        if (sifdvz.length>3) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Currency cannot be greater than 3 characters. (GK_LN_SIFDVZ)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_SIFDVZ.focus();
+          return;
+        }
+
+        let tecaj = GK_LN_TECAJ.value.toString();
+        if (!isFloat(tecaj)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Exchange rate must be a valid float number. (GK_LN_TECAJ)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_TECAJ.focus();
+          return;
+        }
+
+        let izndev = GK_LN_IZNDEV.value.toString();
+        if (!isFloat(izndev)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Amount/currency must be a valid float number. (GK_LN_IZNDEV)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_IZNDEV.focus();
+          return;
+        }
+
+        //**************************************************
+        console.log("KRAJ VALIDACIJE");
+        //**************************************************
 
 
-      // const params = new URLSearchParams();
-      // params.append('currentMasterId', formDataObject['currentMasterId']);
-      // params.append('currentLineId', formDataObject['currentLineId']);
-      // params.append('GK_LN_KONTO', formDataObject['GK_LN_KONTO']);
-      // params.append('GK_LN_OBJED', formDataObject['GK_LN_OBJED']);
-      // params.append('GK_LN_OPIS', formDataObject['GK_LN_OPIS']);
-      // params.append('GK_LN_DP', formDataObject['GK_LN_DP']);
-      // params.append('GK_LN_IZNOS', formDataObject['GK_LN_IZNOS']);
-      // params.append('GK_LN_BRDOK', formDataObject['GK_LN_BRDOK']);
-      // params.append('GK_LN_DATDOK', formDataObject['GK_LN_DATDOK']);
-      // params.append('GK_LN_PARTNR', formDataObject['GK_LN_PARTNR']);
-      // params.append('GK_LN_SIFDVZ', formDataObject['GK_LN_SIFDVZ']);
-      // params.append('GK_LN_TECAJ', formDataObject['GK_LN_TECAJ']);
-      // params.append('GK_LN_IZNDEV', formDataObject['GK_LN_IZNDEV']);
+        const formData = new FormData(document.getElementById('line-entry-form'));
+        const url = currentLineId ?
+          `/gk-lines/${currentMasterId}/${currentLineId}` :
+          `/gk-lines/${currentMasterId}`;
+        const method = currentLineId ? 'PUT' : 'POST';
+
+        console.log("URL " + url);
+        console.log("Method " + method);
+        // console.log("Form Data: ", Object.fromEntries(formData));
+        console.log("Form Data: ", formData);
+
+        formDataObject = Object.fromEntries(formData);
+
+        fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formDataObject)
+        })   
+          .then(response => response.json())
+          .then(data => {
+              console.log('Result:', data.Result);
+
+              if (data.Result != "Success")
+              {
+                  if (currentLineId)
+                  {
+                      console.log("Update line failed.")
+
+                      Swal.fire({
+                        title: 'FAILED!',
+                        text: 'Update line failed in transaction with id ' + currentMasterId + ' and line id ' + currentLineId + '. ' + data.Message,
+                        icon: 'error',                  
+                        confirmButtonText: 'Close'
+                      }).then((result2) => {
+                          // Reload the data grid
+                          htmx.ajax('GET', '/gk-lines/' + currentMasterId, {
+                            target: '.datagrid-container-detail',
+                            swap: 'innerHTML'
+                          });                                
+                      });
+ 
+                      return;
+                  }
+                  else
+                  {
+                      console.log("Insert new line failed.")
+
+                      Swal.fire({
+                        title: 'FAILED!',
+                        text: 'Insert line failed in transaction with id ' + currentMasterId + '. ' + data.Message,
+                        icon: 'error',                  
+                        confirmButtonText: 'Close'
+                      }).then((result2) => {
+                          // Reload the data grid
+                          htmx.ajax('GET', '/gk-lines/' + currentMasterId, {
+                            target: '.datagrid-container-detail',
+                            swap: 'innerHTML'
+                           });                                
+                      });
+
+                      return;
+                  }
+                    
+              }
       
-      // fetch(url, {
-      //   method: method,
-      //   headers: {
-      //     'Content-Type': 'application/x-www-form-urlencoded'
-      //   },
-      //   body: params.toString() // This gives you: a=1&b=2&c=3
-      // })
-      //   // .then(response => response.text())
-      //   // .then(html => {
-      //   .then(() => {
-      //     // Refresh the detail table
-      //     htmx.ajax('GET', `/gk-lines/${currentMasterId}`, {
-      //       target: '.datagrid-container-detail',
-      //       swap: 'innerHTML'
-      //     }).then(() => {
-      //       // Reload first line data to refresh the form
-      //       loadFirstLineData(currentMasterId);
-      //     });
-      //   })
-      //   .catch(error => {
-      //     console.error('Error saving line:', error);
-      //     alert('Error saving line');
-      //   });
+              let titlex = "";
+              let textx = "";
+              if (currentLineId)
+              {
+                  titlex = "Successfully updated!";
+                  textx = 'Updated line in transaction with id ' + currentMasterId + ' and line id ' + currentLineId + '.';
+              }
+              else
+              {
+                  titlex = "Successfully inserted!";
+                  textx = 'Inserted line in transaction with id ' + currentMasterId + '.';
+              }
 
-    });
+              //Success
+              Swal.fire({
+                  title: titlex,
+                  text: textx,
+                  icon: 'success',
+                  //timer: 3000,
+                  confirmButtonText: 'Close'
+              }).then((result2) => {
+                  // Reload the data grid
+                  htmx.ajax('GET', '/gk-lines/' + currentMasterId, {
+                    target: '.datagrid-container-detail',
+                    swap: 'innerHTML'
+                  }).then(() => {
+                      // Reload first line data to refresh the form
+                      loadFirstLineData(currentMasterId);
+                  });
+              });
+
+          })
+          .catch(error => {
+              if (currentLineId)
+              {
+                  console.error('Error UPDATE line:', error); 
+              }
+              else
+              {
+                  console.error('Error INSERT line:', error); 
+              }         
+        });
+      }
+      catch(error)
+      {
+         console.error('Error:', error);
+      }
+    })
+
 
     // Function to populate form for editing
     function populateLineForm(masterId, lineData) {

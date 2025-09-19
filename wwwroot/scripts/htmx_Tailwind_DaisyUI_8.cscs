@@ -2614,497 +2614,605 @@ function getNewLineForm(args) {
 CreateEndpoint("POST", "/gk-lines/{id}", "createLine");
 function createLine(args) {
     print("U funkciji: createLine");
+    try
+    {    
     
-    masterId = args["RouteValues"]["id"];
+        masterId = args["RouteValues"]["id"];
     
-    print("Master ID: " + masterId);
+        print("Master ID: " + masterId);
 
-    fieldsx = {
-        "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
-        "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
-        "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
-    };
+        fieldsx = {
+            "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
+            "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
+            "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
+        };
 
-    dataObject = DeserializeJson(args["Body"]);
+        dataObject = DeserializeJson(args["Body"]);
 
-    konto = dataObject["GK_LN_KONTO"];    
-    objed = dataObject["GK_LN_OBJED"];
-    opis = dataObject["GK_LN_OPIS"];
-    dp = dataObject["GK_LN_DP"];
-    iznos = dataObject["GK_LN_IZNOS"];
-    brdok = dataObject["GK_LN_BRDOK"];
-    datdok = dataObject["GK_LN_DATDOK"];
-    partnr = dataObject["GK_LN_PARTNR"];
-    sifdvz = dataObject["GK_LN_SIFDVZ"];
-    tecaj = dataObject["GK_LN_TECAJ"];
-    izndev = dataObject["GK_LN_IZNDEV"];
+        konto = dataObject["GK_LN_KONTO"];    
+        objed = dataObject["GK_LN_OBJED"];
+        opis = dataObject["GK_LN_OPIS"];
+        dp = dataObject["GK_LN_DP"];
+        iznos = dataObject["GK_LN_IZNOS"];
+        brdok = dataObject["GK_LN_BRDOK"];
+        datdok = dataObject["GK_LN_DATDOK"];
+        partnr = dataObject["GK_LN_PARTNR"];
+        sifdvz = dataObject["GK_LN_SIFDVZ"];
+        tecaj = dataObject["GK_LN_TECAJ"];
+        izndev = dataObject["GK_LN_IZNDEV"];
 
-print("1) iznos: " + iznos);
-
-    if (iznos == "")
-    {
-        iznos = "0"; //float
-    } 
-
-    if (brdok == "")
-    {
-        brdok = "0"; //int
-    }
-
-    if (datdok == "")
-    {
-        datdok = "1900-01-01"; //date
-    }
-
-    if (tecaj == "")
-    {
-        tecaj = "0"; //float
-    }
-
-    if (izndev == "")
-    {
-        izndev = "0"; //float
-    }
-
-    //***************************************************
-    // Promjena zarez u točku za float brojeve
-    //***************************************************
-    iznos = iznos.Replace("," , ".");
-print("2) iznos: " + iznos);    
-    tecaj = tecaj.Replace("," , ".");
-    izndev = izndev.Replace("," , ".");
-    
-    //********************************************
-    //VALIDACIJA
-    //******************************************** 
-    if (!IsInt(masterId))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera masterId nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera masterId je prošla");
-    }
-
-    if(konto.Length > 15)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_KONTO nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_KONTO je prošla");
-    }
-
-    if(objed.Length > 6)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_OBJED nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_OBJED je prošla");
-    }
-
-    if(opis.Length > 50)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_OPIS nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_OPIS je prošla");
-    }   
-
-    //if((dp != "D") && (dp != "P"))  
-    if(dp.Length > 1)
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_DP nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_DP je prošla");
-    }   
-
-    // IZNOS je float, može biti i negativan broj
-    if(!IsFloat(iznos))  
-    {
-print("3) iznos: " + iznos);        
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_IZNOS nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_IZNOS je prošla");
-    }
-
-    if(!IsInt(brdok))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_BRDOK nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_BRDOK je prošla");
-    }
-
-    // DATDOK je date
-    if(!IsDate(datdok))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_DATDOK nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_DATDOK je prošla");
-    }
-
-    if(partnr.Length > 10)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_PARTNR nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_PARTNR je prošla");
-    }
-
-    if(sifdvz.Length > 3)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_SIFDVZ nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_SIFDVZ je prošla");
-    }
-
-    // TECAJ je float
-    if(!IsFloat(tecaj))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_TECAJ nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_TECAJ je prošla");
-    }
-
-    // IZNDEV je float
-    if(!IsFloat(izndev))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_IZNDEV nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_IZNDEV je prošla");
-    }
-    //********************************************
-    print("createLine: Nakon validacije");
-
-
-
-    // Get next line number
-    querydd = "SELECT ISNULL(MAX(GK_LN_BR_LIN), 0) + 1 FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
-    sqlParamsdd = {};
-    sqlParamsdd.Add({"@id", int(masterId)});
-    resulte = sqlQuery(querydd, sqlParamsdd);
-    lineId = resulte[1][0];
-
-    print("SELECT Next line ID: " + lineId);
-
-    
-
-    // Build INSERT
-    queryde = "INSERT INTO NKGKLNTM (GK_LN_BR_TEM, GK_LN_BR_LIN, " + fieldsx.Join(", ") + ") VALUES (@masterId, @lineId, ";
-    for(ig = 0; ig < Size(fieldsx); ig++) {
-        if (ig > 0) 
+        if (iznos == "")
         {
-            queryde += ", ";
+            iznos = "0"; //float
+        } 
+
+        if (brdok == "")
+        {
+            brdok = "0"; //int
         }
-        queryde += "@" + fieldsx[ig];
+
+        if (datdok == "")
+        {
+            datdok = "1900-01-01"; //date
+        }
+
+        if (tecaj == "")
+        {
+            tecaj = "0"; //float
+        }
+
+        if (izndev == "")
+        {
+            izndev = "0"; //float
+        }
+
+        //***************************************************
+        // Promjena zarez u točku za float brojeve
+        //***************************************************
+        iznos = iznos.Replace("," , ".");   
+        tecaj = tecaj.Replace("," , ".");
+        izndev = izndev.Replace("," , ".");
+    
+        //********************************************
+        //VALIDACIJA
+        //******************************************** 
+        if (!IsInt(masterId))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera masterId nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: masterId is not integer."}';        
+            return Response(headers, jsonString, 200);         
+        }
+        else
+        {
+            print("Provjera masterId je prošla");
+        }
+
+        if(konto.Length > 15)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_KONTO nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_KONTO exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);        
+        }
+        else
+        {
+            print("Provjera GK_LN_KONTO je prošla");
+        }
+
+        if(objed.Length > 6)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_OBJED nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OBJED exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);         
+        }
+        else
+        {
+            print("Provjera GK_LN_OBJED je prošla");
+        }
+
+        if(opis.Length > 50)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_OPIS nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OPIS exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);                
+        }
+        else
+        {
+            print("Provjera GK_LN_OPIS je prošla");
+        }   
+
+        //if((dp != "D") && (dp != "P"))  
+        if(dp.Length > 1)
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_DP nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DP exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);        
+        }
+        else
+        {
+            print("Provjera GK_LN_DP je prošla");
+        }   
+
+        // IZNOS je float, može biti i negativan broj
+        if(!IsFloat(iznos))  
+        {
+       
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_IZNOS nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNOS is not a valid float."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_IZNOS je prošla");
+        }
+
+        if(!IsInt(brdok))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_BRDOK nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_BRDOK is not a valid integer."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_BRDOK je prošla");
+        }
+
+        // DATDOK je date
+        if(!IsDate(datdok))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_DATDOK nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DATDOK is not a valid date."}';        
+            return Response(headers, jsonString, 200);                
+        }
+        else
+        {
+            print("Provjera GK_LN_DATDOK je prošla");
+        }
+
+        if(partnr.Length > 10)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_PARTNR nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_PARTNR exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_PARTNR je prošla");
+        }
+
+        if(sifdvz.Length > 3)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_SIFDVZ nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_SIFDVZ exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_SIFDVZ je prošla");
+        }
+
+        // TECAJ je float
+        if(!IsFloat(tecaj))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_TECAJ nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_TECAJ is not a valid float."}';        
+            return Response(headers, jsonString, 200);               
+        }
+        else
+        {
+            print("Provjera GK_LN_TECAJ je prošla");
+        }
+
+        // IZNDEV je float
+        if(!IsFloat(izndev))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_IZNDEV nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNDEV is not a valid float."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_IZNDEV je prošla");
+        }
+        //********************************************
+        print("createLine: Nakon validacije");
+
+
+
+        // Get next line number
+        querydd = "SELECT ISNULL(MAX(GK_LN_BR_LIN), 0) + 1 FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
+        sqlParamsdd = {};
+        sqlParamsdd.Add({"@id", int(masterId)});
+        resulte = sqlQuery(querydd, sqlParamsdd);
+        lineId = resulte[1][0];
+
+        //print("SELECT Next line ID: " + lineId);
+
+    
+
+        // Build INSERT
+        queryde = "INSERT INTO NKGKLNTM (GK_LN_BR_TEM, GK_LN_BR_LIN, " + fieldsx.Join(", ") + ") VALUES (@masterId, @lineId, ";
+        for(ig = 0; ig < Size(fieldsx); ig++) {
+            if (ig > 0) 
+            {
+                queryde += ", ";
+            }
+            queryde += "@" + fieldsx[ig];
+        }
+        queryde += ")";
+
+        // Set params
+        sqlParams = {};
+        sqlParams.Add({"@masterId", int(masterId)});
+        sqlParams.Add({"@lineId", int(lineId)});
+        for(ih = 0; ih < Size(fieldsx); ih++) {
+            fieldName = fieldsx[ih];
+            fieldValue = dataObject[fieldName]; 
+            sqlParams.Add({"@" + fieldName, fieldValue});
+        }
+
+        print("BEFORE INSERT LINE query: " + queryde);
+        print("BEFORE INSERT LINE params: " + sqlParams);
+
+        rowsAffected = sqlNonQuery(queryde, sqlParams);
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = "";
+        if (rowsAffected > 0)
+        {
+            jsonString = '{"Result" : "Success", "Message": ""}';
+        }
+        else
+        {
+            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+        }
+        return Response(headers, jsonString, 200);
+
     }
-    queryde += ")";
-
-    // Set params
-    sqlParams = {};
-    sqlParams.Add({"@masterId", int(masterId)});
-    sqlParams.Add({"@lineId", int(lineId)});
-    for(ih = 0; ih < Size(fieldsx); ih++) {
-        fieldName = fieldsx[ih];
-        fieldValue = dataObject[fieldName]; 
-        sqlParams.Add({"@" + fieldName, fieldValue});
+    catch(ex4444)
+    {
+        print("Error occurred while inserting line: " + ex4444);
+        exMessage = ex4444;        
     }
-
-    print("BEFORE INSERT LINE query: " + queryde);
-    print("BEFORE INSERT LINE params: " + sqlParams);
-
-    sqlNonQuery(queryde, sqlParams);
-
-    // ovo ne jer ide na klijentu reload detail table
-    // Reload detail table
-    // args2 = {};
-    // args2["RouteValues"] = {"id": int(masterId)};
-    // return getGKLines(args2);
+    headers = {"Content-Type": "application/json"}; 
+    jsonString = '{"Result" : "Failed", "Message": "Cannot insert line. ' + exMessage + '"}';  
+    return Response(headers, jsonString, 200);
 }
 
 // Update line endpoint
 CreateEndpoint("PUT", "/gk-lines/{id}/{line}", "updateLine");
 function updateLine(args) {
     print("U funkciji: updateLine");
-
-    masterId = args["RouteValues"]["id"];
-    lineId = args["RouteValues"]["line"];
+    exMessage = "";
+    try
+    {
+        masterId = args["RouteValues"]["id"];
+        lineId = args["RouteValues"]["line"];
     
-    fieldsx = {
-        "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
-        "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
-        "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
-    };
+        fieldsx = {
+            "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
+            "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
+            "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
+        };
 
-    dataObject = DeserializeJson(args["Body"]);
+        dataObject = DeserializeJson(args["Body"]);
 
-    konto = dataObject["GK_LN_KONTO"];    
-    objed = dataObject["GK_LN_OBJED"];
-    opis = dataObject["GK_LN_OPIS"];
-    dp = dataObject["GK_LN_DP"];
-    iznos = dataObject["GK_LN_IZNOS"];
-    brdok = dataObject["GK_LN_BRDOK"];
-    datdok = dataObject["GK_LN_DATDOK"];
-    partnr = dataObject["GK_LN_PARTNR"];
-    sifdvz = dataObject["GK_LN_SIFDVZ"];
-    tecaj = dataObject["GK_LN_TECAJ"];
-    izndev = dataObject["GK_LN_IZNDEV"];
+        konto = dataObject["GK_LN_KONTO"];    
+        objed = dataObject["GK_LN_OBJED"];
+        opis = dataObject["GK_LN_OPIS"];
+        dp = dataObject["GK_LN_DP"];
+        iznos = dataObject["GK_LN_IZNOS"];
+        brdok = dataObject["GK_LN_BRDOK"];
+        datdok = dataObject["GK_LN_DATDOK"];
+        partnr = dataObject["GK_LN_PARTNR"];
+        sifdvz = dataObject["GK_LN_SIFDVZ"];
+        tecaj = dataObject["GK_LN_TECAJ"];
+        izndev = dataObject["GK_LN_IZNDEV"];
 
-    if (iznos == "")
-    {
-        iznos = "0"; //float
-    } 
+        if (iznos == "")
+        {
+            iznos = "0"; //float
+        } 
 
-    if (brdok == "")
-    {
-        brdok = "0"; //int
-    }
-
-    if (datdok == "")
-    {
-        datdok = "1900-01-01"; //date
-    }
-
-    if (tecaj == "")
-    {
-        tecaj = "0"; //float
-    }
-
-    if (izndev == "")
-    {
-        izndev = "0"; //float
-    }
-
-    //***************************************************
-    // Promjena zarez u točku za float brojeve
-    //***************************************************
-    iznos = iznos.Replace("," , ".");
-    tecaj = tecaj.Replace("," , ".");
-    izndev = izndev.Replace("," , ".");
-    
-    //********************************************
-    //VALIDACIJA
-    //******************************************** 
-    if (!IsInt(masterId))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera masterId nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera masterId je prošla");
-    }
-
-    if (!IsSmallInt(lineId))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera lineId nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera lineId je prošla");
-    }
-
-    if(konto.Length > 15)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_KONTO nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_KONTO je prošla");
-    }
-
-    if(objed.Length > 6)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_OBJED nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_OBJED je prošla");
-    }
-
-    if(opis.Length > 50)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_OPIS nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_OPIS je prošla");
-    }   
-
-    //if((dp != "D") && (dp != "P"))  
-    if(dp.Length > 1)
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_DP nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_DP je prošla");
-    }   
-
-    // IZNOS je float, može biti i negativan broj
-    if(!IsFloat(iznos))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_IZNOS nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_IZNOS je prošla");
-    }
-
-    if(!IsInt(brdok))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_BRDOK nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_BRDOK je prošla");
-    }
-
-    // DATDOK je date
-    if(!IsDate(datdok))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_DATDOK nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_DATDOK je prošla");
-    }
-
-    if(partnr.Length > 10)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_PARTNR nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_PARTNR je prošla");
-    }
-
-    if(sifdvz.Length > 3)  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_SIFDVZ nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_SIFDVZ je prošla");
-    }
-
-    // TECAJ je float
-    if(!IsFloat(tecaj))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_TECAJ nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_TECAJ je prošla");
-    }
-
-    // IZNDEV je float
-    if(!IsFloat(izndev))  
-    {
-        // 🔴 Validation failed: Return the error
-        print("Provjera GK_LN_IZNDEV nije prošla");
-        return;        
-    }
-    else
-    {
-        print("Provjera GK_LN_IZNDEV je prošla");
-    }
-    //********************************************
-    print("updateLine: Nakon validacije");
-
-    // Build UPDATE
-    queryUpdate = "UPDATE NKGKLNTM SET ";
-    for(i = 0; i < Size(fieldsx); i++) {
-        if (i > 0) {
-            queryUpdate += ", ";
+        if (brdok == "")
+        {
+            brdok = "0"; //int
         }
-        queryUpdate += fieldsx[i] + " = @" + fieldsx[i];
+
+        if (datdok == "")
+        {
+            datdok = "1900-01-01"; //date
+        }
+
+        if (tecaj == "")
+        {
+            tecaj = "0"; //float
+        }
+
+        if (izndev == "")
+        {
+            izndev = "0"; //float
+        }
+
+        //***************************************************
+        // Promjena zarez u točku za float brojeve
+        //***************************************************
+        iznos = iznos.Replace("," , ".");
+        tecaj = tecaj.Replace("," , ".");
+        izndev = izndev.Replace("," , ".");
+    
+        //********************************************
+        //VALIDACIJA
+        //******************************************** 
+        if (!IsInt(masterId))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera masterId nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: masterId is not integer."}';        
+            return Response(headers, jsonString, 200);    
+        }
+        else
+        {
+            print("Provjera masterId je prošla");
+        }
+
+        if (!IsSmallInt(lineId))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera lineId nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: lineId is not small integer."}';        
+            return Response(headers, jsonString, 200);       
+        }
+        else
+        {
+            print("Provjera lineId je prošla");
+        }
+
+        if(konto.Length > 15)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_KONTO nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_KONTO exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_KONTO je prošla");
+        }
+
+        if(objed.Length > 6)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_OBJED nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OBJED exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_OBJED je prošla");
+        }
+
+        if(opis.Length > 50)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_OPIS nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OPIS exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_OPIS je prošla");
+        }   
+
+        //if((dp != "D") && (dp != "P"))  
+        if(dp.Length > 1)
+        {   
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_DP nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DP exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_DP je prošla");
+        }   
+
+        // IZNOS je float, može biti i negativan broj
+        if(!IsFloat(iznos))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_IZNOS nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNOS is not a float."}';        
+            return Response(headers, jsonString, 200);    
+        }
+        else
+        {
+            print("Provjera GK_LN_IZNOS je prošla");
+        }
+
+        if(!IsInt(brdok))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_BRDOK nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_BRDOK is not an integer."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_BRDOK je prošla");
+        }
+
+        // DATDOK je date
+        if(!IsDate(datdok))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_DATDOK nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DATDOK is not a date."}';        
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_DATDOK je prošla");
+        }
+
+        if(partnr.Length > 10)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_PARTNR nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_PARTNR exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_PARTNR je prošla");
+        }
+
+        if(sifdvz.Length > 3)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_SIFDVZ nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_SIFDVZ exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);       
+        }
+        else
+        {
+            print("Provjera GK_LN_SIFDVZ je prošla");
+        }
+
+        // TECAJ je float
+        if(!IsFloat(tecaj))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_TECAJ nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_TECAJ is not a float."}';        
+            return Response(headers, jsonString, 200);  
+        }
+        else
+        {
+            print("Provjera GK_LN_TECAJ je prošla");
+        }
+
+        // IZNDEV je float
+        if(!IsFloat(izndev))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_IZNDEV nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNDEV is not a float."}';        
+            return Response(headers, jsonString, 200);      
+        }
+        else
+        {
+            print("Provjera GK_LN_IZNDEV je prošla");
+        }
+        //********************************************
+        print("updateLine: Nakon validacije");
+
+        // Build UPDATE
+        queryUpdate = "UPDATE NKGKLNTM SET ";
+        for(i = 0; i < Size(fieldsx); i++) {
+            if (i > 0) {
+                queryUpdate += ", ";
+            }
+            queryUpdate += fieldsx[i] + " = @" + fieldsx[i];
+        }
+        queryUpdate += " WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
+
+        // Set params
+        sqlParams = {};
+        sqlParams.Add({"@masterId", int(masterId)});
+        sqlParams.Add({"@lineId", int(lineId)});
+        for(i = 0; i < Size(fieldsx); i++) {
+            fieldName = fieldsx[i];
+            fieldValue = dataObject[fieldName];        
+            sqlParams.Add({"@" + fieldName, fieldValue});
+        }
+
+        print("BEFORE UPDATE LINE query: " + queryUpdate);
+        print("BEFORE UPDATE LINE params: " + sqlParams);
+
+        rowsAffected = sqlNonQuery(queryUpdate, sqlParams);
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = "";
+        if (rowsAffected > 0)
+        {
+            jsonString = '{"Result" : "Success", "Message": ""}';
+        }
+        else
+        {
+            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+        }
+        return Response(headers, jsonString, 200);
     }
-    queryUpdate += " WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
-
-    // Set params
-    sqlParams = {};
-    sqlParams.Add({"@masterId", int(masterId)});
-    sqlParams.Add({"@lineId", int(lineId)});
-    for(i = 0; i < Size(fieldsx); i++) {
-        fieldName = fieldsx[i];
-        fieldValue = dataObject[fieldName];        
-        sqlParams.Add({"@" + fieldName, fieldValue});
+    catch(ex3333)
+    {
+        print("Error occurred while updating line: " + ex3333);
+        exMessage = ex3333;        
     }
-
-    print("BEFORE UPDATE LINE query: " + queryUpdate);
-    print("BEFORE UPDATE LINE params: " + sqlParams);
-
-    sqlNonQuery(queryUpdate, sqlParams);
-
-    // Reload detail table
-    // args2 = {};
-    // args2["RouteValues"] = {"id": int(masterId)};
-    // return getGKLines(args2);
+    headers = {"Content-Type": "application/json"}; 
+    jsonString = '{"Result" : "Failed", "Message": "Cannot update line. ' + exMessage + '"}';  
+    return Response(headers, jsonString, 200);
 }
 
 // Delete line endpoint
