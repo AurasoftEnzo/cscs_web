@@ -1,0 +1,17 @@
+print("IR script loaded");
+
+//CreateEndpoint("GET", "/ir", "ir_get");
+function ir_get(){
+    print("IR GET called");
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\prodaja\\ir.html")), 200);
+}
+
+//CreateEndpoint("GET", "/ir/print/{brRac}", "ir_print");
+function ir_print(args){
+    brRac = args["RouteValues"]["brRac"];
+    print("IR PRINT called with brRac: " + brRac);
+    return;
+}
+
+return ir_get();

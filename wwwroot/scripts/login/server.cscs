@@ -1,5 +1,9 @@
 SQLConnectionString(ReadConfig("SQLConnectionString"));
 
+
+ExtractEndpoints(ReadConfig("ScriptsDirectory") + "programs\\");
+
+
 /*
 
 CREATE TABLE SessionStore (
@@ -31,6 +35,13 @@ CREATE INDEX IX_SessionStore_ExpiresAt ON SessionStore(ExpiresAt);
 
 
 
+//--- CHAIN --------------------------------------------------------
+
+CreateEndpoint("GET", "/chain", "chainHandler");
+function chainHandler(request) {
+    program = request["QueryParams"]["program"];
+    RunScript(ReadConfig("ScriptsDirectory") + "programs\\" + program + ".cscs", request);
+}
 
 
 
@@ -40,7 +51,7 @@ CREATE INDEX IX_SessionStore_ExpiresAt ON SessionStore(ExpiresAt);
 
 
 
-CreateEndpoint("GET", "/login", "showLoginStep1");
+CreateEndpoint("GET", "/", "showLoginStep1");
 function showLoginStep1(args) {
     sessionId = GetSessionIdFromCookie(args);
     if (sessionId != null) {
@@ -235,10 +246,11 @@ function showMainMenu(args) {
     menuList = "";
     for (moduleKey : allowedModules.Keys) {
         module = allowedModules[moduleKey];
-        menuList += "<li class='menu-title'><span>" + module["title"] + "</span></li>";
+        menuList += "<li class='menu-title'><span>" + moduleKey + "</span></li>";
         for (subKey : module["submodules"].Keys) {
             sub = module["submodules"][subKey];
-            menuList += "<li><a href='" + sub["path"] + "' hx-get='" + sub["path"] + "' hx-target='#content-area' hx-swap='innerHTML'><i class='" + module["icon"] + "'></i> " + sub["title"] + "</a></li>";
+            // menuList += "<li><a href='" + sub["path"] + "' hx-get='" + sub["path"] + "' hx-target='#content-area' hx-swap='innerHTML'><i class='" + module["icon"] + "'></i> " + sub["title"] + "</a></li>";
+            menuList += "<li><a href='" + sub["script"] + "'><i class='" + module["icon"] + "'></i> " + subKey + "</a></li>";
         }
     }
 

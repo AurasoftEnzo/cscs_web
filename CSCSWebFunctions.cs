@@ -47,11 +47,75 @@ namespace cscs_web
             interpreter.RegisterFunction("RenderHtml", new RenderHtmlFunction());
 
             interpreter.RegisterFunction("GetValueFromForm", new GetValueFromFormFunction());
+            
+            
+            interpreter.RegisterFunction("RunScript", new RunScriptFunction());
+            
+            
+            
+            interpreter.RegisterFunction("ExtractEndpoints", new ExtractEndpointsFunction());
         }
     }
 
+
+
+    class RunScriptFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            try
+            {
+                List<Variable> args = script.GetFunctionArgs();
+                Utils.CheckArgs(args.Count, 1, m_name);
+
+                var scriptPath = Utils.GetSafeString(args, 0);
+                //var requestVariable = Utils.GetSafeVariable(args, 1);
+
+                var scriptContent = File.ReadAllText(scriptPath);
+
+                var res = CSCSWebApplication.Interpreter.Process(scriptContent);
+                return res;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("RunScriptFunction exception: " + ex.Message);
+                return new Variable("Server error.");
+            }
+        }
+    }
     
-    
+    class ExtractEndpointsFunction : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            List<Variable> args = script.GetFunctionArgs();
+            Utils.CheckArgs(args.Count, 1, m_name);
+
+            var scriptsDirectory = Utils.GetSafeString(args, 0);
+            //var requestVariable = Utils.GetSafeVariable(args, 1);
+
+
+            var files = Directory.GetFiles(scriptsDirectory, "*.cscs", SearchOption.AllDirectories);
+
+            foreach (var file in files)
+            {
+                var lines = File.ReadAllLines(file);
+                foreach (var line in lines)
+                {
+                    if (line.Trim().ToLower().StartsWith("//createendpoint("))
+                    {
+                        var lineToExecute = line.Trim();
+                        lineToExecute = lineToExecute.Substring(2, lineToExecute.IndexOf(';') + 1 - 2);
+
+                        CSCSWebApplication.Interpreter.Process(lineToExecute);
+                    }
+                }
+            }
+
+            return Variable.EmptyInstance;
+        }
+    }
+
     class ReadConfigFunction : ParserFunction
     {
         protected override Variable Evaluate(ParsingScript script)
@@ -181,7 +245,7 @@ namespace cscs_web
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("ExecScriptFunction exception: " + ex.Message);
                 return new Variable("Server error.");
             }
         }
