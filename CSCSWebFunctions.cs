@@ -50,14 +50,10 @@ namespace cscs_web
             
             
             interpreter.RegisterFunction("RunScript", new RunScriptFunction());
-            
-            
-            
+
             interpreter.RegisterFunction("ExtractEndpoints", new ExtractEndpointsFunction());
         }
     }
-
-
 
     class RunScriptFunction : ParserFunction
     {

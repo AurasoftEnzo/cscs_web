@@ -40,7 +40,7 @@ CREATE INDEX IX_SessionStore_ExpiresAt ON SessionStore(ExpiresAt);
 CreateEndpoint("GET", "/chain", "chainHandler");
 function chainHandler(request) {
     program = request["QueryParams"]["program"];
-    RunScript(ReadConfig("ScriptsDirectory") + "programs\\" + program + ".cscs", request);
+    RunScript(ReadConfig("ScriptsDirectory") + "programs\\" + program + ".cscs");
 }
 
 
@@ -136,9 +136,11 @@ function authenticateUser(args) {
     sessionId = GetSessionIdFromCookie(args);
 
     if(sessionId == null) {
-        redirectScript = "<script>window.location.href='/';</script>";
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, redirectScript, 303);
+        // redirectScript = "<script>window.location.href='/';</script>";
+        // headers = {"Content-Type": "text/html"};
+        // return Response(headers, redirectScript, 303);
+
+        return RedirectToLogin();
     }
     
     sd = GetSessionData(sessionId);
@@ -151,9 +153,11 @@ function authenticateUser(args) {
     databaseName = ExtractSessionEntry(sd, "DatabaseName");
 
     if (companyCode == null || fiscalYear == null || databaseName == null) {
-        redirectScript = "<script>window.location.href='/';</script>";
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, redirectScript, 303);
+        // redirectScript = "<script>window.location.href='/';</script>";
+        // headers = {"Content-Type": "text/html"};
+        // return Response(headers, redirectScript, 303);
+
+        return RedirectToLogin();
     }
 
     userCode = GetValueFromForm(args["Body"], "UserCode");
@@ -190,9 +194,15 @@ function authenticateUser(args) {
     SetSession(sessionId, "UserName", userName);
     SetSession(sessionId, "UserRole", userRole);
 
-    redirectScript = "<script>window.location.href='/main-menu';</script>";
-    headers = {"Content-Type": "text/html"};
-    return Response(headers, redirectScript, 303);
+
+    return RedirectToMainMenu();
+
+    // redirectScript = "<script>window.location.href='/main-menu';</script>";
+    // headers = {"Content-Type": "text/html"};
+    // return Response(headers, redirectScript, 303);
+
+    // headers = {"HX-Redirect": "/main-menu"};
+    // return Response(headers, "", 303);
 }
 
 // CreateEndpoint("GET", "/main-menu", "showMainMenu");

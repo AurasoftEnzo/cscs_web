@@ -1,8 +1,6 @@
 print("IR script loaded");
 
-//CreateEndpoint("GET", "/ir", "ir_get");
-function ir_get(){
-    print("IR GET called");
+function ir(){
     headers = {"Content-Type": "text/html"};
     return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\prodaja\\ir.html")), 200);
 }
@@ -14,4 +12,4 @@ function ir_print(args){
     return;
 }
 
-return ir_get();
+return ir();

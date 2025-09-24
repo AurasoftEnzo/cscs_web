@@ -1,4 +1,14 @@
 {
+  "main": {
+    "title": "Glavni Meni",
+    "icon": "fas fa-home",
+    "order": 0,
+    "submodules": {
+      "Matični Podaci Artikala": {
+        "script": "/chain?program=mpa"
+      }
+    }
+  },
   "sales": {
     "title": "Prodaja",
     "icon": "fas fa-shopping-cart",
