@@ -1,57 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <title>Main Menu - ERP</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://cdn.tailwindcss.com/4.1.3"></script>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet"> -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-</head>
-
-<body>
-    <h1>Izlazni Račun</h1>
-    <button onclick="print(555)">Print IR</button>
-    <br />
-    <br />
-    <label for="sifArtikla">Šifra artikla:</label>
-    <input type="text" id="sifArtikla" />
-    <label for="skladiste">Skladište:</label>
-    <input type="text" id="skladiste" />
-    <br />
-    <br />
-    <br />
-    <button id="buttonMPA">MPA</button>
+<!-- <h1>Izlazni Račun</h1> -->
+<button onclick="print(555)">Print IR</button>
+<br />
+<br />
+<label for="sifArtikla">Šifra artikla:</label>
+<input type="text" id="sifArtikla" />
+<label for="skladiste">Skladište:</label>
+<input type="text" id="skladiste" />
+<br />
+<br />
+<br />
+<button id="buttonMPA">MPA</button>
 
 
 
-    <div id="pageOverlay"
-        style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-        <div
-            style="background:white; padding:2rem; border-radius:12px; box-shadow:0 2px 16px rgba(0,0,0,0.3); position:relative; width:calc(100vw - 40px); height:calc(100vh - 120px); max-width:100vw; max-height:100vh; margin:60px 20px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-            <button id="closeOverlay"
-                style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:2rem; cursor:pointer;">&times;</button>
-            <div id="overlayContent" style="width:100%; height:100%; overflow:auto;"></div>
-        </div>
+<div id="pageOverlay"
+    style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div
+        style="background:white; padding:2rem; border-radius:12px; box-shadow:0 2px 16px rgba(0,0,0,0.3); position:relative; width:calc(100vw - 40px); height:calc(100vh - 120px); max-width:100vw; max-height:100vh; margin:60px 20px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <button id="closeOverlay"
+            style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:2rem; cursor:pointer;">&times;</button>
+        <div id="overlayContent" style="width:100%; height:100%; overflow:auto;"></div>
     </div>
+</div>
 
-    <script>
-        function print(brRac) {
-            fetch('/ir/print/' + brRac);
-        }
+<script>
+    function print(brRac) {
+        fetch('/ir/print/' + brRac);
+    }
 
-        document.getElementById('buttonMPA').onclick = function () {
-            document.getElementById('pageOverlay').style.display = 'flex';
-            // Load htmx content into overlayContent (replace '/your/htmx/endpoint' with your endpoint)
-            htmx.ajax('GET', '/chain?program=mpa', { target: '#overlayContent', swap: 'innerHTML' });
-        };
+    document.getElementById('buttonMPA').onclick = function () {
+        document.getElementById('pageOverlay').style.display = 'flex';
+        // Load htmx content into overlayContent (replace '/your/htmx/endpoint' with your endpoint)
+        htmx.ajax('GET', '/chain?program=mpa', { target: '#overlayContent', swap: 'innerHTML' });
+    };
 
-        document.getElementById('closeOverlay').onclick = function () {
-            document.getElementById('pageOverlay').style.display = 'none';
-        };
-    </script>
-</body>
-
-</html>
+    document.getElementById('closeOverlay').onclick = function () {
+        document.getElementById('pageOverlay').style.display = 'none';
+    };
+</script>

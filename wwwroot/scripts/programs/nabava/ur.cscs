@@ -1,15 +1,56 @@
 print("UR script loaded");
 
-function ur(){
+//CreateEndpoint("Get", "/nabava/ur", "nabava_ur");
+function nabava_ur(request){
+    if(!IsAuthenticated(request)){return RedirectToLogin();}
+    
+    sd = GetSessionData(GetSessionIdFromCookie(request));
+
+    htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "mainLayout.html");
+
+    FillTemplatePlaceholder(htmlHndl, "backButtonPath", "main-menu");
+
+    //Navbar
+    FillTemplatePlaceholder(htmlHndl, "programTitle", "Ulazni Račun");
+
+    FillTemplatePlaceholder(htmlHndl, "companyName", sd["CompanyName"]);
+    FillTemplatePlaceholder(htmlHndl, "fiscalYear", sd["FiscalYear"] + ".");
+    FillTemplatePlaceholder(htmlHndl, "userName", sd["UserName"]);
+
+    //Chains
+    chains = {};
+    // chains.Add({"name": "Matični podaci kupaca", "script": "prodaja/mpk"});
+    // chains.Add({"name": "Matični podaci mjesta otpreme", "script": "prodaja/mpmo"});
+    // chains.Add({"name": "Otpremnice", "script": "prodaja/otp"});
+    chains.Add({"name": "IZLAZNI RAČUN", "script": "prodaja/ir"});
+
+    chainsHtmlString = "";
+
+    for(chain : chains){
+        chainsHtmlString += "<a href=\"#\" onclick=\"chain('" + chain["script"] + "')\" style=\"display:block;padding:8px 16px;text-decoration:none;color:#fff;\">" + chain["name"] + "</a>";
+    }
+
+    if(chainsHtmlString != ""){
+        RenderCondition(htmlHndl, "displayChains", true);
+        FillTemplatePlaceholder(htmlHndl, "chainOptions", chainsHtmlString)
+    }else{
+        RenderCondition(htmlHndl, "displayChains", false);
+    }
+
+    //Main Contnent
+
+    
+    FillTemplatePlaceholder(htmlHndl, "mainContent", RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "nabava\\ur.html")));
+
     headers = {"Content-Type": "text/html"};
-    return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "nabava\\ur.html")), 200);
+    return Response(headers, RenderHtml(htmlHndl), 200);
 }
 
-//CreateEndpoint("GET", "/ur/print/{brRac}", "ur_print");
-function ur_print(args){
-    brRac = args["RouteValues"]["brRac"];
-    print("UR PRINT called with brRac: " + brRac);
-    return;
-}
+// //CreateEndpoint("GET", "/nabava/ur/print/{brRac}", "nabava_ur_print");
+// function nabava_ur_print(args){
+//     brRac = args["RouteValues"]["brRac"];
+//     print("UR PRINT called with brRac: " + brRac);
+//     return;
+// }
 
-return ur();
+// return nabava_ur();
