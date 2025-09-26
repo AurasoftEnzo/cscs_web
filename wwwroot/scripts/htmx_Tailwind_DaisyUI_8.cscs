@@ -47,63 +47,65 @@ gk_masterLabels = {
 };
 
 function gk_generateForm(mode, values, id = null, errorHtml = "") {
-    // mode can be "new" or "edit"
-    gk_generateForm_isEdit = (mode == "edit");
+    try
+    {        
+        // mode can be "new" or "edit"
+        gk_generateForm_isEdit = (mode == "edit");
     
-    print("GLAVA isEdit=" + gk_generateForm_isEdit);
+        print("SERVER GLAVA isEdit=" + gk_generateForm_isEdit);
     
-    gk_generateForm_html = "<div class='datagrid-container-master'>" +
+        gk_generateForm_html = "<div class='datagrid-container-master'>" +
            "  <form class='vertical-form eight-column-form'>";
     
-    if (errorHtml != "") {
-        gk_generateForm_html += errorHtml;
-    }
+        if (errorHtml != "") {
+            gk_generateForm_html += errorHtml;
+        }
     
-    gk_generateForm_html += "    <div class='grid grid-cols-8 gap-4'>";
+        gk_generateForm_html += "    <div class='grid grid-cols-8 gap-4'>";
     
-    for(i = 0; i < Size(gk_masterFields); i++) {
+        for(i = 0; i < Size(gk_masterFields); i++) {
         
-        gk_generateForm_field = gk_masterFields[i];
-        //print("field=" + field);
-        //value = Contains(values, field) ? values[field] : gk_defaultValues[field];
-        if (Contains(values, gk_generateForm_field))
-        {
-            gk_generateForm_value = values[gk_generateForm_field];
-        }
-        else
-        {
-            gk_generateForm_value = gk_defaultValues[gk_generateForm_field];
-        }
+            gk_generateForm_field = gk_masterFields[i];
+            //print("field=" + field);
+            //value = Contains(values, field) ? values[field] : gk_defaultValues[field];
+            if (Contains(values, gk_generateForm_field))
+            {
+                gk_generateForm_value = values[gk_generateForm_field];
+            }
+            else
+            {
+                gk_generateForm_value = gk_defaultValues[gk_generateForm_field];
+            }
         
-        // if (gk_generateForm_field=="GK_GL_DATUM") 
-        // {
-        //     print("DATUMSKO POLJE JE GK_GL_DATUM = " + gk_generateForm_value);
-        // }
+            // if (gk_generateForm_field=="GK_GL_DATUM") 
+            // {
+            //     print("DATUMSKO POLJE JE GK_GL_DATUM = " + gk_generateForm_value);
+            // }
 
-        // if (gk_generateForm_field=="GK_GL_DATDOK")
-        // {
-        //     print("DATUMSKO POLJE JE GK_GL_DATDOK = " + gk_generateForm_value);
-        // }
+            // if (gk_generateForm_field=="GK_GL_DATDOK")
+            // {
+            //     print("DATUMSKO POLJE JE GK_GL_DATDOK = " + gk_generateForm_value);
+            // }
 
-        // fieldSplit2 = field.Split("_");
-        // print(fieldSplit2[2]);
+            // fieldSplit2 = field.Split("_");
+            // print(fieldSplit2[2]);
 
-        //gk_generateForm_fieldShort = strReplace(gk_generateForm_field, "GK_GL_", "");
-        gk_generateForm_fieldShort = gk_masterLabels[i];
+            //gk_generateForm_fieldShort = strReplace(gk_generateForm_field, "GK_GL_", "");
+            gk_generateForm_fieldShort = gk_masterLabels[i];
 
-        gk_generateForm_ternary1 = (gk_generateForm_field == "GK_GL_BR_TEM" && gk_generateForm_isEdit == true ? " readonly " : "");
+            gk_generateForm_ternary1 = (gk_generateForm_field == "GK_GL_BR_TEM" && gk_generateForm_isEdit == true ? " readonly " : "");
 
-        //gk_generateForm_ternary2 = ((gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK")) ? " type='date'" : "");
-        if (gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK"))
-        {
-            gk_generateForm_ternary2 = " type='date'";
-        }
-        else
-        {
-            gk_generateForm_ternary2 = "";
-        }
+            //gk_generateForm_ternary2 = ((gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK")) ? " type='date'" : "");
+            if (gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK"))
+            {
+                gk_generateForm_ternary2 = " type='date'";
+            }
+            else
+            {
+                gk_generateForm_ternary2 = "";
+            }
       
-        gk_generateForm_html += "      <div><label>" + gk_generateForm_fieldShort + ":</label>" +
+            gk_generateForm_html += "      <div><label>" + gk_generateForm_fieldShort + ":</label>" +
                 "        <input class='input input-bordered input-sm w-full' " +
                 "               name='" + gk_generateForm_field + "' " +
                 gk_generateForm_ternary1 +
@@ -111,39 +113,103 @@ function gk_generateForm(mode, values, id = null, errorHtml = "") {
                 "               " + gk_generateForm_ternary2 + ">" +
                 "      </div>";
 
-        // print(html);
+            // print(html);
        
-    }
+        }
     
-    //POST => INSERT
-    //PUT => UPDATE
-    gk_generateForm_ternary3 = (gk_generateForm_isEdit ? "put" : "post");
-    gk_generateForm_ternary4 = (gk_generateForm_isEdit ? "/" + id : "");
+        //POST => INSERT
+        //PUT => UPDATE
+        // gk_generateForm_ternary3 = (gk_generateForm_isEdit ? "put" : "post");
+        // gk_generateForm_ternary4 = (gk_generateForm_isEdit ? "/" + id : "");
 
-    gk_generateForm_html += "    </div>" +
+
+        if (gk_generateForm_isEdit)
+        {
+            gk_generateForm_html += "    </div>" +
             "    <div class='form-actions mt-4'>" +
+            // "      <button class='btn btn-success btn-sm' " +
+            // //"              hx-" + (isEdit ? "put" : "post") + "='/gk-transactions" + (isEdit ? "/" + id : "") + "' " +
+            // "              hx-" + gk_generateForm_ternary3 + "='/gk-transactions" + gk_generateForm_ternary4 + "' " +
+            // "              hx-include='closest form' " +
+            // "              hx-target='.datagrid-container-master' " +
+            // "              hx-swap='outerHTML'>Save</button>" +
+
             "      <button class='btn btn-success btn-sm' " +
-            //"              hx-" + (isEdit ? "put" : "post") + "='/gk-transactions" + (isEdit ? "/" + id : "") + "' " +
-            "              hx-" + gk_generateForm_ternary3 + "='/gk-transactions" + gk_generateForm_ternary4 + "' " +
-            "              hx-include='closest form' " +
-            "              hx-target='.datagrid-container-master' " +
-            "              hx-swap='outerHTML'>Save</button>" +
+            "              id='saveTransactionButton' " +
+            "              type='button' " +
+            "              onclick='TransactionSavePut(" + id + ")'>Save</button>" +
+            // "      <button class='btn btn-error btn-sm' " +
+            // "              hx-get='/gk-transactions' " +
+            // "              hx-target='.datagrid-container-master' " +
+            // "              hx-swap='outerHTML'>Cancel</button>" +
             "      <button class='btn btn-error btn-sm' " +
-            "              hx-get='/gk-transactions' " +
-            "              hx-target='.datagrid-container-master' " +
-            "              hx-swap='outerHTML'>Cancel</button>" +
+            "              type='button' " +
+            "              onclick='TransactionCancel()'>Cancel</button>" +
             "    </div>" +
             "  </form>" +
             "</div>";
-    
-    return gk_generateForm_html;
+        }
+        else
+        {
+            gk_generateForm_html += "    </div>" +
+            "    <div class='form-actions mt-4'>" +
+            // "      <button class='btn btn-success btn-sm' " +
+            // //"              hx-" + (isEdit ? "put" : "post") + "='/gk-transactions" + (isEdit ? "/" + id : "") + "' " +
+            // "              hx-" + gk_generateForm_ternary3 + "='/gk-transactions" + gk_generateForm_ternary4 + "' " +
+            // "              hx-include='closest form' " +
+            // "              hx-target='.datagrid-container-master' " +
+            // "              hx-swap='outerHTML'>Save</button>" +
+
+            "      <button class='btn btn-success btn-sm' " +
+            "              id='saveTransactionButton' " +
+            "              type='button' " +
+            "              onclick='TransactionSavePost()'>Save</button>" +
+            // "      <button class='btn btn-error btn-sm' " +
+            // "              hx-get='/gk-transactions' " +
+            // "              hx-target='.datagrid-container-master' " +
+            // "              hx-swap='outerHTML'>Cancel</button>" +
+            "      <button class='btn btn-error btn-sm' " +
+            "              type='button' " +
+            "              onclick='TransactionCancel()'>Cancel</button>" +
+            "    </div>" +
+            "  </form>" +
+            "</div>";
+        }
+
+        return gk_generateForm_html;
+    }
+    catch(ex11111)
+    {
+        print("SERVER Error occurred in gk_generateForm: " + ex11111);
+        //exMessage = ex11111;        
+    }
+    return "";
 }
 
 //MASTER TABLE
 CreateEndpoint("GET", "/", "getRoot");
 function getRoot(){
-    root_headers = {"Content-Type": "text/html"};
-    return Response(root_headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "htmx_tailwind_daisyUI\\" + "htmx_Tailwind_DaisyUI_8.html")), 200);
+    exMessage = "";
+    try
+    {
+        root_headers = {"Content-Type": "text/html"};        
+        return Response(root_headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "htmx_tailwind_daisyUI\\" + "htmx_Tailwind_DaisyUI_8.html")), 200);
+    }
+    catch(ex22222)
+    {
+        print("SERVER Error occurred in getRoot: " + ex22222);
+        exMessage = ex22222;        
+    }
+    try
+    {
+        root_headers = {"Content-Type": "text/html"};    
+        root_alert = "SERVER ERROR in getRoot: " + exMessage;
+        return Response(root_headers, root_alert, 200);
+    }
+    catch(ex1222)
+    {
+        print("SERVER Error occurred in getRoot: " + ex1222);
+    }
 }
 
 
@@ -151,11 +217,16 @@ function getRoot(){
 // Main endpoint for GK transactions grid
 CreateEndpoint("GET", "/gk-transactions", "getGKTransactions");
 function getGKTransactions(requestGlave) {
+ try
+ {
+    //throw "TEST ERROR";
+
+
     // ... (keep existing pagination/sorting/search logic) ...
     // Pagination
     gkTrans_page = 1;
     if (Contains(requestGlave["QueryParams"], "page")) {
-        gkTrans_page = int(requestGlave["QueryParams"]["page"]);
+        gkTrans_page = int(requestGlave["QueryParams"]["page"]);        
     }
     if (gkTrans_page < 1) {
         gkTrans_headers = {"Content-Type": "text/html"};
@@ -184,13 +255,13 @@ function getGKTransactions(requestGlave) {
     gkTrans_pageSize = 5;
     gkTrans_skip = (gkTrans_page - 1) * gkTrans_pageSize;
         
-    //ALERT after html
-    gkTrans_alert = "";
-    if (Contains(requestGlave["QueryParams"], "alertText")) 
-    {
-        gkTrans_alert = requestGlave["QueryParams"]["alertText"];
-    }
-    //print("gkTrans_alert=" + gkTrans_alert);
+    // //ALERT after html
+    // gkTrans_alert = "";
+    // if (Contains(requestGlave["QueryParams"], "alertText")) 
+    // {
+    //     gkTrans_alert = requestGlave["QueryParams"]["alertText"];
+    // }
+    // //print("gkTrans_alert=" + gkTrans_alert);
 
     // Build SQL query - always exclude zero/null IDs
     gkTrans_whereClause = " WHERE GK_GL_BR_TEM IS NOT NULL AND GK_GL_BR_TEM <> 0";
@@ -345,13 +416,27 @@ function getGKTransactions(requestGlave) {
         gkTrans_html += "</div>";  
     gkTrans_html += "</div>"; 
 
-    gkTrans_html += gkTrans_alert; 
+    // gkTrans_html += gkTrans_alert; 
     
     
     gkTrans_headers1 = {"Content-Type": "text/html"};
 
     
     return Response(gkTrans_headers1, gkTrans_html, 200);
+ }
+ catch(error)
+ {
+    try
+    {
+        gkTrans_headers1 = {"Content-Type": "text/html"};        
+        alert = "<script>Swal.fire({title: 'ERROR!', text: 'SERVER getGKTransactions " + error + "', icon: 'error', confirmButtonText: 'Close'});</script>";
+        return Response(gkTrans_headers1, alert, 200);
+    }
+    catch(error2)
+    {
+        print("SERVER Error occurred in getGKTransactions: " + error2);
+    }
+ }  
 }
 
 // New transaction form
@@ -391,14 +476,33 @@ function getNewGKTransactionForm(args) {
 */
 
 function getNewGKTransactionForm(args) {
-    headers = {"Content-Type": "text/html"};
-    return Response(headers, gk_generateForm("new", gk_defaultValues), 200);
+    try
+    {     
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, gk_generateForm("new", gk_defaultValues), 200);
+    }
+    catch(error)
+    {
+        try
+        {
+            headers = {"Content-Type": "text/html"};        
+            alert = "<script>Swal.fire({title: 'ERROR!', text: 'SERVER getNewGKTransactionForm " + error + "', icon: 'error', confirmButtonText: 'Close'});</script>";
+            return Response(headers, alert, 200);
+        }
+        catch(error2)
+        {
+            print("SERVER Error occurred in getNewGKTransactionForm: " + error2);
+        }
+    } 
 }
 
 
 // Create new transaction
 CreateEndpoint("POST", "/gk-transactions", "createGKTransaction");
 function createGKTransaction(args) {
+  exMessage = "";
+  try
+  {  
     currentlyEditingId = null;
     //print("createGKTransaction - DODAVANJE NOVE GLAVE");
     // Get all form values
@@ -415,23 +519,45 @@ function createGKTransaction(args) {
     //     create_values[create_i]= GetValueFromForm(args["Body"], create_field);
     // }
 
+    dataObject = DeserializeJson(args["Body"]);
+
+    // temp_br_tem = dataObject["GK_GL_BR_TEM"];
+    // print("SERVER BRTEM=" + temp_br_tem);
+
     create_values2 = {};
-    create_values2["GK_GL_BR_TEM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_TEM"));
-    create_values2["GK_GL_DATUM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATUM"));
-    create_values2["GK_GL_POSTED"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POSTED"));
-    create_values2["GK_GL_OPIS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OPIS"));
-    create_values2["GK_GL_GOD"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_GOD"));
-    create_values2["GK_GL_TIP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_TIP"));
-    create_values2["GK_GL_OZNAKA"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OZNAKA"));
-    create_values2["GK_GL_ZNAK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZNAK"));
-    create_values2["GK_GL_IZNL"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNL"));
-    create_values2["GK_GL_IZNP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNP"));
-    create_values2["GK_GL_ZATV_KLAS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS"));
-    create_values2["GK_GL_POC_STANJ"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POC_STANJ"));
-    create_values2["GK_GL_BRDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BRDOK"));
-    create_values2["GK_GL_DATDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATDOK"));
-    create_values2["GK_GL_PARTNER"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_PARTNER"));
-    create_values2["GK_GL_BR_LIN"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_LIN"));
+    // create_values2["GK_GL_BR_TEM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_TEM"));
+    // create_values2["GK_GL_DATUM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATUM"));
+    // create_values2["GK_GL_POSTED"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POSTED"));
+    // create_values2["GK_GL_OPIS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OPIS"));
+    // create_values2["GK_GL_GOD"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_GOD"));
+    // create_values2["GK_GL_TIP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_TIP"));
+    // create_values2["GK_GL_OZNAKA"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OZNAKA"));
+    // create_values2["GK_GL_ZNAK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZNAK"));
+    // create_values2["GK_GL_IZNL"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNL"));
+    // create_values2["GK_GL_IZNP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNP"));
+    // create_values2["GK_GL_ZATV_KLAS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS"));
+    // create_values2["GK_GL_POC_STANJ"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POC_STANJ"));
+    // create_values2["GK_GL_BRDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BRDOK"));
+    // create_values2["GK_GL_DATDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATDOK"));
+    // create_values2["GK_GL_PARTNER"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_PARTNER"));
+    // create_values2["GK_GL_BR_LIN"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_LIN"));
+
+    create_values2["GK_GL_BR_TEM"] = dataObject["GK_GL_BR_TEM"];
+    create_values2["GK_GL_DATUM"] = dataObject["GK_GL_DATUM"];
+    create_values2["GK_GL_POSTED"] = dataObject["GK_GL_POSTED"];
+    create_values2["GK_GL_OPIS"] = dataObject["GK_GL_OPIS"];
+    create_values2["GK_GL_GOD"] = dataObject["GK_GL_GOD"];
+    create_values2["GK_GL_TIP"] = dataObject["GK_GL_TIP"];
+    create_values2["GK_GL_OZNAKA"] = dataObject["GK_GL_OZNAKA"];
+    create_values2["GK_GL_ZNAK"] = dataObject["GK_GL_ZNAK"];
+    create_values2["GK_GL_IZNL"] = dataObject["GK_GL_IZNL"];
+    create_values2["GK_GL_IZNP"] = dataObject["GK_GL_IZNP"];
+    create_values2["GK_GL_ZATV_KLAS"] = dataObject["GK_GL_ZATV_KLAS"];
+    create_values2["GK_GL_POC_STANJ"] = dataObject["GK_GL_POC_STANJ"];
+    create_values2["GK_GL_BRDOK"] = dataObject["GK_GL_BRDOK"];
+    create_values2["GK_GL_DATDOK"] = dataObject["GK_GL_DATDOK"];
+    create_values2["GK_GL_PARTNER"] = dataObject["GK_GL_PARTNER"];
+    create_values2["GK_GL_BR_LIN"] = dataObject["GK_GL_BR_LIN"];
 
     createGKTransaction_id = create_values2["GK_GL_BR_TEM"];
 
@@ -474,274 +600,273 @@ function createGKTransaction(args) {
     //***************************************************
     // Validate fields
     //***************************************************  
-    if (IsInt(create_values2["GK_GL_BR_TEM"])==false)
+    if (create_values2["GK_GL_BR_TEM"]=="" || create_values2["GK_GL_BR_TEM"]=="0")
     {
-        print("Provjera GK_GL_BR_TEM nije prošla");
+        print("SERVER Provjera GK_GL_BR_TEM nije prošla. error1");
+        
+        // 🔴 Validation failed: Return Failed error
 
-        // 🔴 Validation failed: Return the form again with values + error
-        create_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_TEM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-                
-        return Response(create_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_BR_TEM nije ispravno popunjen."}';        
+        return Response(headers, jsonString, 200);    
     }
     else
     {
-        print("Provjera GK_GL_BR_TEM je prošla");
+        print("SERVER Provjera GK_GL_BR_TEM je prošla");
+    }    
+
+    if (IsInt(create_values2["GK_GL_BR_TEM"])==false)
+    {
+        print("SERVER Provjera GK_GL_BR_TEM nije prošla. error2");
+
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_BR_TEM nije ispravno popunjen."}';        
+        return Response(headers, jsonString, 200);    
+    }
+    else
+    {
+        print("SERVER Provjera GK_GL_BR_TEM je prošla");
     }    
 
     if (IsDate(create_values2["GK_GL_DATUM"])==false)
     {
-        print("Provjera GK_GL_DATUM nije prošla");
+        print("SERVER Provjera GK_GL_DATUM nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        create_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATUM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(create_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_DATUM nije ispravno popunjen."}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_DATUM je prošla");
+        print("SERVER Provjera GK_GL_DATUM je prošla");
     }
     
 
     createGKTransaction_posted = create_values2["GK_GL_POSTED"];
     if(createGKTransaction_posted.Length > 1)
     {
-        print("Provjera GK_GL_POSTED nije prošla");
+        print("SERVER Provjera GK_GL_POSTED nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POSTED nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_POSTED nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_POSTED je prošla");
+        print("SERVER Provjera GK_GL_POSTED je prošla");
     }
 
     createGKTransaction_opis = create_values2["GK_GL_OPIS"];
     if (createGKTransaction_opis.Length > 50)
     {
-        print("Provjera GK_GL_OPIS nije prošla");
+        print("SERVER Provjera GK_GL_OPIS nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OPIS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_OPIS nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_OPIS je prošla");
+        print("SERVER Provjera GK_GL_OPIS je prošla");
     }
 
     createGKTransaction_god = create_values2["GK_GL_GOD"];
     if (createGKTransaction_god.Length > 2)
     {
-        print("Provjera GK_GL_GOD nije prošla");
+        print("SERVER Provjera GK_GL_GOD nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_GOD nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_GOD nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_GOD je prošla");
+        print("SERVER Provjera GK_GL_GOD je prošla");
     }
 
     createGKTransaction_tip = create_values2["GK_GL_TIP"];
     if (createGKTransaction_tip.Length > 2)
     {
-        print("Provjera GK_GL_TIP nije prošla");
+        print("SERVER Provjera GK_GL_TIP nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_TIP nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_TIP nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_TIP je prošla");
+        print("SERVER Provjera GK_GL_TIP je prošla");
     }
 
     createGKTransaction_oznaka = create_values2["GK_GL_OZNAKA"];
     if (createGKTransaction_oznaka.Length > 10)
     {
-        print("Provjera GK_GL_OZNAKA nije prošla");
+        print("SERVER Provjera GK_GL_OZNAKA nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OZNAKA nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_OZNAKA nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_OZNAKA je prošla");
+        print("SERVER Provjera GK_GL_OZNAKA je prošla");
     }
     
     if (IsSmallInt(create_values2["GK_GL_ZNAK"])==false)
     {
-        print("Provjera GK_GL_ZNAK nije prošla");
+        print("SERVER Provjera GK_GL_ZNAK nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZNAK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-                
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_ZNAK nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_ZNAK je prošla");
+        print("SERVER Provjera GK_GL_ZNAK je prošla");
     }   
     
     if (IsFloat(create_values2["GK_GL_IZNL"])==false)
     {
-        print("Provjera GK_GL_IZNL nije prošla");
+        print("SERVER Provjera GK_GL_IZNL nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNL nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-                
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_IZNL nije ispravno popunjen."}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_IZNL je prošla");
+        print("SERVER Provjera GK_GL_IZNL je prošla");
     } 
     
     if (IsFloat(create_values2["GK_GL_IZNP"])==false)
     {
-        print("Provjera GK_GL_IZNP nije prošla");
+        print("SERVER Provjera GK_GL_IZNP nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNP nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-                
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_IZNP nije ispravno popunjen."}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_IZNP je prošla");
+        print("SERVER Provjera GK_GL_IZNP je prošla");
     }
     
 
     createGKTransaction_zatv_klas = create_values2["GK_GL_ZATV_KLAS"];
     if (createGKTransaction_zatv_klas.Length > 1)
     {
-        print("Provjera GK_GL_ZATV_KLAS nije prošla");
+        print("SERVER Provjera GK_GL_ZATV_KLAS nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZATV_KLAS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_ZATV_KLAS nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_ZATV_KLAS je prošla");
+        print("SERVER Provjera GK_GL_ZATV_KLAS je prošla");
     }
 
     createGKTransaction_poc_stanj = create_values2["GK_GL_POC_STANJ"];
     if (createGKTransaction_poc_stanj.Length > 1)
     {
-        print("Provjera GK_GL_POC_STANJ nije prošla");
+        print("SERVER Provjera GK_GL_POC_STANJ nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POC_STANJ nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_POC_STANJ nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_POC_STANJ je prošla");
+        print("SERVER Provjera GK_GL_POC_STANJ je prošla");
     }
     
     if (IsInt(create_values2["GK_GL_BRDOK"])==false)
     {
-        print("Provjera GK_GL_BRDOK nije prošla");
+        print("SERVER Provjera GK_GL_BRDOK nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BRDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-                
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_BRDOK nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_BRDOK je prošla");
+        print("SERVER Provjera GK_GL_BRDOK je prošla");
     }   
 
 
     if (IsDate(create_values2["GK_GL_DATDOK"])==false)
     {
-        print("Provjera GK_GL_DATDOK nije prošla");
+        print("SERVER Provjera GK_GL_DATDOK nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_DATDOK nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_DATDOK je prošla");
+        print("SERVER Provjera GK_GL_DATDOK je prošla");
     }
 
     createGKTransaction_partner = create_values2["GK_GL_PARTNER"];
     if (createGKTransaction_partner.Length > 10)
     {
-        print("Provjera GK_GL_PARTNER nije prošla");
+        print("SERVER Provjera GK_GL_PARTNER nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_PARTNER nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_PARTNER nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_PARTNER je prošla");
+        print("SERVER Provjera GK_GL_PARTNER je prošla");
     }
 
     if (IsSmallInt(create_values2["GK_GL_BR_LIN"])==false)
     {
-        print("Provjera GK_GL_BR_LIN nije prošla");
+        print("SERVER Provjera GK_GL_BR_LIN nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_LIN nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-                
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_BR_LIN nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_BR_LIN je prošla");
+        print("SERVER Provjera GK_GL_BR_LIN je prošla");
     }   
 
-    print('INSERT GLAVE: VALIDACIJA JE PROŠLA ZA SVA POLJA OK');
+    print('SERVER INSERT GLAVE: VALIDACIJA JE PROŠLA ZA SVA POLJA OK');
 
   
     //*********************************************************
@@ -776,19 +901,17 @@ function createGKTransaction(args) {
 
     if (createGKTransaction_recordExist)
     {        
-        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " postoji: nije prošla");
+        print("SERVER Provjera da li GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " postoji: nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        createGKTransaction_headers = {"Content-Type": "text/html"};
-        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " već postoji.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        // 🔴 Validation failed: Return Failed error
 
-        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
-
-        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GLAVA sa GK_GL_BR_TEM = ' + createGKTransaction_id + ' već postoji."}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " postoji je prošla");
+        print("SERVER Provjera da li GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " postoji je prošla");
     }    
     //***********************************
 
@@ -827,22 +950,49 @@ function createGKTransaction(args) {
         create_sqlParams.Add({"@"+create_fields[create_i], create_values2[current_field_name]});
     }
     
-    print("INSERT GLAVA SQL query=" + create_query);
-    print("INSERT GLAVA SQL params=" + create_sqlParams);
+    print("SERVER INSERT GLAVA SQL query=" + create_query);
+    print("SERVER INSERT GLAVA SQL params=" + create_sqlParams);
 
-    sqlNonQuery(create_query, create_sqlParams);
+    rowsAffected = sqlNonQuery(create_query, create_sqlParams);
 
 
 
     //htmx.trigger("body", "refreshTable");
-    create_args2 = {};
-    create_args2["QueryParams"] = {"page": 1};
+    // create_args2 = {};
+    // create_args2["QueryParams"] = {"page": 1};
+    // createGKTransaction_alert = "<script>Swal.fire({title: 'Successfully added!', text: 'Added transaction with id " + create_values2["GK_GL_BR_TEM"] + ".', icon: 'success', confirmButtonText: 'Close'});</script>";
+    // create_args2["QueryParams"] = {"alertText": createGKTransaction_alert};
+    // return getGKTransactions(create_args2);
 
-    createGKTransaction_alert = "<script>Swal.fire({title: 'Successfully added!', text: 'Added transaction with id " + create_values2["GK_GL_BR_TEM"] + ".', icon: 'success', confirmButtonText: 'Close'});</script>";
+    headers = {"Content-Type": "application/json"};
+    jsonString = "";
+    if (rowsAffected > 0)
+    {
+        jsonString = '{"Result" : "Success", "Message": ""}';
+    }
+    else
+    {
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Rows affected 0"}';
+    }
+    return Response(headers, jsonString, 200);
     
-    create_args2["QueryParams"] = {"alertText": createGKTransaction_alert};
+  }
+  catch(ex33333)
+  {
+    print("SERVER Error occurred while inserting transaction: " + ex33333);
+    exMessage = ex33333;
+  }  
 
-    return getGKTransactions(create_args2);
+  try
+  {
+    headers = {"Content-Type": "application/json"}; 
+    jsonString = '{"Result" : "Failed", "Message": "SERVER Cannot insert transaction. ' + exMessage + '"}';  
+    return Response(headers, jsonString, 200);
+  }
+  catch(ex33333A)
+  {
+    print("SERVER Error occurred while inserting transaction in createGKTransaction: " + ex33333A);
+  }
 }
 
 function IsInt(value)
@@ -1075,7 +1225,7 @@ function IsDate(value)
         numbers = value.Split("-");
         if (Size(numbers) != 3)
         {
-            throw "Date Validacija nije prošla.\nvalue = " + value;
+            throw "SERVER Date Validacija nije prošla.\nvalue = " + value;
         }
 
         stryear = numbers[0];
@@ -1088,7 +1238,7 @@ function IsDate(value)
 
         if (IsInt(strday) == false || IsInt(strmonth) == false || IsInt(stryear) == false)
         {
-            throw "Date Validacija nije prošla.\nvalue = " + value;
+            throw "SERVER Date Validacija nije prošla.\nvalue = " + value;
         }
 
         // Check if value is a valid date
@@ -1098,7 +1248,7 @@ function IsDate(value)
 
 
         if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
-            throw "Date Validacija nije prošla.\nvalue = " + value;
+            throw "SERVER Date Validacija nije prošla.\nvalue = " + value;
         }
         //print("Date Validacija OK");
         return true; 
@@ -1289,7 +1439,8 @@ function getEditGKTransactionForm(args) {
 
 // Replace getEditGKTransactionForm with:
 function getEditGKTransactionForm(args) {
-
+  try
+  {
     id = args["RouteValues"]["id"];
     //query = "SELECT " + gk_masterFields.Join(", ") + " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
     query = "SELECT GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS,"+
@@ -1305,7 +1456,8 @@ function getEditGKTransactionForm(args) {
 
     if(transaction == null || Size(transaction) < 2) {
         headers = {"Content-Type": "text/html"};
-        return Response(headers, "<script>showError('Transaction not found');</script>", 200);
+        alert = "<script>Swal.fire({title: 'ERROR!', text: 'SERVER Transaction not found', icon: 'error', confirmButtonText: 'Close'});</script>"; 
+        return Response(headers, alert, 200);        
     }
     
     values = {};
@@ -1316,12 +1468,31 @@ function getEditGKTransactionForm(args) {
 
     headers = {"Content-Type": "text/html"};
     return Response(headers, gk_generateForm("edit", values, id), 200);
+  }
+  catch(ex)
+  {
+    try
+    {
+        print("SERVER Error occurred in getEditGKTransactionForm: " + ex);
+        headers = {"Content-Type": "text/html"};        
+        alert = "<script>Swal.fire({title: 'ERROR!', text: 'SERVER Error occurred in getEditGKTransactionForm:'" + ex + ", icon: 'error', confirmButtonText: 'Close'});</script>"; 
+        return Response(headers, alert, 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error occurred in getEditGKTransactionForm");
+    }
+
+  }
 }
 
 
 // update transactions
 CreateEndpoint("PUT", "/gk-transactions/{id}", "updateGKTransaction");
 function updateGKTransaction(args) {
+  exMessage = "";
+  try
+  {
     updateGKTransaction_id = args["RouteValues"]["id"];
 
     updateGKTransaction_fields = [
@@ -1331,7 +1502,7 @@ function updateGKTransaction(args) {
         "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
     ];
     //values = {};
-    print("UPDATE GLAVE za GK_GL_BR_TEM = " + updateGKTransaction_id);
+    print("SERVER UPDATE GLAVE za GK_GL_BR_TEM = " + updateGKTransaction_id);
     // print("sizefields: " + Size(fields));  
     // for(i = 0; i < Size(fields); i++) {
     //     field = fields[i];
@@ -1339,23 +1510,42 @@ function updateGKTransaction(args) {
     //     print("Field: " + field + " = " + values[field]);
     // }
 
+    dataObject = DeserializeJson(args["Body"]);
+
     updateGKTransaction_values = {};
-    updateGKTransaction_values["GK_GL_BR_TEM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_TEM"));
-    updateGKTransaction_values["GK_GL_DATUM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATUM"));
-    updateGKTransaction_values["GK_GL_POSTED"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POSTED"));
-    updateGKTransaction_values["GK_GL_OPIS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OPIS"));
-    updateGKTransaction_values["GK_GL_GOD"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_GOD"));
-    updateGKTransaction_values["GK_GL_TIP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_TIP"));
-    updateGKTransaction_values["GK_GL_OZNAKA"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OZNAKA"));
-    updateGKTransaction_values["GK_GL_ZNAK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZNAK"));
-    updateGKTransaction_values["GK_GL_IZNL"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNL"));
-    updateGKTransaction_values["GK_GL_IZNP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNP"));
-    updateGKTransaction_values["GK_GL_ZATV_KLAS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS"));
-    updateGKTransaction_values["GK_GL_POC_STANJ"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POC_STANJ"));
-    updateGKTransaction_values["GK_GL_BRDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BRDOK"));
-    updateGKTransaction_values["GK_GL_DATDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATDOK"));
-    updateGKTransaction_values["GK_GL_PARTNER"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_PARTNER"));
-    updateGKTransaction_values["GK_GL_BR_LIN"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_LIN"));
+    // updateGKTransaction_values["GK_GL_BR_TEM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_TEM"));
+    // updateGKTransaction_values["GK_GL_DATUM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATUM"));
+    // updateGKTransaction_values["GK_GL_POSTED"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POSTED"));
+    // updateGKTransaction_values["GK_GL_OPIS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OPIS"));
+    // updateGKTransaction_values["GK_GL_GOD"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_GOD"));
+    // updateGKTransaction_values["GK_GL_TIP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_TIP"));
+    // updateGKTransaction_values["GK_GL_OZNAKA"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OZNAKA"));
+    // updateGKTransaction_values["GK_GL_ZNAK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZNAK"));
+    // updateGKTransaction_values["GK_GL_IZNL"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNL"));
+    // updateGKTransaction_values["GK_GL_IZNP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNP"));
+    // updateGKTransaction_values["GK_GL_ZATV_KLAS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS"));
+    // updateGKTransaction_values["GK_GL_POC_STANJ"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POC_STANJ"));
+    // updateGKTransaction_values["GK_GL_BRDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BRDOK"));
+    // updateGKTransaction_values["GK_GL_DATDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATDOK"));
+    // updateGKTransaction_values["GK_GL_PARTNER"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_PARTNER"));
+    // updateGKTransaction_values["GK_GL_BR_LIN"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_LIN"));
+
+    updateGKTransaction_values["GK_GL_BR_TEM"] = dataObject["GK_GL_BR_TEM"];
+    updateGKTransaction_values["GK_GL_DATUM"] = dataObject["GK_GL_DATUM"];
+    updateGKTransaction_values["GK_GL_POSTED"] = dataObject["GK_GL_POSTED"];
+    updateGKTransaction_values["GK_GL_OPIS"] = dataObject["GK_GL_OPIS"];
+    updateGKTransaction_values["GK_GL_GOD"] = dataObject["GK_GL_GOD"];
+    updateGKTransaction_values["GK_GL_TIP"] = dataObject["GK_GL_TIP"];
+    updateGKTransaction_values["GK_GL_OZNAKA"] = dataObject["GK_GL_OZNAKA"];
+    updateGKTransaction_values["GK_GL_ZNAK"] = dataObject["GK_GL_ZNAK"];
+    updateGKTransaction_values["GK_GL_IZNL"] = dataObject["GK_GL_IZNL"];
+    updateGKTransaction_values["GK_GL_IZNP"] = dataObject["GK_GL_IZNP"];
+    updateGKTransaction_values["GK_GL_ZATV_KLAS"] = dataObject["GK_GL_ZATV_KLAS"];
+    updateGKTransaction_values["GK_GL_POC_STANJ"] = dataObject["GK_GL_POC_STANJ"];
+    updateGKTransaction_values["GK_GL_BRDOK"] = dataObject["GK_GL_BRDOK"];
+    updateGKTransaction_values["GK_GL_DATDOK"] = dataObject["GK_GL_DATDOK"];
+    updateGKTransaction_values["GK_GL_PARTNER"] = dataObject["GK_GL_PARTNER"];
+    updateGKTransaction_values["GK_GL_BR_LIN"] = dataObject["GK_GL_BR_LIN"];
 
     if (updateGKTransaction_values["GK_GL_ZNAK"]=="")
     {
@@ -1395,283 +1585,277 @@ function updateGKTransaction(args) {
 
     //***************************************************
     // Validate fields
-    //***************************************************    
-    if (IsInt(updateGKTransaction_values["GK_GL_BR_TEM"])==false)
+    //*************************************************** 
+    
+    if (updateGKTransaction_id=="" || updateGKTransaction_id=="0")
     {
-        print("Provjera GK_GL_BR_TEM nije prošla");
+        print("SERVER Provjera GK_GL_BR_TEM nije prošla. error1");
+        
+        // 🔴 Validation failed: Return Failed error
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_TEM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
-                
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_BR_TEM nije ispravan."}';        
+        return Response(headers, jsonString, 200);    
     }
     else
     {
-        print("Provjera GK_GL_BR_TEM je prošla");
+        print("SERVER Provjera GK_GL_BR_TEM je prošla");
+    }   
+
+    if (IsInt(updateGKTransaction_id)==false)
+    {
+        print("SERVER Provjera GK_GL_BR_TEM nije prošla. error2");
+
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_BR_TEM nije ispravan."}';        
+        return Response(headers, jsonString, 200);
+    }
+    else
+    {
+        print("SERVER Provjera GK_GL_BR_TEM je prošla");
     }        
 
     if (IsDate(updateGKTransaction_values["GK_GL_DATUM"])==false)
     {
-        print("Provjera GK_GL_DATUM nije prošla");
+        print("SERVER Provjera GK_GL_DATUM nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATUM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_DATUM nije ispravno popunjen."}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_DATUM je prošla");
+        print("SERVER Provjera GK_GL_DATUM je prošla");
     }
 
-    //print("updateGKTransaction_values[\"GK_GL_POSTED\"]=" + updateGKTransaction_values["GK_GL_POSTED"]);
-    //print("updateGKTransaction_values[\"GK_GL_POSTED\"].Length = " + updateGKTransaction_values["GK_GL_POSTED"].Length);
     
-    
-    //if (updateGKTransaction_values["GK_GL_POSTED"].Length > 1)
     updateGKTransaction_posted = updateGKTransaction_values["GK_GL_POSTED"];
     if(updateGKTransaction_posted.Length > 1)
     {
-        print("Provjera GK_GL_POSTED nije prošla");
+        print("SERVER Provjera GK_GL_POSTED nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POSTED nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_POSTED nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_POSTED je prošla");
+        print("SERVER Provjera GK_GL_POSTED je prošla");
     }
 
 
-    //if (updateGKTransaction_values["GK_GL_OPIS"].Length > 50)
     updateGKTransaction_opis = updateGKTransaction_values["GK_GL_OPIS"];
     if (updateGKTransaction_opis.Length > 50)
     {
-        print("Provjera GK_GL_OPIS nije prošla");
+        print("SERVER Provjera GK_GL_OPIS nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OPIS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_OPIS nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_OPIS je prošla");
+        print("SERVER Provjera GK_GL_OPIS je prošla");
     }
 
-    //if (updateGKTransaction_values["GK_GL_GOD"].Length > 2)
+
     updateGKTransaction_god = updateGKTransaction_values["GK_GL_GOD"];
     if (updateGKTransaction_god.Length > 2)
     {
-        print("Provjera GK_GL_GOD nije prošla");
+        print("SERVER Provjera GK_GL_GOD nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_GOD nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_GOD nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_GOD je prošla");
+        print("SERVER Provjera GK_GL_GOD je prošla");
     }
 
     updateGKTransaction_tip = updateGKTransaction_values["GK_GL_TIP"];
     if (updateGKTransaction_tip.Length > 2)
     {
-        print("Provjera GK_GL_TIP nije prošla");
+        print("SERVER Provjera GK_GL_TIP nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_TIP nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_TIP nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_TIP je prošla");
+        print("SERVER Provjera GK_GL_TIP je prošla");
     }
 
     updateGKTransaction_oznaka = updateGKTransaction_values["GK_GL_OZNAKA"];
     if (updateGKTransaction_oznaka.Length > 10)
     {
-        print("Provjera GK_GL_OZNAKA nije prošla");
+        print("SERVER Provjera GK_GL_OZNAKA nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OZNAKA nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_OZNAKA nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_OZNAKA je prošla");
+        print("SERVER Provjera GK_GL_OZNAKA je prošla");
     }
     
     if (IsSmallInt(updateGKTransaction_values["GK_GL_ZNAK"])==false)
     {
-        print("Provjera GK_GL_ZNAK nije prošla");
+        print("SERVER Provjera GK_GL_ZNAK nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZNAK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
-                
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_ZNAK nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_ZNAK je prošla");
+        print("SERVER Provjera GK_GL_ZNAK je prošla");
     }   
     
     if (IsFloat(updateGKTransaction_values["GK_GL_IZNL"])==false)
     {
-        print("Provjera GK_GL_IZNL nije prošla");
+        print("SERVER Provjera GK_GL_IZNL nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNL nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
-                
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+        
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_IZNL nije ispravno popunjen."}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_IZNL je prošla");
+        print("SERVER Provjera GK_GL_IZNL je prošla");
     } 
     
     if (IsFloat(updateGKTransaction_values["GK_GL_IZNP"])==false)
     {
-        print("Provjera GK_GL_IZNP nije prošla");
+        print("SERVER Provjera GK_GL_IZNP nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNP nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
-                
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+        
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_IZNP nije ispravno popunjen."}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_IZNP je prošla");
+        print("SERVER Provjera GK_GL_IZNP je prošla");
     }
     
 
-    //if (updateGKTransaction_values["GK_GL_ZATV_KLAS"].Length > 1)
     updateGKTransaction_zatv_klas = updateGKTransaction_values["GK_GL_ZATV_KLAS"];
     if (updateGKTransaction_zatv_klas.Length > 1)
     {
-        print("Provjera GK_GL_ZATV_KLAS nije prošla");
+        print("SERVER Provjera GK_GL_ZATV_KLAS nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZATV_KLAS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_ZATV_KLAS nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_ZATV_KLAS je prošla");
+        print("SERVER Provjera GK_GL_ZATV_KLAS je prošla");
     }
 
     updateGKTransaction_poc_stanj = updateGKTransaction_values["GK_GL_POC_STANJ"];
     if (updateGKTransaction_poc_stanj.Length > 1)
     {
-        print("Provjera GK_GL_POC_STANJ nije prošla");
+        print("SERVER Provjera GK_GL_POC_STANJ nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POC_STANJ nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_POC_STANJ nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_POC_STANJ je prošla");
+        print("SERVER Provjera GK_GL_POC_STANJ je prošla");
     }
     
     if (IsInt(updateGKTransaction_values["GK_GL_BRDOK"])==false)
     {
-        print("Provjera GK_GL_BRDOK nije prošla");
+        print("SERVER Provjera GK_GL_BRDOK nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BRDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
-                
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+        
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_BRDOK nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_BRDOK je prošla");
+        print("SERVER Provjera GK_GL_BRDOK je prošla");
     }   
 
 
     if (IsDate(updateGKTransaction_values["GK_GL_DATDOK"])==false)
     {
-        print("Provjera GK_GL_DATDOK nije prošla");
+        print("SERVER Provjera GK_GL_DATDOK nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+        // 🔴 Validation failed: Return Failed error
 
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_DATDOK nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_DATDOK je prošla");
+        print("SERVER Provjera GK_GL_DATDOK je prošla");
     }
 
     updateGKTransaction_partner = updateGKTransaction_values["GK_GL_PARTNER"];
     if (updateGKTransaction_partner.Length > 10)
     {
-        print("Provjera GK_GL_PARTNER nije prošla");
+        print("SERVER Provjera GK_GL_PARTNER nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_PARTNER nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
-
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+        
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_PARTNER nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_PARTNER je prošla");
+        print("SERVER Provjera GK_GL_PARTNER je prošla");
     }
 
     if (IsSmallInt(updateGKTransaction_values["GK_GL_BR_LIN"])==false)
     {
-        print("Provjera GK_GL_BR_LIN nije prošla");
+        print("SERVER Provjera GK_GL_BR_LIN nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_LIN nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
-                
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_GL_BR_LIN nije ispravno popunjen. Duljina je prevelika"}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera GK_GL_BR_LIN je prošla");
+        print("SERVER Provjera GK_GL_BR_LIN je prošla");
     }   
 
-    print('UPDATE GLAVE: VALIDACIJA JE PROŠLA ZA SVA POLJA OK');
+    print('SERVER UPDATE GLAVE: VALIDACIJA JE PROŠLA ZA SVA POLJA OK');
 
     //***********************************
     //SELECT COUNT(*) GLAVA sa GK_GL_BR_TEM = id
@@ -1705,39 +1889,21 @@ function updateGKTransaction(args) {
     if (!updateGKTransaction_recordExist)
     {
         //print("Transaction not found in database za: GK_GL_BR_TEM = " + id);
-        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " postoji: nije prošla");
+        print("SERVER Provjera da li GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " postoji: nije prošla");
 
-        // 🔴 Validation failed: Return the form again with values + error
-        updateGKTransaction_headers = {"Content-Type": "text/html"};
-        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " ne postoji.', icon: 'error', confirmButtonText: 'Close'});</script>";        
-
-//print("OK 111");
-//print("updateGKTransaction_values[\"GK_GL_BR_TEM\"] = " + updateGKTransaction_values["GK_GL_BR_TEM"]);
-//print("OK prije poziva funkcije getEditGKTransactionFormWithValues2"); 
-
-// print("FIELDS prije poziva funkcije = " + updateGKTransaction_fields);
-// print("");
-// print("VALUES prije poziva funkcije = " + updateGKTransaction_values);
-// print("");
-// print("updateGKTransaction_id prije poziva funkcije = " + updateGKTransaction_id);
-// print("");
-// print("ALERT prije poziva funkcije = " + updateGKTransaction_alert);
-
-    //print("PRIJE POZIVA FUNKCIJE updateGKTransaction_values = " + updateGKTransaction_values);
-
-        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
-
-//print("OK prije response");
-
-        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+        // 🔴 Validation failed: Return Failed error
+        
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GLAVA sa GK_GL_BR_TEM = ' + updateGKTransaction_id + ' ne postoji."}';        
+        return Response(headers, jsonString, 200);
     }
     else
     {
-        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " postoji je prošla");
+        print("SERVER Provjera da li GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " postoji je prošla");
     }    
     //***********************************
 
-    print("BEFORE UPDATE GLAVE");
+    print("SERVER BEFORE UPDATE GLAVE");
     // Build update query
     updateGKTransaction_query = "UPDATE NKGKGLTM SET ";
     updateGKTransaction_first = true;
@@ -1757,28 +1923,59 @@ function updateGKTransaction(args) {
     }    
     updateGKTransaction_sqlParams.Add({"@id", int(updateGKTransaction_id)});
 
-    print("BEFORE UPDATE GLAVE: query = " + updateGKTransaction_query);
-    print("BEFORE UPDATE GLAVE: params = " + updateGKTransaction_sqlParams);
+    print("SERVER BEFORE UPDATE GLAVE: query = " + updateGKTransaction_query);
+    print("SERVER BEFORE UPDATE GLAVE: params = " + updateGKTransaction_sqlParams);
 
     // Execute query
-    sqlNonQuery(updateGKTransaction_query, updateGKTransaction_sqlParams);
+    rowsAffected = sqlNonQuery(updateGKTransaction_query, updateGKTransaction_sqlParams);
 
-    print("UPDATE GLAVE: PROŠAO JE UPDATE OK");
+    print("SERVER UPDATE GLAVE: PROŠAO JE UPDATE OK");
 
-    updateGKTransaction_args2 = {};
-    updateGKTransaction_args2["QueryParams"] = {};
-    if (Contains(updateGKTransaction_args2["QueryParams"], "page")) {
-        updateGKTransaction_args2["QueryParams"]["page"] = updateGKTransaction_args2["QueryParams"]["page"];
-    } else {
-        updateGKTransaction_args2["QueryParams"]["page"] = 1;
+    headers = {"Content-Type": "application/json"};
+    jsonString = "";
+    if (rowsAffected > 0)
+    {
+        jsonString = '{"Result" : "Success", "Message": ""}';
     }
-                                
-    updateGKTransaction_alert = "<script>Swal.fire({title: 'Successfully updated!', text: 'GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " .', icon: 'success', confirmButtonText: 'Close'});</script>";        
-    updateGKTransaction_args2["QueryParams"]["alertText"] = updateGKTransaction_alert;
+    else
+    {
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Rows affected 0"}';
+    }
+    return Response(headers, jsonString, 200);
 
-    print ('UPDATE GLAVE: Refresh tablu sa GLAVAMA');
-    //htmx.trigger('body', 'refreshTable'); //it does not work in cdcd language, this is javascript
-    return getGKTransactions(updateGKTransaction_args2);    
+
+    // updateGKTransaction_args2 = {};
+    // updateGKTransaction_args2["QueryParams"] = {};
+    // if (Contains(updateGKTransaction_args2["QueryParams"], "page")) {
+    //     updateGKTransaction_args2["QueryParams"]["page"] = updateGKTransaction_args2["QueryParams"]["page"];
+    // } else {
+    //     updateGKTransaction_args2["QueryParams"]["page"] = 1;
+    // }
+                                
+    // updateGKTransaction_alert = "<script>Swal.fire({title: 'Successfully updated!', text: 'GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " .', icon: 'success', confirmButtonText: 'Close'});</script>";        
+    // updateGKTransaction_args2["QueryParams"]["alertText"] = updateGKTransaction_alert;
+
+    // print ('UPDATE GLAVE: Refresh tablu sa GLAVAMA');
+    // //htmx.trigger('body', 'refreshTable'); //it does not work in cdcd language, this is javascript
+    // return getGKTransactions(updateGKTransaction_args2);  
+
+  }
+  catch(ex33333)
+  {
+    print("SERVER Error occurred while updating transaction: " + ex33333);
+    exMessage = ex33333;
+  }  
+
+  try
+  {
+    headers = {"Content-Type": "application/json"}; 
+    jsonString = '{"Result" : "Failed", "Message": "SERVER Cannot update transaction. ' + exMessage + '"}';  
+    return Response(headers, jsonString, 200);
+  }
+  catch(ex33333A)
+  {
+    print("SERVER Error occurred while updating transaction: " + ex33333A);
+  }  
 }
 
 
@@ -1853,7 +2050,9 @@ function updateGKTransaction(args) {
 
 
 function getNewGKTransactionFormWithValues2(values, errorScript) {
-    print("getNewGKTransactionFormWithValues2");
+  try
+  {
+    print("SERVER getNewGKTransactionFormWithValues2");
     // Default empty values
     /*defaults = {
         "GK_GL_BR_TEM": "0",
@@ -1927,6 +2126,11 @@ function getNewGKTransactionFormWithValues2(values, errorScript) {
     //headers = {"Content-Type": "text/html"};
     //return Response(headers, html, 200);
     return html;
+  }
+  catch(ex44444)
+  {
+        print("SERVER Error occurred in getNewGKTransactionFormWithValues2: " + ex44444);
+  }
 }
 
 // function getEditGKTransactionFormWithValues(id, values, errorHtml) {
@@ -1992,6 +2196,8 @@ function getNewGKTransactionFormWithValues2(values, errorScript) {
 
 
 function getEditGKTransactionFormWithValues2(id, values_param, errorScript) {
+  try
+  {
     //print("Na početku funkcije: getEditGKTransactionFormWithValues2");
     //print("ID U FUNKCIJI = " + id);
     //print("VALUES U FUNKCIJI = " + values_param);//16
@@ -2023,7 +2229,7 @@ function getEditGKTransactionFormWithValues2(id, values_param, errorScript) {
     //print(values_param["GK_GL_IZNP"]);
     //print(values_param["GK_GL_ZATV_KLAS"]);
 
-    print("errorScript U FUNKCIJI = " + errorScript);
+    print("SERVER errorScript U FUNKCIJI = " + errorScript);
     //print("");
 
     // print("values_param[\"GK_GL_BR_TEM\"] = " + values_param["GK_GL_BR_TEM"]);
@@ -2128,6 +2334,11 @@ function getEditGKTransactionFormWithValues2(id, values_param, errorScript) {
     //print("Na kraju funkcije: getEditGKTransactionFormWithValues2");
 
     return html;
+  }
+  catch(ex)
+  {
+    print("SERVER Error occurred in getEditGKTransactionFormWithValues2: " + ex44444);
+  }
 }
 
 
@@ -2210,7 +2421,7 @@ function deleteGKTransactionNoRefresh(args) {
         {
             // If there are detail lines, prevent deletion
             headers = {"Content-Type": "application/json"};
-            return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete transaction with existing lines."}', 400);    
+            return Response(headers, '{"Result" : "Failed", "Message": "SERVER Cannot delete transaction with existing lines."}', 400);    
         }
         //******************************************
 
@@ -2228,11 +2439,18 @@ function deleteGKTransactionNoRefresh(args) {
     }
     catch(ex1111)
     {
-        print("Error occurred while deleting transaction: " + ex1111);
+        print("SERVER Error occurred in deleteGKTransactionNoRefresh while deleting transaction: " + ex1111);
         exMessage = ex1111;
     }
-    headers = {"Content-Type": "application/json"};   
-    return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete transaction. ' + exMessage + '"}', 200);
+    try
+    {
+        headers = {"Content-Type": "application/json"};   
+        return Response(headers, '{"Result" : "Failed", "Message": "SERVER Cannot delete transaction. ' + exMessage + '"}', 200);
+    }
+    catch(ex1111A)
+    {
+        print("SERVER Error occurred in deleteGKTransactionNoRefresh while deleting transaction: " + ex1111A);
+    }
 }
 
 function formatForDisplay(dateStr) {
@@ -2255,8 +2473,10 @@ function formatForDisplay(dateStr) {
 //=======================================================================================
 CreateEndpoint("GET", "/gk-lines/{id}", "getGKLines");
 function getGKLines(requestLinije) {
+  try
+  {  
     id = requestLinije["RouteValues"]["id"];
-    print("Fetching lines for GK transaction ID: " + id);
+    print("SERVER Fetching lines for GK transaction ID: " + id);
     queryd = "SELECT " +
             "GK_LN_BR_TEM, GK_LN_KONTO, GK_LN_OBJED, GK_LN_OPIS, " +
             "GK_LN_DP, GK_LN_IZNOS, GK_LN_BRDOK, FORMAT(GK_LN_DATDOK, 'yyyy-MM-dd') AS GK_LN_DATDOK, " +
@@ -2369,6 +2589,20 @@ function getGKLines(requestLinije) {
 
     headers2 = {"Content-Type": "text/html"};
     return Response(headers2, htmld, 200);
+  }
+  catch(ex)
+  {
+    try
+    {
+        headers2 = {"Content-Type": "text/html"};
+        alert = "<script>Swal.fire({title: 'ERROR!', text: 'SERVER Error occurred in getGKLines:'" + ex + ", icon: 'error', confirmButtonText: 'Close'});</script>"; 
+        return Response(headers2, alert, 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error in getGKLines: " + ex2);
+    }
+  }
 }
 
 function formatNumber(vali) {
@@ -2445,6 +2679,8 @@ function getEditLineForm(args) {
 
 // Replace getEditLineForm with:
 function getEditLineForm(args) {
+  try
+  {
     masterId = args["RouteValues"]["id"];
     lineId = args["RouteValues"]["line"];
     
@@ -2465,6 +2701,21 @@ function getEditLineForm(args) {
     
     headers = {"Content-Type": "text/html"};
     return Response(headers, gk_generateLineForm("edit", values, masterId, lineId), 200);
+  }
+  catch(ex)
+  {
+    try
+    {
+        print("SERVER Error occurred in getEditLineForm: " + ex);
+        headers = {"Content-Type": "text/html"};
+        alert = "<script>Swal.fire({title: 'ERROR!', text: 'SERVER Error occurred in getEditLineForm: " + ex + "', icon: 'error', confirmButtonText: 'Close'});</script>";
+        return Response(headers, alert, 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error occurred in getEditLineForm: " + ex2);
+    }
+  }
 }
 
 
@@ -2472,6 +2723,8 @@ function getEditLineForm(args) {
 
 CreateEndpoint("GET", "/gk-lines/{id}/{line}/view", "getViewLine");
 function getViewLine(args) {
+  try
+  {
     masterId = args["RouteValues"]["id"];
     lineId = args["RouteValues"]["line"];
 
@@ -2517,9 +2770,26 @@ function getViewLine(args) {
 
     headers = {"Content-Type": "text/html"};
     return Response(headers, htmlda, 200);
+  }
+  catch(ex)
+  {
+    try
+    {
+        print("SERVER Error occurred in getViewLine: " + ex);
+        headers = {"Content-Type": "text/html"};
+        alert = "<script>Swal.fire({title: 'ERROR!', text: 'SERVER Error occurred in getViewLine: " + ex + "', icon: 'error', confirmButtonText: 'Close'});</script>";
+        return Response(headers, alert, 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error occurred in getViewLine: " + ex2);
+    }
+  }
 }
 
 function gk_generateLineForm(mode, values, masterId, lineId = null) {
+  try
+  {
     isEdit = (mode == "edit");
     
     html = "<tr>";
@@ -2551,13 +2821,20 @@ function gk_generateLineForm(mode, values, masterId, lineId = null) {
             "</td></tr>";
     
     return html;
+  }
+  catch(ex)
+  {
+    print("SERVER Error occurred in gk_generateLineForm: " + ex);    
+  }
 }
 
 
 //NewLine Endpoint
 CreateEndpoint("GET", "/gk-lines/{id}/new", "getNewLineForm");
 function getNewLineForm(args) {
-    print("U funkciji: getNewLineForm");
+  try
+  {  
+    print("SERVER U funkciji: getNewLineForm");
 
     masterId = args["RouteValues"]["id"];
 
@@ -2608,18 +2885,33 @@ function getNewLineForm(args) {
     headers = {"Content-Type": "text/html"};
     //return Response(headers, htmlda + test_alert, 200);
     return Response(headers, htmlda, 200);
+  }
+  catch(ex)
+  {
+    try
+    {
+        print("SERVER Error occurred in getNewLineForm: " + ex);
+        headers = {"Content-Type": "text/html"};
+        alert = "<script>Swal.fire({title: 'ERROR!', text: 'SERVER Error occurred in getNewLineForm: " + ex + "', icon: 'error', confirmButtonText: 'Close'});</script>";
+        return Response(headers, alert, 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error occurred in getNewLineForm: " + ex2);
+    }
+  }
 }
 
 //Create/Update/Delete Endpoints for lines
 CreateEndpoint("POST", "/gk-lines/{id}", "createLine");
-function createLine(args) {
-    print("U funkciji: createLine");
+function createLine(args) {    
+    exMessage = "";
     try
     {    
-    
+        print("SERVER U funkciji: createLine");
         masterId = args["RouteValues"]["id"];
     
-        print("Master ID: " + masterId);
+        print("SERVER Master ID: " + masterId);
 
         fieldsx = {
             "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
@@ -2679,72 +2971,72 @@ function createLine(args) {
         if (!IsInt(masterId))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera masterId nije prošla");
+            print("SERVER Provjera masterId nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: masterId is not integer."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: masterId is not integer."}';        
             return Response(headers, jsonString, 200);         
         }
         else
         {
-            print("Provjera masterId je prošla");
+            print("SERVER Provjera masterId je prošla");
         }
 
         if(konto.Length > 15)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_KONTO nije prošla");
+            print("SERVER Provjera GK_LN_KONTO nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_KONTO exceeds maximum length."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_KONTO exceeds maximum length."}';        
             return Response(headers, jsonString, 200);        
         }
         else
         {
-            print("Provjera GK_LN_KONTO je prošla");
+            print("SERVER Provjera GK_LN_KONTO je prošla");
         }
 
         if(objed.Length > 6)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_OBJED nije prošla");
+            print("SERVER Provjera GK_LN_OBJED nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OBJED exceeds maximum length."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_OBJED exceeds maximum length."}';        
             return Response(headers, jsonString, 200);         
         }
         else
         {
-            print("Provjera GK_LN_OBJED je prošla");
+            print("SERVER Provjera GK_LN_OBJED je prošla");
         }
 
         if(opis.Length > 50)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_OPIS nije prošla");
+            print("SERVER Provjera GK_LN_OPIS nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OPIS exceeds maximum length."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_OPIS exceeds maximum length."}';        
             return Response(headers, jsonString, 200);                
         }
         else
         {
-            print("Provjera GK_LN_OPIS je prošla");
+            print("SERVER Provjera GK_LN_OPIS je prošla");
         }   
 
         //if((dp != "D") && (dp != "P"))  
         if(dp.Length > 1)
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_DP nije prošla");
+            print("SERVER Provjera GK_LN_DP nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DP exceeds maximum length."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_DP exceeds maximum length."}';        
             return Response(headers, jsonString, 200);        
         }
         else
         {
-            print("Provjera GK_LN_DP je prošla");
+            print("SERVER Provjera GK_LN_DP je prošla");
         }   
 
         // IZNOS je float, može biti i negativan broj
@@ -2752,105 +3044,105 @@ function createLine(args) {
         {
        
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_IZNOS nije prošla");
+            print("SERVER Provjera GK_LN_IZNOS nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNOS is not a valid float."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_IZNOS is not a valid float."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_IZNOS je prošla");
+            print("SERVER Provjera GK_LN_IZNOS je prošla");
         }
 
         if(!IsInt(brdok))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_BRDOK nije prošla");
+            print("SERVER Provjera GK_LN_BRDOK nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_BRDOK is not a valid integer."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_BRDOK is not a valid integer."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_BRDOK je prošla");
+            print("SERVER Provjera GK_LN_BRDOK je prošla");
         }
 
         // DATDOK je date
         if(!IsDate(datdok))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_DATDOK nije prošla");
+            print("SERVER Provjera GK_LN_DATDOK nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DATDOK is not a valid date."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_DATDOK is not a valid date."}';        
             return Response(headers, jsonString, 200);                
         }
         else
         {
-            print("Provjera GK_LN_DATDOK je prošla");
+            print("SERVER Provjera GK_LN_DATDOK je prošla");
         }
 
         if(partnr.Length > 10)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_PARTNR nije prošla");
+            print("SERVER Provjera GK_LN_PARTNR nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_PARTNR exceeds maximum length."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_PARTNR exceeds maximum length."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_PARTNR je prošla");
+            print("SERVER Provjera GK_LN_PARTNR je prošla");
         }
 
         if(sifdvz.Length > 3)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_SIFDVZ nije prošla");
+            print("SERVER Provjera GK_LN_SIFDVZ nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_SIFDVZ exceeds maximum length."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_SIFDVZ exceeds maximum length."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_SIFDVZ je prošla");
+            print("SERVER Provjera GK_LN_SIFDVZ je prošla");
         }
 
         // TECAJ je float
         if(!IsFloat(tecaj))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_TECAJ nije prošla");
+            print("SERVER Provjera GK_LN_TECAJ nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_TECAJ is not a valid float."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_TECAJ is not a valid float."}';        
             return Response(headers, jsonString, 200);               
         }
         else
         {
-            print("Provjera GK_LN_TECAJ je prošla");
+            print("SERVER Provjera GK_LN_TECAJ je prošla");
         }
 
         // IZNDEV je float
         if(!IsFloat(izndev))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_IZNDEV nije prošla");
+            print("SERVER Provjera GK_LN_IZNDEV nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNDEV is not a valid float."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_IZNDEV is not a valid float."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_IZNDEV je prošla");
+            print("SERVER Provjera GK_LN_IZNDEV je prošla");
         }
         //********************************************
-        print("createLine: Nakon validacije");
+        print("SERVER createLine: Nakon validacije");
 
 
 
@@ -2886,8 +3178,8 @@ function createLine(args) {
             sqlParams.Add({"@" + fieldName, fieldValue});
         }
 
-        print("BEFORE INSERT LINE query: " + queryde);
-        print("BEFORE INSERT LINE params: " + sqlParams);
+        print("SERVER BEFORE INSERT LINE query: " + queryde);
+        print("SERVER BEFORE INSERT LINE params: " + sqlParams);
 
         rowsAffected = sqlNonQuery(queryde, sqlParams);
 
@@ -2899,28 +3191,36 @@ function createLine(args) {
         }
         else
         {
-            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Rows affected 0"}';
         }
         return Response(headers, jsonString, 200);
 
     }
     catch(ex4444)
     {
-        print("Error occurred while inserting line: " + ex4444);
+        print("SERVER Error occurred in createLine while inserting line: " + ex4444);
         exMessage = ex4444;        
     }
-    headers = {"Content-Type": "application/json"}; 
-    jsonString = '{"Result" : "Failed", "Message": "Cannot insert line. ' + exMessage + '"}';  
-    return Response(headers, jsonString, 200);
+    try
+    {
+        headers = {"Content-Type": "application/json"}; 
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Cannot insert line. ' + exMessage + '"}';  
+        return Response(headers, jsonString, 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error occurred in createLine: " + ex2);
+    }
 }
 
 // Update line endpoint
 CreateEndpoint("PUT", "/gk-lines/{id}/{line}", "updateLine");
-function updateLine(args) {
-    print("U funkciji: updateLine");
+function updateLine(args) {    
     exMessage = "";
     try
     {
+        print("SERVER U funkciji: updateLine");
+
         masterId = args["RouteValues"]["id"];
         lineId = args["RouteValues"]["line"];
     
@@ -2982,191 +3282,191 @@ function updateLine(args) {
         if (!IsInt(masterId))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera masterId nije prošla");
+            print("SERVER Provjera masterId nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: masterId is not integer."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: masterId is not integer."}';        
             return Response(headers, jsonString, 200);    
         }
         else
         {
-            print("Provjera masterId je prošla");
+            print("SERVER Provjera masterId je prošla");
         }
 
         if (!IsSmallInt(lineId))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera lineId nije prošla");
+            print("SERVER Provjera lineId nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: lineId is not small integer."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: lineId is not small integer."}';        
             return Response(headers, jsonString, 200);       
         }
         else
         {
-            print("Provjera lineId je prošla");
+            print("SERVER Provjera lineId je prošla");
         }
 
         if(konto.Length > 15)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_KONTO nije prošla");
+            print("SERVER Provjera GK_LN_KONTO nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_KONTO exceeds maximum length."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_KONTO exceeds maximum length."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_KONTO je prošla");
+            print("SERVER Provjera GK_LN_KONTO je prošla");
         }
 
         if(objed.Length > 6)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_OBJED nije prošla");
+            print("SERVER Provjera GK_LN_OBJED nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OBJED exceeds maximum length."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_OBJED exceeds maximum length."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_OBJED je prošla");
+            print("SERVER Provjera GK_LN_OBJED je prošla");
         }
 
         if(opis.Length > 50)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_OPIS nije prošla");
+            print("SERVER Provjera GK_LN_OPIS nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OPIS exceeds maximum length."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_OPIS exceeds maximum length."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_OPIS je prošla");
+            print("SERVER Provjera GK_LN_OPIS je prošla");
         }   
 
         //if((dp != "D") && (dp != "P"))  
         if(dp.Length > 1)
         {   
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_DP nije prošla");
+            print("SERVER Provjera GK_LN_DP nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DP exceeds maximum length."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_DP exceeds maximum length."}';        
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_DP je prošla");
+            print("SERVER Provjera GK_LN_DP je prošla");
         }   
 
         // IZNOS je float, može biti i negativan broj
         if(!IsFloat(iznos))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_IZNOS nije prošla");
+            print("SERVER Provjera GK_LN_IZNOS nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNOS is not a float."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_IZNOS is not a float."}';        
             return Response(headers, jsonString, 200);    
         }
         else
         {
-            print("Provjera GK_LN_IZNOS je prošla");
+            print("SERVER Provjera GK_LN_IZNOS je prošla");
         }
 
         if(!IsInt(brdok))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_BRDOK nije prošla");
+            print("SERVER Provjera GK_LN_BRDOK nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_BRDOK is not an integer."}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_BRDOK is not an integer."}';
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_BRDOK je prošla");
+            print("SERVER Provjera GK_LN_BRDOK je prošla");
         }
 
         // DATDOK je date
         if(!IsDate(datdok))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_DATDOK nije prošla");
+            print("SERVER Provjera GK_LN_DATDOK nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DATDOK is not a date."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_DATDOK is not a date."}';        
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_DATDOK je prošla");
+            print("SERVER Provjera GK_LN_DATDOK je prošla");
         }
 
         if(partnr.Length > 10)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_PARTNR nije prošla");
+            print("SERVER Provjera GK_LN_PARTNR nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_PARTNR exceeds maximum length."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_PARTNR exceeds maximum length."}';        
             return Response(headers, jsonString, 200);
         }
         else
         {
-            print("Provjera GK_LN_PARTNR je prošla");
+            print("SERVER Provjera GK_LN_PARTNR je prošla");
         }
 
         if(sifdvz.Length > 3)  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_SIFDVZ nije prošla");
+            print("SERVER Provjera GK_LN_SIFDVZ nije prošla");
 
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_SIFDVZ exceeds maximum length."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_SIFDVZ exceeds maximum length."}';        
             return Response(headers, jsonString, 200);       
         }
         else
         {
-            print("Provjera GK_LN_SIFDVZ je prošla");
+            print("SERVER Provjera GK_LN_SIFDVZ je prošla");
         }
 
         // TECAJ je float
         if(!IsFloat(tecaj))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_TECAJ nije prošla");
+            print("SERVER Provjera GK_LN_TECAJ nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_TECAJ is not a float."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_TECAJ is not a float."}';        
             return Response(headers, jsonString, 200);  
         }
         else
         {
-            print("Provjera GK_LN_TECAJ je prošla");
+            print("SERVER Provjera GK_LN_TECAJ je prošla");
         }
 
         // IZNDEV je float
         if(!IsFloat(izndev))  
         {
             // 🔴 Validation failed: Return the error
-            print("Provjera GK_LN_IZNDEV nije prošla");
+            print("SERVER Provjera GK_LN_IZNDEV nije prošla");
         
             headers = {"Content-Type": "application/json"};
-            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNDEV is not a float."}';        
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GK_LN_IZNDEV is not a float."}';        
             return Response(headers, jsonString, 200);      
         }
         else
         {
-            print("Provjera GK_LN_IZNDEV je prošla");
+            print("SERVER Provjera GK_LN_IZNDEV je prošla");
         }
         //********************************************
-        print("updateLine: Nakon validacije");
+        print("SERVER updateLine: Nakon validacije");
 
         // Build UPDATE
         queryUpdate = "UPDATE NKGKLNTM SET ";
@@ -3188,8 +3488,8 @@ function updateLine(args) {
             sqlParams.Add({"@" + fieldName, fieldValue});
         }
 
-        print("BEFORE UPDATE LINE query: " + queryUpdate);
-        print("BEFORE UPDATE LINE params: " + sqlParams);
+        print("SERVER BEFORE UPDATE LINE query: " + queryUpdate);
+        print("SERVER BEFORE UPDATE LINE params: " + sqlParams);
 
         rowsAffected = sqlNonQuery(queryUpdate, sqlParams);
 
@@ -3201,24 +3501,33 @@ function updateLine(args) {
         }
         else
         {
-            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Rows affected 0"}';
         }
         return Response(headers, jsonString, 200);
     }
     catch(ex3333)
     {
-        print("Error occurred while updating line: " + ex3333);
+        print("SERVER Error occurred in updateLine while updating line: " + ex3333);
         exMessage = ex3333;        
     }
-    headers = {"Content-Type": "application/json"}; 
-    jsonString = '{"Result" : "Failed", "Message": "Cannot update line. ' + exMessage + '"}';  
-    return Response(headers, jsonString, 200);
+    try
+    {
+        headers = {"Content-Type": "application/json"}; 
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Cannot update line. ' + exMessage + '"}';  
+        return Response(headers, jsonString, 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error occurred in updateLine: " + ex2);
+    }
 }
 
 // Delete line endpoint
 CreateEndpoint("DELETE", "/gk-lines/{id}/{line}", "deleteLine");
 function deleteLine(args) {
-    print('deleteLine');
+  try
+  {
+    print('SERVER deleteLine');
     masterId = args["RouteValues"]["id"];
     lineId = args["RouteValues"]["line"];
     
@@ -3232,12 +3541,17 @@ function deleteLine(args) {
     // args2 = {};
     // args2["RouteValues"] = {"id": int(masterId)};
     // return getGKLines(args2);
+  }
+  catch(ex)
+  {
+    print("SERVER Error in deleteLine: " + ex);
+  }
 }
 
 // Delete line endpoint
 CreateEndpoint("DELETE", "/gk-lines-norefresh/{id}/{line}", "deleteLineNoRefresh");
 function deleteLineNoRefresh(args) {
-    //print('deleteLineNoRefresh');
+    //print('SERVER deleteLineNoRefresh');
     exMessage = "";
     try
     {
@@ -3259,17 +3573,24 @@ function deleteLineNoRefresh(args) {
         }
         else
         {
-            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+            jsonString = '{"Result" : "Failed", "Message": "SERVER Rows affected 0"}';
         }
         return Response(headers, jsonString, 200);
     }
     catch(ex2222)
     {
-        print("Error occurred while deleting line: " + ex2222);
+        print("SERVER Error occurred while deleting line: " + ex2222);
         exMessage = ex2222;
     }
-    headers = {"Content-Type": "application/json"};   
-    return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete line. ' + exMessage + '"}', 200);
+    try
+    {
+        headers = {"Content-Type": "application/json"};   
+        return Response(headers, '{"Result" : "Failed", "Message": "SERVER Cannot delete line. ' + exMessage + '"}', 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error in deleteLineNoRefresh: " + ex2);
+    }
 }
 
 function safeStr(valu) {
