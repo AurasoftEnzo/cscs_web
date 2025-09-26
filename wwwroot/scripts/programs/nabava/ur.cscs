@@ -1,0 +1,15 @@
+print("UR script loaded");
+
+function ur(){
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "nabava\\ur.html")), 200);
+}
+
+//CreateEndpoint("GET", "/ur/print/{brRac}", "ur_print");
+function ur_print(args){
+    brRac = args["RouteValues"]["brRac"];
+    print("UR PRINT called with brRac: " + brRac);
+    return;
+}
+
+return ur();

@@ -8,12 +8,16 @@
 
   <ItemGroup>
     <Compile Remove="CSCS\**" />
+    <Compile Remove="StaticFiles\**" />
     <Compile Remove="SvelteApp1\**" />
     <Content Remove="CSCS\**" />
+    <Content Remove="StaticFiles\**" />
     <Content Remove="SvelteApp1\**" />
     <EmbeddedResource Remove="CSCS\**" />
+    <EmbeddedResource Remove="StaticFiles\**" />
     <EmbeddedResource Remove="SvelteApp1\**" />
     <None Remove="CSCS\**" />
+    <None Remove="StaticFiles\**" />
     <None Remove="SvelteApp1\**" />
   </ItemGroup>
 

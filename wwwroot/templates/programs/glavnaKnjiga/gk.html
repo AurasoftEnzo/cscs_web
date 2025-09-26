@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html data-theme='light'>
+
+<head>
+  <title>GK Transactions Management</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta charset="utf-8">
+  <script src='https://unpkg.com/htmx.org@1.9.10'></script>
+  <script src='https://cdn.tailwindcss.com'></script>
+  <link href='https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css' rel='stylesheet'>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    /* :root {
+      --b1: #1e90ff;
+    } */
+
+    html {
+      height: 100%;
+      margin: 0;
+      padding: 0px;
+    }
+
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 10px;
+    }
+
+    .master-detail-layout {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 112px);
+      /* Full viewport height minus padding and fixed header */
+      gap: 5px;
+      overflow: hidden;
+    }
+
+    /* Fixed header styles */
+    .fixed-header {
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] .fixed-header {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* 1. Master Table: Expanded height for 5 rows */
+    .master-table {
+      height: 235px;
+      /* ~8 rows with headers and pagination */
+      background: hsl(var(--b1));
+      /* border-radius: 8px; */
+      padding: 0px;
+      /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
+      display: flex;
+      flex-direction: column;
+      /* border: 1px solid hsl(var(--b3)); */
+      /* border: 1px solid red; */
+    }
+
+    /* [data-theme="dark"] .master-table {
+      box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+    } */
+
+    .master-table h2 {
+      flex-shrink: 0;
+      /* Don't shrink the title */
+      color: hsl(var(--bc));
+    }
+
+    .master-table .datagrid-container-master {
+      flex: 1;
+      /* Take remaining space */
+      overflow: auto;
+      /* Allow both horizontal and vertical scrolling for table body */
+    }
+
+    /* 2. Detail Table: Reduced to fit with expanded master */
+    .detail-table {
+      flex: 1 1 0%;
+      min-height: 0;
+      height: 100%;
+      overflow-y: auto;
+
+      /* Takes remaining available space */
+      /* max-height: 3000px; */
+      /* min-height: 150px; */
+
+      /* Minimum height to ensure visibility */
+      /* max-height: 300px; */
+      /* Maximum height to prevent overflow */
+
+      overflow-y: auto;
+      background: hsl(var(--b1));
+      /* border-radius: 8px; */
+      padding: 0px;
+      /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
+      /* border: 1px solid green; */
+    }
+
+
+    [data-theme="dark"] .detail-table {
+      box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+    }
+
+    /* 3. Bottom Form: Compact */
+    .bottom-form {
+      height: 270px;
+      /* Fixed height for 3-row form */
+      background: hsl(var(--b1));
+      /* border-radius: 8px; */
+      padding: 0px;
+      /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
+      overflow-y: auto;
+      /* border: 1px solid purple; */
+    }
+
+    /* [data-theme="dark"] .bottom-form {
+      box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+    } */
+
+    /* Compact form grid: 4 columns */
+    #line-entry-form {
+      width: 100%;
+    }
+
+    /* Shrink input fields */
+    #line-entry-form input,
+    #line-entry-form select {
+      padding: 4px 8px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    /* Label above input, small font */
+    #line-entry-form>div>div {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #line-entry-form label {
+      font-size: 12px;
+      font-weight: 600;
+      color: hsl(var(--bc) / 0.7);
+    }
+
+    /* Table styles */
+    .datagrid-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      min-width: 1200px;
+      /* Ensure table is wide enough for all columns */
+    }
+
+    .datagrid-table th,
+    .datagrid-table td {
+      padding: 2px 4px;
+      font-size: 13px;
+      white-space: nowrap;
+      /* Prevent text wrapping in cells */
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Specific column widths to prevent wrapping */
+    .datagrid-table th:nth-child(1),
+    .datagrid-table td:nth-child(1) {
+      width: 60px;
+    }
+
+    /* Select */
+    .datagrid-table th:nth-child(2),
+    .datagrid-table td:nth-child(2) {
+      width: 80px;
+    }
+
+    /* ID */
+    .datagrid-table th:nth-child(3),
+    .datagrid-table td:nth-child(3) {
+      width: 100px;
+    }
+
+    /* Date */
+    .datagrid-table th:nth-child(4),
+    .datagrid-table td:nth-child(4) {
+      width: 70px;
+    }
+
+    /* Posted */
+    .datagrid-table th:nth-child(5),
+    .datagrid-table td:nth-child(5) {
+      width: 200px;
+    }
+
+    /* Description */
+    .datagrid-table th:nth-child(6),
+    .datagrid-table td:nth-child(6) {
+      width: 60px;
+    }
+
+    /* Year */
+    .datagrid-table th:nth-child(7),
+    .datagrid-table td:nth-child(7) {
+      width: 60px;
+    }
+
+    /* Type */
+    .datagrid-table th:nth-child(8),
+    .datagrid-table td:nth-child(8) {
+      width: 80px;
+    }
+
+    /* Mark */
+    .datagrid-table th:nth-child(9),
+    .datagrid-table td:nth-child(9) {
+      width: 60px;
+    }
+
+    /* Sign */
+    .datagrid-table th:nth-child(10),
+    .datagrid-table td:nth-child(10) {
+      width: 100px;
+    }
+
+    /* Amount NL */
+    .datagrid-table th:nth-child(11),
+    .datagrid-table td:nth-child(11) {
+      width: 100px;
+    }
+
+    /* Amount NP */
+    .datagrid-table th:nth-child(12),
+    .datagrid-table td:nth-child(12) {
+      width: 70px;
+    }
+
+    /* Closed */
+    .datagrid-table th:nth-child(13),
+    .datagrid-table td:nth-child(13) {
+      width: 70px;
+    }
+
+    /* Status */
+    .datagrid-table th:nth-child(14),
+    .datagrid-table td:nth-child(14) {
+      width: 80px;
+    }
+
+    /* Doc Num */
+    .datagrid-table th:nth-child(15),
+    .datagrid-table td:nth-child(15) {
+      width: 100px;
+    }
+
+    /* Doc Date */
+    .datagrid-table th:nth-child(16),
+    .datagrid-table td:nth-child(16) {
+      width: 80px;
+    }
+
+    /* Partner */
+    .datagrid-table th:nth-child(17),
+    .datagrid-table td:nth-child(17) {
+      width: 60px;
+    }
+
+    /* Line */
+    .datagrid-table th:nth-child(18),
+    .datagrid-table td:nth-child(18) {
+      width: 160px;
+    }
+
+    /* Actions */
+
+    /* Fixed header that doesn't scroll vertically */
+    .datagrid-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgb(222, 222, 222);
+    }
+
+    .datagrid-table thead th {
+      background: rgb(222, 222, 222);
+      color: hsl(var(--bc));
+      font-weight: 600;
+      border-bottom: 2px solid hsl(var(--b3));
+      white-space: nowrap;
+      /* Keep headers in single line */
+      min-width: 120px;
+      /* Minimum width for each column */
+      cursor: pointer;
+      /* Indicate clickable for sorting */
+    }
+
+    /* Header hover for sorting indication */
+    .datagrid-table thead th:hover {
+      background: hsl(var(--b3));
+      transition: background-color 0.2s ease;
+    }
+
+    /* Ensure table renders properly on initial load */
+    .datagrid-container-master {
+      min-height: 200px;
+      /* Ensure container has height even when empty */
+    }
+
+    .pagination {
+      padding: 2px;
+      font-size: 14px;
+    }
+
+    .datagrid-table tr:hover,
+    .datatable tr:hover {
+      background-color: hsl(45 100% 88%);
+    }
+
+    /* Dark mode hover */
+    [data-theme="dark"] .datagrid-table tr:hover,
+    [data-theme="dark"] .datatable tr:hover {
+      background-color: hsl(45 50% 25%);
+    }
+
+    /* Horizontal scrollable table with fixed columns */
+    .datagrid-container-master {
+      position: relative;
+      overflow-x: auto;
+      overflow-y: auto;
+      min-height: 200px;
+      /* Ensure container has height even when empty */
+      /* Add custom scrollbar styling */
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--bc) / 0.3) hsl(var(--b3));
+    }
+
+    .datagrid-container-master::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+
+    .datagrid-container-master::-webkit-scrollbar-track {
+      background: hsl(var(--b3));
+      border-radius: 4px;
+    }
+
+    .datagrid-container-master::-webkit-scrollbar-thumb {
+      background: hsl(var(--bc) / 0.3);
+      border-radius: 4px;
+    }
+
+    .datagrid-container-master::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--bc) / 0.5);
+    }
+
+    .datagrid-container-master .datagrid-table {
+      min-width: 1200px;
+      /* Ensure table is wide enough to scroll */
+      width: max-content;
+      /* Allow table to expand based on content */
+    }
+
+    /* Fixed right column (Actions) */
+    .frozen-column-right {
+      position: sticky;
+      right: 0;
+      z-index: 30;
+      min-width: 160px;
+      /* backgro  und: white ; */
+      /* Temporary - should be very visible */
+      box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+      /* Left shadow for right column */
+    }
+
+    /* Set fixed widths for frozen columns */
+    .frozen-column-select {
+      width: 60px;
+      min-width: 60px;
+      max-width: 60px;
+    }
+
+    .frozen-column-id {
+      width: 80px;
+      min-width: 80px;
+      max-width: 80px;
+
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Edit mode styling */
+    .bottom-form.edit-mode {
+      /* border: 1px solid purple; */
+      box-shadow: 0 4px 6px hsl(var(--su) / 0.1);
+    }
+
+    .bottom-form.edit-mode h2::after {
+      content: " (Edit Mode)";
+      color: hsl(var(--su));
+      font-size: 0.8em;
+    }
+
+    /* Current line highlighting in detail table - bluish like master */
+    .datagrid-container-detail tr.current-line {
+      background-color: hsl(220 91% 85%);
+      border-left: 4px solid hsl(220 91% 65%);
+      z-index: 1;
+      /* Lower than header z-index */
+      position: relative;
+    }
+
+    /* Dark mode current line */
+    [data-theme="dark"] .datagrid-container-detail tr.current-line {
+      background-color: hsl(220 50% 25%);
+      border-left: 4px solid hsl(220 70% 40%);
+    }
+
+    .datagrid-container-detail tr.current-line:hover {
+      background-color: hsl(220 91% 78%);
+      /* Slightly darker blue on hover */
+    }
+
+    /* Dark mode current line hover */
+    [data-theme="dark"] .datagrid-container-detail tr.current-line:hover {
+      background-color: hsl(220 50% 20%);
+      /* Even darker blue for dark mode */
+    }
+
+    /* Make detail table rows clickable */
+    .datagrid-container-detail tr[data-line] {
+      cursor: pointer;
+    }
+
+    .datagrid-container-detail tr[data-line]:hover {
+      background-color: hsl(45 100% 88%);
+      /* Same amber hover as master table */
+    }
+
+    /* Dark mode detail table hover */
+    [data-theme="dark"] .datagrid-container-detail tr[data-line]:hover {
+      background-color: hsl(45 50% 25%);
+      /* Dark amber for dark mode */
+    }
+
+    /* Add these styles to your existing style section */
+
+    /* Table header styling */
+    .datagrid-table thead th {
+      background: rgb(222, 222, 222);
+      color: hsl(var(--bc));
+      font-weight: 600;
+      border-bottom: 2px solid hsl(var(--b3));
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      cursor: pointer;
+      /* Indicate clickable for sorting */
+    }
+
+    /* Header hover for sorting indication */
+    .datagrid-table thead th:hover {
+      background: hsl(var(--b3));
+      transition: background-color 0.2s ease;
+    }
+
+    /* Zebra striping for rows */
+    .datagrid-table tbody tr:nth-child(odd) {
+      background-color: rgb(244, 244, 244);
+    }
+
+    .datagrid-table tbody tr:nth-child(even) {
+      background-color: rgb(233, 233, 233);
+    }
+
+    /* Dark theme zebra stripes */
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) {
+      background-color: rgb(66, 66, 66);
+    }
+
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) {
+      background-color: rgb(77, 77, 77);
+    }
+
+    /* Hover effect - distinct amber/yellow tint */
+    .datagrid-table tbody tr:hover {
+      background-color: hsl(45 100% 88%);
+      /* Light amber on hover */
+    }
+
+    /* Dark mode hover - much darker */
+    [data-theme="dark"] .datagrid-table tbody tr:hover {
+      background-color: hsl(45 50% 25%);
+      /* Dark amber for dark mode */
+    }
+
+    /* Selected row styling - bluish - higher specificity to override zebra and hover */
+    .datagrid-table tbody tr.current-row {
+      background-color: hsl(220 91% 85%);
+      /* Light blue background */
+      box-shadow: inset 0 0 0 1px hsl(220 91% 65%);
+      /* Darker blue border */
+      z-index: 35;
+      /* Higher than frozen columns to ensure proper scrolling */
+      position: relative;
+    }
+
+    /* Selected row on hover - keep blue, don't let hover color override */
+    .datagrid-table tbody tr.current-row:hover {
+      background-color: hsl(220 91% 80%);
+      /* Slightly darker blue on hover */
+      box-shadow: inset 0 0 0 1px hsl(220 91% 60%);
+      /* Darker blue border on hover */
+    }
+
+    /* Dark mode selected row - much darker blue */
+    [data-theme="dark"] .datagrid-table tbody tr.current-row {
+      background-color: hsl(220 50% 25%);
+      /* Dark blue for dark mode */
+      box-shadow: inset 0 0 0 1px hsl(220 70% 40%);
+      /* Darker blue border for dark mode */
+    }
+
+    /* Dark mode selected row on hover - even darker blue */
+    [data-theme="dark"] .datagrid-table tbody tr.current-row:hover {
+      background-color: hsl(220 50% 20%);
+      /* Even darker blue on hover for dark mode */
+      box-shadow: inset 0 0 0 1px hsl(220 70% 35%);
+      /* Darker border on hover for dark mode */
+    }
+
+    /* Extra specificity for selected rows - force blue on all rows */
+    .datagrid-container-master .datagrid-table tbody tr.current-row,
+    .datagrid-container-master tbody tr.current-row,
+    .datagrid-table tbody tr[class*="current-row"] {
+      background-color: hsl(220 91% 85%);
+      /* Force blue selection */
+      box-shadow: inset 0 0 0 1px hsl(220 91% 65%);
+      /* Force blue border */
+    }
+
+    /* Extra specificity for dark mode selected rows */
+    [data-theme="dark"] .datagrid-container-master .datagrid-table tbody tr.current-row,
+    [data-theme="dark"] .datagrid-container-master tbody tr.current-row,
+    [data-theme="dark"] .datagrid-table tbody tr[class*="current-row"] {
+      background-color: hsl(220 50% 25%);
+      /* Force dark blue selection */
+      box-shadow: inset 0 0 0 1px hsl(220 70% 40%);
+      /* Force dark blue border */
+    }
+  </style>
+  <style>
+    /* Frozen columns - keep only positioning and ensure solid background */
+    .frozen-column-select,
+    .frozen-column-id,
+    .frozen-column-right {
+      position: sticky;
+      z-index: 30;
+    }
+
+    /* Non-selected rows should have lower z-index so content scrolls behind frozen columns */
+    .datagrid-table tbody tr:not(.current-row) {
+      z-index: 1;
+      position: relative;
+    }
+
+    /* Left frozen columns */
+    .frozen-column-select {
+      left: 0;
+      background: hsl(var(--b1));
+      /* Solid background - normal rows */
+    }
+
+    .frozen-column-id {
+      left: 60px;
+      /* Width of select column */
+      background: hsl(var(--b1));
+      /* Solid background - normal rows */
+    }
+
+    /* Right frozen column (Actions) */
+    .frozen-column-right {
+      right: 0;
+      background: hsl(var(--b1));
+      /* Solid background - normal rows */
+    }
+
+    /* Zebra striping for frozen columns - odd rows */
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background: transparent;
+    }
+
+    /* Match zebra stripe for odd rows */
+
+    /* Zebra striping for frozen columns - odd rows */
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background: rgb(244, 244, 244);
+    }
+
+    /* Zebra striping for frozen columns - even rows */
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-select,
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-id,
+    .datagrid-table tbody tr:nth-child(even) .frozen-column-right {
+      background: rgb(233, 233, 233);
+    }
+
+    /* Match zebra stripe for even rows */
+
+    /* Dark theme zebra stripes for frozen columns */
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(odd) .frozen-column-right {
+      background: rgb(66, 66, 66);
+    }
+
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr:nth-child(even) .frozen-column-right {
+      background: rgb(77, 77, 77);
+    }
+
+    /* Hover state for frozen columns */
+    .datagrid-table tbody tr:hover .frozen-column-select,
+    .datagrid-table tbody tr:hover .frozen-column-id,
+    .datagrid-table tbody tr:hover .frozen-column-right {
+      background: hsl(45 100% 88%);
+      /* Match hover color */
+    }
+
+    /* Dark mode hover for frozen columns */
+    [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr:hover .frozen-column-right {
+      background: hsl(45 50% 25%);
+      /* Match dark mode hover */
+    }
+
+    /* Selected row state for frozen columns - higher specificity */
+    .datagrid-table tbody tr.current-row .frozen-column-select,
+    .datagrid-table tbody tr.current-row .frozen-column-id,
+    .datagrid-table tbody tr.current-row .frozen-column-right {
+      background: hsl(220 91% 85%);
+      /* Match selected color */
+    }
+
+    /* Dark mode selected row for frozen columns */
+    [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-select,
+    [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-id,
+    [data-theme="dark"] .datagrid-table tbody tr.current-row .frozen-column-right {
+      background: hsl(220 50% 25%);
+      /* Match dark mode selected */
+    }
+
+    /* Header frozen columns */
+    .datagrid-table thead th.frozen-column-select,
+    .datagrid-table thead th.frozen-column-id,
+    .datagrid-table thead th.frozen-column-right {
+      z-index: 50;
+      /* Higher than row frozen columns */
+      background: rgb(222, 222, 222);
+      /* Solid header background */
+    }
+  </style>
+
+
+</head>
+
+<body>
+
+  <!-- Fixed header with controls -->
+  <div class="mb-4 z-50 flex justify-between items-center bg-base-100 p-3 rounded-lg shadow-lg fixed-header">
+    <div class="flex items-center gap-4">
+      <h1 class="text-xl font-bold">GK Transactions Management</h1>
+      <button class='btn btn-accent btn-sm' hx-get='/gk-transactions/new' hx-target='.datagrid-container-master'
+        hx-swap='outerHTML'>
+        Add New Transaction
+      </button>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm">Theme:</span>
+      <label for="theme-toggle" class="sr-only">Toggle dark/light theme</label>
+      <input type="checkbox" id="theme-toggle" class="toggle toggle-sm" onchange="toggleTheme()"
+        title="Toggle dark/light theme">
+      <span class="text-sm">Dark</span>
+    </div>
+  </div>
+
+  <!-- Add top margin to compensate for fixed header -->
+  <!-- <div style="margin-top: 40px;"></div> -->
+
+  <div class="master-detail-layout">
+
+    <!-- 1. MASTER TABLE (3-4 rows) -->
+    <div class="master-table">
+      <!-- <div class="datagrid-container-master" hx-get="/gk-transactions" hx-trigger="load" hx-swap="innerHTML"></div> -->
+       <div class="datagrid-container-master"></div>
+    </div>
+
+    <!-- 2. DETAIL TABLE (fills space) -->
+    <div class="detail-table">
+      <div class="datagrid-container-detail"></div>
+    </div>
+
+    <!-- 3. BOTTOM FORM (compact 3-row) -->
+    <div class="bottom-form">
+      <h2 class="text-lg font-bold">Line Entry</h2>
+      <form id="line-entry-form">
+        <input type="hidden" name="masterId" value="">
+        <input type="hidden" name="lineId" value="">
+        <div class="grid grid-cols-4 gap-2 mb-2">
+          <div><label>Account</label><input type="text" name="GK_LN_KONTO" class="input input-bordered input-sm w-full"
+              placeholder="11100" maxlength="15"></div>
+          <div><label>Cost Center</label><input type="text" name="GK_LN_OBJED"
+              class="input input-bordered input-sm w-full" placeholder="601" maxlength="6"></div>
+          <div><label>Description</label><input type="text" name="GK_LN_OPIS"
+              class="input input-bordered input-sm w-full" placeholder="Payment" maxlength="50"></div>
+          <div><label>DP</label><select name="GK_LN_DP" class="select select-bordered select-sm w-full">
+              <option value="">Select</option>
+              <option value="D">D</option>
+              <option value="P">P</option>
+            </select></div>
+        </div>
+        <div class="grid grid-cols-4 gap-2 mb-2">
+          <div><label>Amount</label><input type="number" step="0.01" name="GK_LN_IZNOS"
+              class="input input-bordered input-sm w-full" placeholder="100.00"></div>
+          <div><label>Doc ID</label><input type="number" name="GK_LN_BRDOK" class="input input-bordered input-sm w-full"
+              placeholder="12345"></div>
+          <div><label>Doc Date</label><input type="date" name="GK_LN_DATDOK"
+              class="input input-bordered input-sm w-full"></div>
+          <div><label>Partner</label><input type="text" name="GK_LN_PARTNR" class="input input-bordered input-sm w-full"
+              placeholder="P001" maxlength="10"></div>
+        </div>
+        <div class="grid grid-cols-4 gap-2 mb-2">
+          <div><label>Currency</label><input type="text" name="GK_LN_SIFDVZ"
+              class="input input-bordered input-sm w-full" placeholder="EUR" maxlength="3"></div>
+          <div><label>Rate</label><input type="number" step="0.0001" name="GK_LN_TECAJ"
+              class="input input-bordered input-sm w-full" placeholder="1.0000"></div>
+          <div><label>Amount/Curr</label><input type="number" step="0.01" name="GK_LN_IZNDEV"
+              class="input input-bordered input-sm w-full" placeholder="100.00"></div>
+          <div class="flex gap-2 items-end">
+            <button type="button" id="save-line-btn" class="btn btn-success btn-sm" disabled>Save Line</button>
+            <button type="button" id="new-line-btn" class="btn btn-primary btn-sm" disabled>New Line</button>
+            <button type="button" id="clear-line-btn" class="btn btn-warning btn-sm">Clear</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      try
+      {
+        htmx.ajax('GET', '/gk-transactions', {
+          target: document.querySelector('.datagrid-container-master'),
+          swap: 'innerHTML'
+        });
+      }
+      catch(error)
+      {
+          console.error('Error:', error);
+
+          Swal.fire({
+            title: "Loading master table error",
+            text: "Something went wrong.",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          }); 
+      }
+    });
+  </script>
+
+  <script>
+    // Re-process HTMX after dynamic content loads and fix table layout
+    document.addEventListener('htmx:afterSwap', function (evt) {
+      //console.log('document htmx:afterSwap fired');
+      if (evt.target.classList.contains('datagrid-container-master') ||
+        evt.target.classList.contains('datagrid-container-detail')) {
+        htmx.process(evt.target);
+
+        // Fix table layout after content loads
+        setTimeout(function () {
+          const table = evt.target.querySelector('.datagrid-table');
+          if (table) {
+            // Force table layout recalculation to prevent column wrapping
+            table.style.tableLayout = 'auto';
+            // Force a reflow
+            table.offsetHeight;
+            // Switch back to fixed layout
+            table.style.tableLayout = 'fixed';
+          }
+
+          // Add row click handlers for highlighting if this is the master table
+          if (evt.target.classList.contains('datagrid-container-master')) {
+            addRowClickHandlers();
+          }
+        }, 10);
+      }
+    });
+
+    // Additional fix for initial table load
+    document.addEventListener('DOMContentLoaded', function () {
+      // Wait a bit for HTMX to load the initial content
+      setTimeout(function () {
+        const table = document.querySelector('.datagrid-table');
+        if (table) {
+          // Force table layout recalculation
+          table.style.tableLayout = 'auto';
+          table.offsetHeight; // Force reflow
+          table.style.tableLayout = 'fixed';
+        }
+      }, 100);
+    });
+  </script>
+  <script>
+    // Auto-load details for first master row
+    /*
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function() {
+      const firstRow = document.querySelector('.master-table tr[data-id]');
+      if (firstRow) {
+        const id = firstRow.getAttribute('data-id');
+        htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+      }
+    });
+    */
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
+      //console.log('master htmx:afterSwap 1 fired');
+      const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
+      // console.log('Found first row:', firstRow);
+      if (firstRow) {
+        const id = firstRow.getAttribute('data-id');
+        // console.log('First row ID:', id);
+        htmx.ajax('GET', '/gk-lines/' + id, { target: '.datagrid-container-detail' });
+
+        // Temporarily disable auto-highlighting to test manual selection
+        // highlightCurrentRow(firstRow);
+      }
+
+      // Add click handlers to all rows for highlighting
+      // console.log('About to call addRowClickHandlers()');
+      addRowClickHandlers();
+      // console.log('Finished calling addRowClickHandlers()');
+    });
+
+    // Function to highlight current row
+    function highlightCurrentRow(row) {
+      // console.log('highlightCurrentRow called with:', row);
+      // Remove current-row class from all rows
+      document.querySelectorAll('.datagrid-container-master tr.current-row').forEach(r => {
+        // console.log('Removing current-row from:', r);
+        r.classList.remove('current-row');
+      });
+
+      // Add current-row class to clicked row
+      if (row) {
+        // console.log('Adding current-row to:', row);
+        row.classList.add('current-row');
+        // console.log('Row classes after adding current-row:', row.className);
+      }
+    }
+
+    // Function to add click handlers to rows
+    function addRowClickHandlers() {
+      // console.log('=== addRowClickHandlers() called ===');
+      const rows = document.querySelectorAll('.datagrid-container-master tbody tr');
+      // console.log('Adding click handlers to', rows.length, 'rows');
+      rows.forEach((row, index) => {
+        // console.log('Row', index + 1, 'has data-id:', row.getAttribute('data-id'), 'classes:', row.className);
+        row.addEventListener('click', function (e) {
+          // Only highlight if not clicking on buttons or form elements
+          if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
+            // console.log('Row clicked:', index + 1);
+            highlightCurrentRow(this);
+          }
+        });
+      });
+      // console.log('=== addRowClickHandlers() finished ===');
+    }
+
+    // Test function to call manually from console
+    function testRowSelection() {
+      // console.log('=== MANUAL TEST ===');
+      addRowClickHandlers();
+    }
+
+
+  </script>
+  <script>
+    // Function to select a line for editing
+    function selectLineForEdit(rowElement) {
+      //console.log('selectLineForEdit');
+      //console.log('rowElement:', rowElement);
+      const masterId = rowElement.getAttribute('data-id');
+      const lineId = rowElement.getAttribute('data-line');
+      const lineData = {
+        lineId: lineId,
+        //account: rowElement.getAttribute('data-account') || '',
+        // costCenter: rowElement.getAttribute('data-costcenter') || '',
+        // description: rowElement.getAttribute('data-description') || '',
+        // dp: rowElement.getAttribute('data-dp') || '',
+        // amount: rowElement.getAttribute('data-amount') || '',
+        // docId: rowElement.getAttribute('data-docid') || '',
+        // docDate: rowElement.getAttribute('data-docdate') || '',
+        // partner: rowElement.getAttribute('data-partner') || '',
+        // currency: rowElement.getAttribute('data-currency') || '',
+        // rate: rowElement.getAttribute('data-rate') || '',
+        // amountCurr: rowElement.getAttribute('data-amountcurr') || ''      
+
+        account: rowElement.querySelector('[data-field="GK_LN_KONTO"]')?.textContent.trim() || '',
+        costCenter: rowElement.querySelector('[data-field="GK_LN_OBJED"]')?.textContent.trim() || '',
+        description: rowElement.querySelector('[data-field="GK_LN_OPIS"]')?.textContent.trim() || '',
+        debit: rowElement.querySelector('[data-field="data-debit"]')?.textContent.trim() || '',
+        credit: rowElement.querySelector('[data-field="data-credit"]')?.textContent.trim() || '',
+        dp: '',
+        amount: '0',
+        docId: rowElement.querySelector('[data-field="GK_LN_BRDOK"]')?.textContent.trim() || '',
+        docDate: rowElement.querySelector('[data-field="GK_LN_DATDOK"]')?.textContent.trim() || '',
+        partner: rowElement.querySelector('[data-field="GK_LN_PARTNR"]')?.textContent.trim() || '',
+        currency: rowElement.querySelector('[data-field="GK_LN_SIFDVZ"]')?.textContent.trim() || '',
+        rate: rowElement.querySelector('[data-field="GK_LN_TECAJ"]')?.textContent.trim() || '',
+        amountCurr: rowElement.querySelector('[data-field="GK_LN_IZNDEV"]')?.textContent.trim() || ''
+      };
+
+      if (lineData.debit != "") {
+        lineData.dp = "D";
+        lineData.amount = lineData.debit;
+      }
+      if (lineData.credit != "") {
+        lineData.dp = "P";
+        lineData.amount = lineData.credit;
+      }
+
+      lineData.amount = lineData.amount.replace(',', '.');
+
+      if (lineData.docDate == '1900-01-01') {
+        lineData.docDate = '';
+      }
+
+      lineData.rate = lineData.rate.replace(',', '.');
+      lineData.amountCurr = lineData.amountCurr.replace(',', '.');
+
+      //console.log('lineData:', lineData);
+
+      // Highlight selected line
+      highlightCurrentLine(rowElement);
+
+      // Always populate form with line data for viewing/editing
+      populateLineForm(masterId, lineData);
+      setStyleToElementsOnLineForm();
+    }
+
+    // Function to highlight current line in detail table
+    function highlightCurrentLine(row) {
+      // Remove current-line class from all lines
+      document.querySelectorAll('.datagrid-container-detail tr.current-line').forEach(r => {
+        r.classList.remove('current-line');
+      });
+
+      // Add current-line class to clicked row
+      if (row) {
+        row.classList.add('current-line');
+      }
+    }
+
+    function showError(message, title = 'Error') {
+      Swal.fire({
+        title: title,
+        text: message,
+        icon: 'error',
+        confirmButtonText: 'OK',
+        background: getComputedStyle(document.documentElement).getPropertyValue('--b1'),
+        color: getComputedStyle(document.documentElement).getPropertyValue('--bc')
+      });
+    }
+
+
+    // Line form functionality
+    let currentMasterId = null;
+    let currentLineId = null;
+    let isEditMode = false;
+    let isMasterInEditMode = false;
+
+    // Clear form function
+    function clearLineForm() {
+      // Check if we are in edit mode
+      const editForm = document.querySelector('.datagrid-container-master form');
+      if (!editForm) {
+        Swal.fire({
+          title: 'Edit Mode Error',
+          text: 'You cannot clear a line form because the transaction is not in edit mode!',
+          icon: 'warning',
+          showCancelButton: false,
+          confirmButtonText: 'OK'
+        });
+        return;
+      }
+
+      document.getElementById('line-entry-form').reset();
+      document.querySelector('input[name="masterId"]').value = '';
+      document.querySelector('input[name="lineId"]').value = '';
+      currentMasterId = null;
+      currentLineId = null;
+      isEditMode = false;
+      updateFormState();
+      document.querySelector('.bottom-form h2').textContent = 'Line Entry';
+    }
+
+    // Function to update form state based on master edit mode
+    function updateFormState() {
+      const saveBtn = document.getElementById('save-line-btn');
+      const newLineBtn = document.getElementById('new-line-btn');
+      const formInputs = document.querySelectorAll('#line-entry-form input, #line-entry-form select');
+
+      if (isMasterInEditMode && currentMasterId) {
+        // Enable form for editing
+        saveBtn.disabled = false;
+        newLineBtn.disabled = false;
+        formInputs.forEach(input => {
+          input.disabled = false;
+        });
+        saveBtn.textContent = currentLineId ? 'Update Line' : 'Save Line';
+      } else {
+        // Disable form for read-only viewing
+        saveBtn.disabled = true;
+        newLineBtn.disabled = true;
+        formInputs.forEach(input => {
+          input.disabled = true;
+        });
+        saveBtn.textContent = 'Save Line';
+      }
+    }
+
+    // Clear button click handler
+    document.getElementById('clear-line-btn').addEventListener('click', clearLineForm);
+
+    // New Line button click handler
+    document.getElementById('new-line-btn').addEventListener('click', function () {
+      if (currentMasterId && isMasterInEditMode) {
+        enableNewLineForm(currentMasterId);
+      }
+    });
+
+    // Save line button click handler
+    document.getElementById('save-line-btn').addEventListener('click', function () {
+      try
+      {
+        if (!currentMasterId) {
+          Swal.fire({
+            title: 'No Selected Transaction Error',
+            text: 'Please select a master transaction first!',
+            icon: 'warning',
+            showCancelButton: false,
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+
+        if (!isMasterInEditMode) {
+          Swal.fire({
+            title: 'Edit Mode Error',
+            text: 'Master transaction must be in edit mode to save lines!',
+            icon: 'warning',
+            showCancelButton: false,
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+
+        const form = document.getElementById('line-entry-form');
+
+        //INPUT ELEMENTI
+        const GK_LN_KONTO = form.elements['GK_LN_KONTO'];
+        const GK_LN_OBJED = form.elements['GK_LN_OBJED'];
+        const GK_LN_OPIS = form.elements['GK_LN_OPIS'];
+        const GK_LN_DP = form.elements['GK_LN_DP'];
+        const GK_LN_IZNOS = form.elements['GK_LN_IZNOS'];
+        const GK_LN_BRDOK = form.elements['GK_LN_BRDOK'];
+        const GK_LN_DATDOK = form.elements['GK_LN_DATDOK'];
+        const GK_LN_PARTNR = form.elements['GK_LN_PARTNR'];
+        const GK_LN_SIFDVZ = form.elements['GK_LN_SIFDVZ'];
+        const GK_LN_TECAJ = form.elements['GK_LN_TECAJ'];
+        const GK_LN_IZNDEV = form.elements['GK_LN_IZNDEV'];
+
+        // console.log("UPDATE VALUES:");
+        // console.log("currentMasterId: " + currentMasterId);
+        // console.log("currentLineId: " + currentLineId);      
+        // console.log("GK_LN_KONTO: " + GK_LN_KONTO.value); 
+        // console.log("GK_LN_OBJED: " + GK_LN_OBJED.value); 
+        // console.log("GK_LN_OPIS: " + GK_LN_OPIS.value); 
+        // console.log("GK_LN_DP: " + GK_LN_DP.value); 
+        // console.log("GK_LN_IZNOS: " + GK_LN_IZNOS.value); 
+        // console.log("GK_LN_BRDOK: " + GK_LN_BRDOK.value); 
+        // console.log("GK_LN_DATDOK: " + GK_LN_DATDOK.value); 
+        // console.log("GK_LN_PARTNR: " + GK_LN_PARTNR.value); 
+        // console.log("GK_LN_SIFDVZ: " + GK_LN_SIFDVZ.value); 
+        // console.log("GK_LN_TECAJ: " + GK_LN_TECAJ.value); 
+        // console.log("GK_LN_IZNDEV: " + GK_LN_IZNDEV.value);
+
+        if (GK_LN_IZNOS.value == "") {
+          GK_LN_IZNOS.value = "0"; //float
+        }
+
+        if (GK_LN_BRDOK.value == "") {
+          GK_LN_BRDOK.value = "0"; //int
+        }
+
+        if (GK_LN_DATDOK.value == "") {
+          GK_LN_DATDOK.value = "1900-01-01"; //date
+        }
+
+        if (GK_LN_TECAJ.value == "") {
+          GK_LN_TECAJ.value = "0"; //float
+        }
+
+        if (GK_LN_IZNDEV.value == "") {
+          GK_LN_IZNDEV.value = "0"; //float
+        }
+
+        //***************************************************
+        // Promjena zarez u točku za float brojeve
+        //***************************************************
+        GK_LN_KONTO.value = GK_LN_KONTO.value.toString().replaceAll(',', '.');
+        GK_LN_TECAJ.value = GK_LN_TECAJ.value.toString().replaceAll(',', '.');
+        GK_LN_IZNDEV.value = GK_LN_IZNDEV.value.toString().replaceAll(',', '.');
+
+        console.log("UPDATE VALUES:");
+        console.log("currentMasterId: " + currentMasterId);
+        console.log("currentLineId: " + currentLineId);
+        console.log("GK_LN_KONTO: " + GK_LN_KONTO.value.toString());
+        console.log("GK_LN_OBJED: " + GK_LN_OBJED.value.toString());
+        console.log("GK_LN_OPIS: " + GK_LN_OPIS.value.toString());
+        console.log("GK_LN_DP: " + GK_LN_DP.value.toString());
+        console.log("GK_LN_IZNOS: " + GK_LN_IZNOS.value.toString());
+        console.log("GK_LN_BRDOK: " + GK_LN_BRDOK.value.toString());
+        console.log("GK_LN_DATDOK: " + GK_LN_DATDOK.value.toString());
+        console.log("GK_LN_PARTNR: " + GK_LN_PARTNR.value.toString());
+        console.log("GK_LN_SIFDVZ: " + GK_LN_SIFDVZ.value.toString());
+        console.log("GK_LN_TECAJ: " + GK_LN_TECAJ.value.toString());
+        console.log("GK_LN_IZNDEV: " + GK_LN_IZNDEV.value.toString());
+
+        //***************************************************
+        // VALIDACIJA
+        //***************************************************
+        console.log("POČETAK VALIDACIJE");
+
+        if (!isInt(currentMasterId))
+        {
+          Swal.fire({
+            title: "Validation error",
+            text: "Transaction ID is not valid. (currentMasterId)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });        
+          return;
+        }
+
+        if (currentLineId)
+        {
+          if (!isInt(currentLineId))
+          {
+            Swal.fire({
+              title: "Validation error",
+              text: "Line ID is not valid. (currentLineId)",
+              icon: 'error',
+              confirmButtonText: 'OK'         
+            });
+            return;
+          }
+        }
+
+        let konto = GK_LN_KONTO.value.toString();
+        if (konto.length>15) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Account length cannot be greater than 15 characters. (GK_LN_KONTO)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_KONTO.focus();
+          return;
+        }
+
+        let objed = GK_LN_OBJED.value.toString();
+        if (objed.length>6) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Cost center cannot be greater than 6 characters. (GK_LN_OBJED)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_OBJED.focus();
+          return;
+        }
+
+        let opis = GK_LN_OPIS.value.toString();
+        if (opis.length>50) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Description cannot be greater than 50 characters. (GK_LN_OPIS)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_OPIS.focus();
+          return;
+        }
+
+        let dp = GK_LN_DP.value.toString();
+        if (dp.length>1) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "DP cannot be greater than 1 character. (GK_LN_DP)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_DP.focus();
+          return;
+        }
+
+        let iznos = GK_LN_IZNOS.value.toString();
+        if (!isFloat(iznos)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Amount must be a valid float number. (GK_LN_IZNOS)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_IZNOS.focus();
+          return;
+        }
+
+        let brdok = GK_LN_BRDOK.value.toString();
+        if (!isInt(brdok)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Document number must be a valid integer. (GK_LN_BRDOK)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_BRDOK.focus();
+          return;
+        }
+
+        let datdok = GK_LN_DATDOK.value.toString();
+        if (!isDate(datdok)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Document date must be a valid date. (GK_LN_DATDOK)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_DATDOK.focus();
+          return;
+        }
+
+        let partnr = GK_LN_PARTNR.value.toString();
+        if (partnr.length>10) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Partner cannot be greater than 10 characters. (GK_LN_PARTNR)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_PARTNR.focus();
+          return;
+        }
+
+        let sifdvz = GK_LN_SIFDVZ.value.toString();
+        if (sifdvz.length>3) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Currency cannot be greater than 3 characters. (GK_LN_SIFDVZ)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_SIFDVZ.focus();
+          return;
+        }
+
+        let tecaj = GK_LN_TECAJ.value.toString();
+        if (!isFloat(tecaj)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Exchange rate must be a valid float number. (GK_LN_TECAJ)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_TECAJ.focus();
+          return;
+        }
+
+        let izndev = GK_LN_IZNDEV.value.toString();
+        if (!isFloat(izndev)) {              
+          Swal.fire({
+            title: "Validation error",
+            text: "Amount/currency must be a valid float number. (GK_LN_IZNDEV)",
+            icon: 'error',
+            confirmButtonText: 'OK'         
+          });
+
+          GK_LN_IZNDEV.focus();
+          return;
+        }
+
+        //**************************************************
+        console.log("KRAJ VALIDACIJE");
+        //**************************************************
+
+
+        const formData = new FormData(document.getElementById('line-entry-form'));
+        const url = currentLineId ?
+          `/gk-lines/${currentMasterId}/${currentLineId}` :
+          `/gk-lines/${currentMasterId}`;
+        const method = currentLineId ? 'PUT' : 'POST';
+
+        console.log("URL " + url);
+        console.log("Method " + method);
+        // console.log("Form Data: ", Object.fromEntries(formData));
+        console.log("Form Data: ", formData);
+
+        formDataObject = Object.fromEntries(formData);
+
+        fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formDataObject)
+        })   
+          .then(response => response.json())
+          .then(data => {
+              console.log('Result:', data.Result);
+
+              if (data.Result != "Success")
+              {
+                  if (currentLineId)
+                  {
+                      console.log("Update line failed.")
+
+                      Swal.fire({
+                        title: 'FAILED!',
+                        text: 'Update line failed in transaction with id ' + currentMasterId + ' and line id ' + currentLineId + '. ' + data.Message,
+                        icon: 'error',                  
+                        confirmButtonText: 'Close'
+                      }).then((result2) => {
+                          // Reload the data grid
+                          htmx.ajax('GET', '/gk-lines/' + currentMasterId, {
+                            target: '.datagrid-container-detail',
+                            swap: 'innerHTML'
+                          });                                
+                      });
+ 
+                      return;
+                  }
+                  else
+                  {
+                      console.log("Insert new line failed.")
+
+                      Swal.fire({
+                        title: 'FAILED!',
+                        text: 'Insert line failed in transaction with id ' + currentMasterId + '. ' + data.Message,
+                        icon: 'error',                  
+                        confirmButtonText: 'Close'
+                      }).then((result2) => {
+                          // Reload the data grid
+                          htmx.ajax('GET', '/gk-lines/' + currentMasterId, {
+                            target: '.datagrid-container-detail',
+                            swap: 'innerHTML'
+                           });                                
+                      });
+
+                      return;
+                  }
+                    
+              }
+      
+              let titlex = "";
+              let textx = "";
+              if (currentLineId)
+              {
+                  titlex = "Successfully updated!";
+                  textx = 'Updated line in transaction with id ' + currentMasterId + ' and line id ' + currentLineId + '.';
+              }
+              else
+              {
+                  titlex = "Successfully inserted!";
+                  textx = 'Inserted line in transaction with id ' + currentMasterId + '.';
+              }
+
+              //Success
+              Swal.fire({
+                  title: titlex,
+                  text: textx,
+                  icon: 'success',
+                  //timer: 3000,
+                  confirmButtonText: 'Close'
+              }).then((result2) => {
+                  // Reload the data grid
+                  htmx.ajax('GET', '/gk-lines/' + currentMasterId, {
+                    target: '.datagrid-container-detail',
+                    swap: 'innerHTML'
+                  }).then(() => {
+                      // Reload first line data to refresh the form
+                      loadFirstLineData(currentMasterId);
+                  });
+              });
+
+          })
+          .catch(error => {
+              if (currentLineId)
+              {
+                  console.error('Error UPDATE line:', error); 
+              }
+              else
+              {
+                  console.error('Error INSERT line:', error); 
+              }         
+        });
+      }
+      catch(error)
+      {
+         console.error('Error:', error);
+      }
+    })
+
+
+    // Function to populate form for editing
+    function populateLineForm(masterId, lineData) {
+
+      currentMasterId = masterId;
+      currentLineId = lineData.lineId;
+      isEditMode = !!lineData.lineId;
+
+      document.querySelector('input[name="masterId"]').value = masterId;
+      document.querySelector('input[name="lineId"]').value = lineData.lineId || '';
+      document.querySelector('input[name="GK_LN_KONTO"]').value = lineData.account || '';
+      document.querySelector('input[name="GK_LN_OBJED"]').value = lineData.costCenter || '';
+      document.querySelector('input[name="GK_LN_OPIS"]').value = lineData.description || '';
+      document.querySelector('select[name="GK_LN_DP"]').value = lineData.dp || '';
+      document.querySelector('input[name="GK_LN_IZNOS"]').value = lineData.amount || '';
+      document.querySelector('input[name="GK_LN_BRDOK"]').value = lineData.docId || '';
+      document.querySelector('input[name="GK_LN_DATDOK"]').value = lineData.docDate || '';
+      document.querySelector('input[name="GK_LN_PARTNR"]').value = lineData.partner || '';
+      document.querySelector('input[name="GK_LN_SIFDVZ"]').value = lineData.currency || '';
+      document.querySelector('input[name="GK_LN_TECAJ"]').value = lineData.rate || '';
+      document.querySelector('input[name="GK_LN_IZNDEV"]').value = lineData.amountCurr || '';
+
+      updateFormState();
+      document.querySelector('.bottom-form h2').textContent = currentLineId ? 'Line Details' : 'New Line Entry';
+    }
+
+
+    function setStyleToElementsOnLineForm() {
+      // Select all input and select elements inside the line entry form
+      const elements = document.querySelectorAll('#line-entry-form input, #line-entry-form select');
+      elements.forEach(el => {
+        //console.log(el + "***" + el.value);
+        // If value is not blank, set text color to black
+        if (el.value && el.value.trim() !== '') {
+          el.style.color = 'black';
+        } else {
+          el.style.color = 'gray'; // Reset to default if blank
+        }
+      });
+    }
+
+    // Function to enable form for new line entry
+    function enableNewLineForm(masterId) {
+      currentMasterId = masterId;
+      currentLineId = null;
+      isEditMode = false;
+
+      // Clear form but keep masterId
+      document.getElementById('line-entry-form').reset();
+      document.querySelector('input[name="masterId"]').value = masterId;
+      document.querySelector('input[name="lineId"]').value = '';
+
+      updateFormState();
+      document.querySelector('.bottom-form h2').textContent = 'New Line Entry';
+    }
+
+    // Function to set master edit mode
+    function setMasterEditMode(editMode) {
+      isMasterInEditMode = editMode;
+      updateFormState();
+
+      // Update visual indication
+      if (editMode) {
+        document.querySelector('.bottom-form').classList.add('edit-mode');
+      } else {
+        document.querySelector('.bottom-form').classList.remove('edit-mode');
+      }
+    }
+
+    // Function to handle master save/cancel - preserve current line
+    function handleMasterSaveCancel() {
+      // console.log('handleMasterSaveCancel called');
+      // console.log('currentMasterId:', currentMasterId);
+      // console.log('currentLineId:', currentLineId);
+
+      const currentSelectedLineId = currentLineId;
+      setMasterEditMode(false);
+
+      // After master table refreshes, restore the current line selection
+      if (currentMasterId && currentSelectedLineId) {
+        // console.log('Attempting to restore line selection after 300ms delay');
+        setTimeout(() => {
+          // Reload the lines for this master
+          fetch(`/gk-lines/${currentMasterId}`)
+            .then(response => response.text())
+            .then(html => {
+              document.querySelector('.datagrid-container-detail').innerHTML = html;
+
+              // Try to select the same line again
+              setTimeout(() => {
+                const lineRow = document.querySelector(`.datagrid-container-detail tr[data-line="${currentSelectedLineId}"]`);
+                // console.log('Looking for line row with id:', currentSelectedLineId);
+                // console.log('Found line row:', lineRow);
+
+                if (lineRow) {
+                  selectLineForEdit(lineRow);
+                } else {
+                  // If line no longer exists, select first line
+                  // console.log('Original line not found, selecting first line');
+                  loadFirstLineData(currentMasterId);
+                }
+              }, 100);
+            })
+            .catch(error => {
+              console.error('Error reloading lines:', error);
+              loadFirstLineData(currentMasterId);
+            });
+        }, 300);
+      } else if (currentMasterId) {
+        // Just reload first line if no specific line was selected
+        setTimeout(() => {
+          loadFirstLineData(currentMasterId);
+        }, 300);
+      }
+    }
+
+    // Function to load first line when master is selected
+    function loadFirstLineData(masterId) {
+      // Wait a bit for the detail table to load, then select first line
+      setTimeout(() => {
+        const firstLineRow = document.querySelector('.datagrid-container-detail tr[data-line]');
+        if (firstLineRow) {
+          selectLineForEdit(firstLineRow);
+        } else {
+          // No lines exist, enable new line form
+          enableNewLineForm(masterId);
+        }
+      }, 100);
+    }
+
+    // Listen for master row selection to enable new line entry
+    htmx.on('.datagrid-container-master', 'htmx:afterSwap', function () {
+      //console.log('master htmx:afterSwap 2 fired');
+      addRowClickHandlers();
+
+      // Check if we're back to normal view (not edit mode)
+      const editForm = document.querySelector('.datagrid-container-master form');
+      if (!editForm) {
+        setMasterEditMode(false);
+      }
+
+      // Enable form for first row if available and load first line
+      const firstRow = document.querySelector('.datagrid-container-master tr[data-id]');
+      if (firstRow) {
+        const masterId = firstRow.getAttribute('data-id');
+        highlightCurrentRow(firstRow);
+        currentMasterId = masterId;
+
+        // Load first line data when detail table loads
+        htmx.ajax('GET', `/gk-lines/${masterId}`, {
+          target: '.datagrid-container-detail',
+          swap: 'innerHTML'
+        }).then(() => {
+          loadFirstLineData(masterId);
+        });
+      }
+    });
+
+    // Listen for detail table updates to add line click handlers
+    htmx.on('.datagrid-container-detail', 'htmx:afterSwap', function () {
+      //console.log('Detail afterSwap, adding line click handlers');
+      addLineClickHandlers();
+      // Auto-select first line if available
+      console.log('Current master ID:', currentMasterId);
+      if (currentMasterId) {
+        loadFirstLineData(currentMasterId);
+      }
+    });
+
+    // Function to add click handlers to line rows
+    function addLineClickHandlers() {
+      document.querySelectorAll('.datagrid-container-detail tr[data-line]').forEach(row => {
+        row.addEventListener('click', function (e) {
+          // Only handle click if not clicking on buttons
+          if (!e.target.closest('button')) {
+            selectLineForEdit(this);
+          }
+        });
+      });
+    }
+
+    // Override the addRowClickHandlers to include form enabling
+    function addRowClickHandlers() {
+      document.querySelectorAll('.datagrid-container-master tr[data-id]').forEach(row => {
+        row.addEventListener('click', function (e) {
+          // Only highlight if not clicking on buttons or form elements
+          if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
+            highlightCurrentRow(this);
+            const masterId = this.getAttribute('data-id');
+            currentMasterId = masterId;
+
+            // Load lines for this master and select first line
+            htmx.ajax('GET', `/gk-lines/${masterId}`, {
+              target: '.datagrid-container-detail',
+              swap: 'innerHTML'
+            }).then(() => {
+              loadFirstLineData(masterId);
+            });
+          }
+        });
+      });
+    }
+
+  </script>
+
+  <script>
+    // window.onload = function () {
+    //   Swal.fire({
+    //     title: 'Hello!',
+    //     text: 'This alert appears when the page is fully loaded.',
+    //     icon: 'success',
+    //     confirmButtonText: 'Cool'
+    //   });
+    // };
+  </script>
+
+  <script>
+    function confirmDeleteGlava(id) 
+    {
+        try
+        {
+          Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, keep it'
+          }).then((result) => {
+            if (result.isConfirmed) 
+            {       
+
+              fetch('/gk-transactions-norefresh/' + id, {
+                method: 'DELETE',
+                // headers: {
+                //    'Content-Type': 'application/json'
+                // }
+              })
+                .then(response => response.json())
+                  .then(data => {
+                    //console.log('Success:'+ data);
+
+                    if (data.Result == "Failed")
+                    {
+                      Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to delete the transaction. ' + data.Message,
+                        icon: 'error',
+                        confirmButtonText: 'Close'
+                      });
+
+                      return;
+                    }
+
+                    //alert('CONFIRM DELETION OF ID: ' + id);
+                    Swal.fire({
+                      title: 'Successfully deleted!',
+                      text: 'Deleted transaction with id ' + id + '. ',
+                      icon: 'success',
+                      //timer: 3000,
+                      confirmButtonText: 'Close'
+                      }).then((result2) => {
+                        
+                        htmx.ajax('GET', '/gk-transactions', {
+                          target: '.datagrid-container-master',
+                          swap: 'innerHTML'
+                        });
+
+                        //console.log('Zadnji sweet alert zatvoren');
+                      });
+                  })
+                  .catch(error => {
+                    console.error('Error:', error);
+                  });
+
+            }
+          });
+        }
+        catch(error)
+        {
+          console.error('Error:', error);
+        }
+    }
+
+    // Theme toggle functionality
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeToggle = document.getElementById('theme-toggle');
+
+      if (themeToggle.checked) {
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        html.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    // Load saved theme on page load
+    document.addEventListener('DOMContentLoaded', function () {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      const html = document.documentElement;
+      const themeToggle = document.getElementById('theme-toggle');
+
+      html.setAttribute('data-theme', savedTheme);
+      if (savedTheme === 'dark') {
+        themeToggle.checked = true;
+      }
+    });
+  </script>
+
+  <script>
+    //  document.body.addEventListener('htmx:afterSwap', function(evt) {
+    //    console.log('document.body htmx:afterSwap fired');
+    // // Check if the swap target is .datagrid-container-detail
+    // if (evt.target.classList.contains('datagrid-container-detail')) {
+    //   // Your code here
+    //   console.log('Detail afterSwap, adding line click handlers');
+    //   addLineClickHandlers();
+    //   if (currentMasterId) {
+    //     loadFirstLineData(currentMasterId);
+    //   }
+    // }
+    //});
+  </script>
+  <script>
+    function confirmDeleteLine(masterId, lineId) 
+    {
+      try
+      {
+        // Check if we are in edit mode
+        const editForm = document.querySelector('.datagrid-container-master form');
+        if (!editForm) {
+          Swal.fire({
+            title: 'Edit Mode',
+            text: 'You cannot delete a line because the transaction is not in edit mode!',
+            icon: 'warning',
+            showCancelButton: false,
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+
+        Swal.fire({
+          title: 'Are you sure?',
+          text: 'This action cannot be undone.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, delete it!',
+          cancelButtonText: 'No, keep it'
+        }).then((result) => {
+          if (result.isConfirmed) {
+
+            fetch('/gk-lines-norefresh/' + masterId + "/" + lineId, {
+              method: 'DELETE',
+              // headers: {
+              //   'Content-Type': 'application/json'
+              // }
+            })
+              .then(response => response.json())
+                .then(data => {
+                  console.log('Result:', data.Result);
+
+                  if (data.Result != "Success")
+                  {
+                    console.log("Delete line failed.")
+
+                    Swal.fire({
+                      title: 'FAILED!',
+                      text: 'Delete line failed in transaction with id ' + masterId + ' and line id ' + lineId + '. ' + data.Message,
+                      icon: 'error',                  
+                      confirmButtonText: 'Close'
+                    }).then((result2) => {
+                      // Reload the data grid
+                      htmx.ajax('GET', '/gk-lines/' + masterId, {
+                        target: '.datagrid-container-detail',
+                        swap: 'innerHTML'
+                      });
+                                
+                    });
+
+                    return;
+                  }
+              
+                  Swal.fire({
+                    title: 'Successfully deleted!',
+                    text: 'Deleted line in transaction with id ' + masterId + ' and line id ' + lineId + '.',
+                    icon: 'success',
+                    //timer: 3000,
+                    confirmButtonText: 'Close'
+                  }).then((result2) => {
+                    // Reload the data grid
+                    htmx.ajax('GET', '/gk-lines/' + masterId, {
+                      target: '.datagrid-container-detail',
+                      swap: 'innerHTML'
+                    });
+
+                
+                    //console.log('Zadnji sweet alert zatvoren');
+                  });
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                });
+
+          }
+        });
+      }
+      catch(error)
+      {
+          console.error('Error:', error);
+      }
+    }
+  </script>
+  <script>
+    function isInt(str) {
+      if (str == "") {
+        return false;
+      }
+
+      const num = Number(str);
+
+      if (Number.isInteger(num)) {
+        if ((num >= -2147483648) && (num <= 2147483647)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    function isSmallInt(str) {
+      if (str == "") {
+        return false;
+      }
+
+      const num = Number(str);
+
+      if (Number.isInteger(num)) {
+        if ((num >= -32768) && (num <= 32767)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    function isFloat(value) {
+      try {
+        if (typeof value === "number") {
+          if (!isNaN(value)) {
+            return true;
+          }
+
+          return false;
+        }
+
+        if (typeof value === "string") {
+          str = value.trim();
+
+          if (str == "") {
+            return false;
+          }
+
+          str2 = str.replaceAll(",", ".");
+
+          if (!isNaN(str2)) {
+            return true;
+          }
+
+          return false;
+        }
+      }
+      catch (ex22) {
+        console.log(ex22);
+        return false;
+      }
+
+      return false;
+    }
+
+
+    function removeLeadingZeros(value) {
+      if (value === "") {
+        return "";
+      }
+
+      while (value.startsWith("0")) {
+        value = value.substring(1);
+      }
+
+      return value;
+    }
+
+
+    function isDate(value) {
+      if (value == "") {
+        return false;
+      }
+
+      try {
+        let numbers = value.split("-");
+        if (numbers.length != 3) {
+          throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+
+        stryear = numbers[0];
+        strmonth = numbers[1];
+        strday = numbers[2];
+
+        stryear = removeLeadingZeros(stryear);
+        strmonth = removeLeadingZeros(strmonth);
+        strday = removeLeadingZeros(strday);
+
+        if (isInt(strday) == false || isInt(strmonth) == false || isInt(stryear) == false) {
+          throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+
+        // Check if value is a valid date
+        let day = Number(strday);
+        let month = Number(strmonth);
+        let year = Number(stryear);
+
+
+        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+          throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+        //console.log("Date Validacija OK");
+        return true;
+      }
+      catch (ex11) {
+        console.log(ex11);
+        return false;
+      }
+
+      return false;
+    }
+  </script>
+
+
+</body>
+
+</html>

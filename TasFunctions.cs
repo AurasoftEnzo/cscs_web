@@ -32,8 +32,6 @@ using System.Windows;
 //using System.Windows.Controls.Primitives;
 //using System.Windows.Data;
 using System.Windows.Input;
-//using System.Windows.Media;
-//using WpfControlsLibrary;
 
 namespace cscs_web
 {
@@ -47,7 +45,7 @@ namespace cscs_web
             //public const string WINFORM = "#WINFORM";
             public const string READ_XML_FILE = "ReadXmlFile";
             public const string READ_TAGCONTENT_FROM_XMLSTRING = "readTagContentFromXmlString";
-            public const string STRINGS = "Strings";
+            //public const string STRINGS = "Strings";
             //public const string GET_FILE = "GET_FILE";
             public const string DLLFC = "DLLFC";
             public const string FFILE = "FFILE";

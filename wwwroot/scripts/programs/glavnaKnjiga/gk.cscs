@@ -1,0 +1,3292 @@
+// var1 = askdjhaksjd();
+
+// SQLConnectionString(ReadConfig("SqlConnectionString"));
+
+// Add to the beginning of the file
+currentlyEditingId = null;
+
+// ===== GLOBAL CONFIGURATION =====
+gk_masterFields = {
+    "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
+    "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
+    "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
+    "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
+};
+
+gk_lineFields = {
+    "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
+    "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
+    "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
+};
+
+gk_defaultValues = {
+    "GK_GL_BR_TEM": "0",
+    "GK_GL_DATUM": "",
+    "GK_GL_POSTED": "",
+    "GK_GL_OPIS": "",
+    "GK_GL_GOD": "",
+    "GK_GL_TIP": "", 
+    "GK_GL_OZNAKA": "", 
+    "GK_GL_ZNAK": 0,
+    "GK_GL_IZNL": 0, 
+    "GK_GL_IZNP": 0, 
+    "GK_GL_ZATV_KLAS": "", 
+    "GK_GL_POC_STANJ": "",
+    "GK_GL_BRDOK": 0,     
+    "GK_GL_DATDOK": "", //"1900-01-01"
+    "GK_GL_PARTNER": "", 
+    "GK_GL_BR_LIN": 0
+    // ... other default values
+};
+
+gk_masterLabels = {
+    "ID", "Date", "Posted", "Description",
+    "Year", "Type", "Mark", "Sign",
+    "Amount NL", "Amount NP", "Closed", "Status",
+    "Doc Num", "Doc Date", "Partner", "Line"
+};
+
+function gk_generateForm(mode, values, id = null, errorHtml = "") {
+    // mode can be "new" or "edit"
+    gk_generateForm_isEdit = (mode == "edit");
+    
+    print("GLAVA isEdit=" + gk_generateForm_isEdit);
+    
+    gk_generateForm_html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>";
+    
+    if (errorHtml != "") {
+        gk_generateForm_html += errorHtml;
+    }
+    
+    gk_generateForm_html += "    <div class='grid grid-cols-8 gap-4'>";
+    
+    for(i = 0; i < Size(gk_masterFields); i++) {
+        
+        gk_generateForm_field = gk_masterFields[i];
+        //print("field=" + field);
+        //value = Contains(values, field) ? values[field] : gk_defaultValues[field];
+        if (Contains(values, gk_generateForm_field))
+        {
+            gk_generateForm_value = values[gk_generateForm_field];
+        }
+        else
+        {
+            gk_generateForm_value = gk_defaultValues[gk_generateForm_field];
+        }
+        
+        // if (gk_generateForm_field=="GK_GL_DATUM") 
+        // {
+        //     print("DATUMSKO POLJE JE GK_GL_DATUM = " + gk_generateForm_value);
+        // }
+
+        // if (gk_generateForm_field=="GK_GL_DATDOK")
+        // {
+        //     print("DATUMSKO POLJE JE GK_GL_DATDOK = " + gk_generateForm_value);
+        // }
+
+        // fieldSplit2 = field.Split("_");
+        // print(fieldSplit2[2]);
+
+        //gk_generateForm_fieldShort = strReplace(gk_generateForm_field, "GK_GL_", "");
+        gk_generateForm_fieldShort = gk_masterLabels[i];
+
+        gk_generateForm_ternary1 = (gk_generateForm_field == "GK_GL_BR_TEM" && gk_generateForm_isEdit == true ? " readonly " : "");
+
+        //gk_generateForm_ternary2 = ((gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK")) ? " type='date'" : "");
+        if (gk_generateForm_field.EndsWith("DATUM") || gk_generateForm_field.EndsWith("DATDOK"))
+        {
+            gk_generateForm_ternary2 = " type='date'";
+        }
+        else
+        {
+            gk_generateForm_ternary2 = "";
+        }
+      
+        gk_generateForm_html += "      <div><label>" + gk_generateForm_fieldShort + ":</label>" +
+                "        <input class='input input-bordered input-sm w-full' " +
+                "               name='" + gk_generateForm_field + "' " +
+                gk_generateForm_ternary1 +
+                "               value='" + gk_generateForm_value + "'" +
+                "               " + gk_generateForm_ternary2 + ">" +
+                "      </div>";
+
+        // print(html);
+       
+    }
+    
+    //POST => INSERT
+    //PUT => UPDATE
+    gk_generateForm_ternary3 = (gk_generateForm_isEdit ? "put" : "post");
+    gk_generateForm_ternary4 = (gk_generateForm_isEdit ? "/" + id : "");
+
+    gk_generateForm_html += "    </div>" +
+            "    <div class='form-actions mt-4'>" +
+            "      <button class='btn btn-success btn-sm' " +
+            //"              hx-" + (isEdit ? "put" : "post") + "='/gk-transactions" + (isEdit ? "/" + id : "") + "' " +
+            "              hx-" + gk_generateForm_ternary3 + "='/gk-transactions" + gk_generateForm_ternary4 + "' " +
+            "              hx-include='closest form' " +
+            "              hx-target='.datagrid-container-master' " +
+            "              hx-swap='outerHTML'>Save</button>" +
+            "      <button class='btn btn-error btn-sm' " +
+            "              hx-get='/gk-transactions' " +
+            "              hx-target='.datagrid-container-master' " +
+            "              hx-swap='outerHTML'>Cancel</button>" +
+            "    </div>" +
+            "  </form>" +
+            "</div>";
+    
+    return gk_generateForm_html;
+}
+
+//MASTER TABLE
+function gk_get(){
+    root_headers = {"Content-Type": "text/html"};
+    return Response(root_headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "glavnaKnjiga\\" + "gk.html")), 200);
+}
+
+
+
+// Main endpoint for GK transactions grid
+//CreateEndpoint("GET", "/gk-transactions", "getGKTransactions");
+function getGKTransactions(requestGlave) {
+    // ... (keep existing pagination/sorting/search logic) ...
+    // Pagination
+    gkTrans_page = 1;
+    if (Contains(requestGlave["QueryParams"], "page")) {
+        gkTrans_page = int(requestGlave["QueryParams"]["page"]);
+    }
+    if (gkTrans_page < 1) {
+        gkTrans_headers = {"Content-Type": "text/html"};
+        return Response(gkTrans_headers, "Error: 'page' must be positive integer", 200);
+    }
+    
+    // Sorting
+    gkTrans_sort = "GK_GL_BR_TEM";
+    if (Contains(requestGlave["QueryParams"], "sort")) {
+        gkTrans_sort = requestGlave["QueryParams"]["sort"];
+    }
+    
+    gkTrans_order = "asc";
+    if (Contains(requestGlave["QueryParams"], "order")) {
+        gkTrans_order = requestGlave["QueryParams"]["order"];
+    }
+    
+    // Search - always exclude zero/null IDs
+    // Search
+    gkTrans_search = "";
+    if (Contains(requestGlave["QueryParams"], "search")) {
+        gkTrans_search = requestGlave["QueryParams"]["search"];
+    }
+    
+    // Fixed page size
+    gkTrans_pageSize = 5;
+    gkTrans_skip = (gkTrans_page - 1) * gkTrans_pageSize;
+        
+    //ALERT after html
+    gkTrans_alert = "";
+    if (Contains(requestGlave["QueryParams"], "alertText")) 
+    {
+        gkTrans_alert = requestGlave["QueryParams"]["alertText"];
+    }
+    //print("gkTrans_alert=" + gkTrans_alert);
+
+    // Build SQL query - always exclude zero/null IDs
+    gkTrans_whereClause = " WHERE GK_GL_BR_TEM IS NOT NULL AND GK_GL_BR_TEM <> 0";
+    if (gkTrans_search != "") {
+        gkTrans_whereClause += " AND (GK_GL_BR_TEM LIKE @search OR GK_GL_OPIS LIKE @search OR GK_GL_OZNAKA LIKE @search)";
+    }
+    
+    gkTrans_query = "SELECT " +
+            "GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'dd.MM.yyyy') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS, " +
+            "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK, " +
+            "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ, " +
+            "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'dd.MM.yyyy') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN " +
+            "FROM NKGKGLTM" + gkTrans_whereClause + " " +
+            "ORDER BY " + gkTrans_sort + " " + gkTrans_order + " " +
+            "OFFSET @skip ROWS FETCH NEXT @pageSize ROWS ONLY";
+    
+    gkTrans_countQuery = "SELECT COUNT(*) FROM NKGKGLTM" + gkTrans_whereClause;
+    
+    // Execute queries
+    gkTrans_sqlParams = {};
+    gkTrans_sqlParams.Add({"@skip", gkTrans_skip});
+    gkTrans_sqlParams.Add({"@pageSize", gkTrans_pageSize});
+    if (gkTrans_search != "") {
+        gkTrans_sqlParams.Add({"@search", "%" + gkTrans_search + "%"});
+    }
+    gkTrans_transactions = sqlQuery(gkTrans_query, gkTrans_sqlParams);
+
+    gkTrans_countResult = sqlQuery(gkTrans_countQuery, gkTrans_sqlParams);
+    gkTrans_totalRecords = gkTrans_countResult[1][0];
+
+    gkTrans_totalPages = Math.Ceil(gkTrans_totalRecords / gkTrans_pageSize);
+
+    // Build HTML
+    gkTrans_html = "<div class='datagrid-container-master'>";
+        //start the table
+        gkTrans_html += "<table class='datagrid-table'>";
+        // Add the table header
+        gkTrans_html += "<thead><tr>";
+            // Example for the ID column (sortable)
+            // Add Select column header
+            gkTrans_html += "<th class='frozen-column-select'>Select</th>";
+            // Modify ID column header
+            gkTrans_newOrder = "asc";
+            // ... rest of headers ...    
+            if (gkTrans_sort == "GK_GL_BR_TEM" && gkTrans_order == "asc") {
+                gkTrans_newOrder = "desc";
+            }
+            gkTrans_html += "<th class='frozen-column-id'><a class='link' hx-get='/gk-transactions?page=1&sort=GK_GL_BR_TEM&order=" + gkTrans_newOrder + "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>ID</a></th>";
+            // Example for other columns
+            gkTrans_headers = [
+                ["GK_GL_DATUM", "Date"],
+                ["GK_GL_POSTED", "Posted"],
+                ["GK_GL_OPIS", "Description"],
+                ["GK_GL_GOD", "Year"],
+                ["GK_GL_TIP", "Type"],
+                ["GK_GL_OZNAKA", "Mark"],
+                ["GK_GL_ZNAK", "Sign"],
+                ["GK_GL_IZNL", "Amount NL"],
+                ["GK_GL_IZNP", "Amount NP"],
+                ["GK_GL_ZATV_KLAS", "Closed"],
+                ["GK_GL_POC_STANJ", "Status"],
+                ["GK_GL_BRDOK", "Doc Num"],
+                ["GK_GL_DATDOK", "Doc Date"],
+                ["GK_GL_PARTNER", "Partner"],
+                ["GK_GL_BR_LIN", "Line"] // ,
+               // ["", "Actions"]
+            ];
+
+            for(gkTrans_i = 0; gkTrans_i < Size(gkTrans_headers); gkTrans_i++) {
+                gkTrans_headerField = gkTrans_headers[gkTrans_i][0];
+                gkTrans_headerTitle = gkTrans_headers[gkTrans_i][1];
+
+                if (gkTrans_headerField != "") {
+                    gkTrans_newOrder = "asc";
+                    if (gkTrans_sort == gkTrans_headerField && gkTrans_order == "asc") {
+                        gkTrans_newOrder = "desc";
+                    }
+                    gkTrans_html += "<th><a class='link' hx-get='/gk-transactions?page=1&sort=" + gkTrans_headerField + "&order=" + gkTrans_newOrder + "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>" + gkTrans_headerTitle + "</a></th>";
+                //} else {
+                //    gkTrans_html += "<th>" + gkTrans_headerTitle + "</th>";
+                }
+            }
+            // Change the Actions header to use frozen-column-right
+            gkTrans_headerTitle = "Actions";
+            gkTrans_html += "<th class='frozen-column-right'>" + gkTrans_headerTitle + "</th>";
+        gkTrans_html += "</tr></thead>";
+        // Start the table body
+        gkTrans_html += "<tbody>";
+        // ... your data rows here ...
+        
+        if(gkTrans_transactions != null && Size(gkTrans_transactions) > 1) {
+            for(gkTrans_i = 1; gkTrans_i < Size(gkTrans_transactions); gkTrans_i++) {
+                gkTrans_row = gkTrans_transactions[gkTrans_i];
+                // Skip data-original to avoid HTML corruption issues
+                // Just use data-id which is all we need for row selection
+                
+                // In the row generation loop, create rows with proper classes from the start:
+                if (gkTrans_i % 2 == 0) {
+                    gkTrans_html += "<tr data-id='" + gkTrans_row[0] + "' class='bg-base-200 hover:bg-base-300 cursor-pointer' hx-get='/gk-lines/" + gkTrans_row[0] + "' hx-target='.datagrid-container-detail' hx-swap='innerHTML' onclick='currentMasterId = " + gkTrans_row[0] + "; loadFirstLineData(" + gkTrans_row[0] + ");'>";
+                } else {
+                    gkTrans_html += "<tr data-id='" + gkTrans_row[0] + "' class='hover:bg-base-300 cursor-pointer' hx-get='/gk-lines/" + gkTrans_row[0] + "' hx-target='.datagrid-container-detail' hx-swap='innerHTML' onclick='currentMasterId = " + gkTrans_row[0] + "; loadFirstLineData(" + gkTrans_row[0] + ");'>";
+                }
+               // Select column
+                gkTrans_html += "<td class='frozen-column-select'><input type='checkbox' class='checkbox' name='selectedRows' value='" + gkTrans_row[0] + "' title='Select row " + gkTrans_row[0] + "' aria-label='Select row " + gkTrans_row[0] + "'></td>";
+                // ID column
+                gkTrans_html += "<td class='frozen-column-id text-right' data-field='GK_GL_BR_TEM'>" + gkTrans_row[0] + "</td>";
+                // ... rest of cells ...
+                
+                // Cells with proper data-field attributes
+                gkTrans_html += "<td data-field='GK_GL_DATUM' class='text-center'>" + gkTrans_row[1] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_POSTED' class='text-center'>" + gkTrans_row[2] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_OPIS' class='text-left'>" + gkTrans_row[3] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_GOD' class='text-center'>" + gkTrans_row[4] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_TIP' class='text-center'>" + gkTrans_row[5] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_OZNAKA' class='text-center'>" + gkTrans_row[6] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_ZNAK' class='text-center'>" + gkTrans_row[7] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_IZNL' class='text-center'>" + gkTrans_row[8] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_IZNP' class='text-center'>" + gkTrans_row[9] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_ZATV_KLAS' class='text-center'>" + gkTrans_row[10] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_POC_STANJ' class='text-center'>" + gkTrans_row[11] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_BRDOK' class='text-center'>" + gkTrans_row[12] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_DATDOK' class='text-center'>" + gkTrans_row[13] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_PARTNER' class='text-center'>" + gkTrans_row[14] + "</td>";
+                gkTrans_html += "<td data-field='GK_GL_BR_LIN' class='text-center'>" + gkTrans_row[15] + "</td>";
+            
+                // Actions column
+                // Change the actions cell to use frozen-column-right
+                gkTrans_html += "<td class='flex gap-1 frozen-column-right'>";
+                
+                gkTrans_html += "<button class='btn btn-info btn-xs action-button' hx-get='/gk-transactions/" + gkTrans_row[0] + "/edit' hx-target='.datagrid-container-master' hx-swap='outerHTML' onclick='setMasterEditMode(true)'>Edit</button>";
+                
+                //gkTrans_html += "<button class='btn btn-error btn-sm' hx-delete='/gk-transactions/" + gkTrans_row[0] + "' hx-target='.datagrid-container-master' hx-swap='outerHTML' hx-confirm='Are you sure?'>Delete</button>";
+                gkTrans_html += "<button class='btn btn-error btn-xs action-button' onclick='confirmDeleteGlava(" + gkTrans_row[0] + ")'>Delete</button>";
+                
+                gkTrans_html += "</td>";
+                gkTrans_html += "</tr>";
+            }
+        }
+        gkTrans_html += "</tbody></table>";
+
+        // Pagination
+        gkTrans_html += "<div class='pagination'>";
+        if(gkTrans_page > 1) {
+            gkTrans_html += "<a class='btn btn-sm' hx-get='/gk-transactions?page=" + (gkTrans_page - 1) + "&sort=" + gkTrans_sort + "&order=" + gkTrans_order + 
+                    "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Previous</a>";
+        }
+        gkTrans_html += "<span class='page-info'>Page " + gkTrans_page + " of " + gkTrans_totalPages + "</span>";
+        if(gkTrans_page < gkTrans_totalPages) {
+            gkTrans_html += "<a class='btn btn-sm' hx-get='/gk-transactions?page=" + (gkTrans_page + 1) + "&sort=" + gkTrans_sort + "&order=" + gkTrans_order + 
+                    "&search=" + gkTrans_search + "' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Next</a>";
+        }
+        gkTrans_html += "</div>";  
+    gkTrans_html += "</div>"; 
+
+    gkTrans_html += gkTrans_alert; 
+    
+    
+    gkTrans_headers1 = {"Content-Type": "text/html"};
+
+    
+    return Response(gkTrans_headers1, gkTrans_html, 200);
+}
+
+// New transaction form
+//CreateEndpoint("GET", "/gk-transactions/new", "getNewGKTransactionForm");
+/*
+function getNewGKTransactionForm(args) {
+    newForm_html = "<div class='datagrid-container-master'>" +
+       "  <form class='vertical-form eight-column-form'>" +
+       "    <div class='grid grid-cols-8 gap-4'>" +
+       "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM'></div>" +
+       "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM'></div>" +
+       "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' maxlength='1'></div>" +
+       "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' maxlength='50'></div>" +
+       "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' maxlength='2'></div>" +
+       "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' maxlength='2'></div>" +
+       "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' maxlength='10'></div>" +
+       "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK'></div>" +
+       "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL'></div>" +
+       "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP'></div>" +
+       "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' maxlength='1'></div>" +
+       "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' maxlength='1'></div>" +
+       "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK'></div>" +
+       "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK'></div>" +
+       "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' maxlength='10'></div>" +
+       "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN'></div>" +
+       "    </div>" +
+       "    <div class='form-actions mt-4'>" +
+       "      <button class='btn btn-success btn-sm' hx-post='/gk-transactions' hx-include='closest form' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Save</button>" +
+       "      <button class='btn btn-error btn-sm' hx-get='/gk-transactions' hx-target='.datagrid-container-master' hx-swap='outerHTML'>Cancel</button>" +
+       "    </div>" +
+       "  </form>" +
+       "</div>";
+
+    newForm_headers = {"Content-Type": "text/html"};
+    return Response(newForm_headers, newForm_html, 200);
+}
+*/
+
+function getNewGKTransactionForm(args) {
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, gk_generateForm("new", gk_defaultValues), 200);
+}
+
+
+// Create new transaction
+//CreateEndpoint("POST", "/gk-transactions", "createGKTransaction");
+function createGKTransaction(args) {
+    currentlyEditingId = null;
+    //print("createGKTransaction - DODAVANJE NOVE GLAVE");
+    // Get all form values
+    create_fields = {
+        "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
+        "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
+        "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
+        "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
+    };
+    //print("Creating new GK transaction with fields: " + create_fields);
+    // create_values = {};
+    // for(create_i = 0; create_i < Size(create_fields); create_i++) {
+    //     create_field = create_fields[create_i];
+    //     create_values[create_i]= GetValueFromForm(args["Body"], create_field);
+    // }
+
+    create_values2 = {};
+    create_values2["GK_GL_BR_TEM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_TEM"));
+    create_values2["GK_GL_DATUM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATUM"));
+    create_values2["GK_GL_POSTED"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POSTED"));
+    create_values2["GK_GL_OPIS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OPIS"));
+    create_values2["GK_GL_GOD"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_GOD"));
+    create_values2["GK_GL_TIP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_TIP"));
+    create_values2["GK_GL_OZNAKA"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OZNAKA"));
+    create_values2["GK_GL_ZNAK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZNAK"));
+    create_values2["GK_GL_IZNL"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNL"));
+    create_values2["GK_GL_IZNP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNP"));
+    create_values2["GK_GL_ZATV_KLAS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS"));
+    create_values2["GK_GL_POC_STANJ"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POC_STANJ"));
+    create_values2["GK_GL_BRDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BRDOK"));
+    create_values2["GK_GL_DATDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATDOK"));
+    create_values2["GK_GL_PARTNER"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_PARTNER"));
+    create_values2["GK_GL_BR_LIN"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_LIN"));
+
+    createGKTransaction_id = create_values2["GK_GL_BR_TEM"];
+
+    if (create_values2["GK_GL_ZNAK"]=="")
+    {
+        create_values2["GK_GL_ZNAK"]="0";//smallint
+    }
+
+    if (create_values2["GK_GL_IZNL"]=="")
+    {
+        create_values2["GK_GL_IZNL"]="0";//float
+    }
+
+    if (create_values2["GK_GL_IZNP"]=="")
+    {
+        create_values2["GK_GL_IZNP"]="0";//float
+    }
+
+    if (create_values2["GK_GL_BRDOK"]=="")
+    {
+        create_values2["GK_GL_BRDOK"]="0";//int
+    }
+
+    if (create_values2["GK_GL_DATDOK"]=="")
+    {
+        create_values2["GK_GL_DATDOK"]="1900-01-01";
+    }
+
+    if (create_values2["GK_GL_BR_LIN"]=="")
+    {
+        create_values2["GK_GL_BR_LIN"]="0";//smallint
+    }
+
+    //***************************************************
+    // Promjena zarez u točku za float brojeve
+    //***************************************************
+    create_values2["GK_GL_IZNL"] = create_values2["GK_GL_IZNL"].Replace("," , ".");
+    create_values2["GK_GL_IZNP"] = create_values2["GK_GL_IZNP"].Replace("," , ".");
+
+    //***************************************************
+    // Validate fields
+    //***************************************************  
+    if (IsInt(create_values2["GK_GL_BR_TEM"])==false)
+    {
+        print("Provjera GK_GL_BR_TEM nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        create_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_TEM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(create_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_BR_TEM je prošla");
+    }    
+
+    if (IsDate(create_values2["GK_GL_DATUM"])==false)
+    {
+        print("Provjera GK_GL_DATUM nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        create_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATUM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(create_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_DATUM je prošla");
+    }
+    
+
+    createGKTransaction_posted = create_values2["GK_GL_POSTED"];
+    if(createGKTransaction_posted.Length > 1)
+    {
+        print("Provjera GK_GL_POSTED nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POSTED nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_POSTED je prošla");
+    }
+
+    createGKTransaction_opis = create_values2["GK_GL_OPIS"];
+    if (createGKTransaction_opis.Length > 50)
+    {
+        print("Provjera GK_GL_OPIS nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OPIS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_OPIS je prošla");
+    }
+
+    createGKTransaction_god = create_values2["GK_GL_GOD"];
+    if (createGKTransaction_god.Length > 2)
+    {
+        print("Provjera GK_GL_GOD nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_GOD nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_GOD je prošla");
+    }
+
+    createGKTransaction_tip = create_values2["GK_GL_TIP"];
+    if (createGKTransaction_tip.Length > 2)
+    {
+        print("Provjera GK_GL_TIP nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_TIP nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_TIP je prošla");
+    }
+
+    createGKTransaction_oznaka = create_values2["GK_GL_OZNAKA"];
+    if (createGKTransaction_oznaka.Length > 10)
+    {
+        print("Provjera GK_GL_OZNAKA nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OZNAKA nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_OZNAKA je prošla");
+    }
+    
+    if (IsSmallInt(create_values2["GK_GL_ZNAK"])==false)
+    {
+        print("Provjera GK_GL_ZNAK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZNAK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_ZNAK je prošla");
+    }   
+    
+    if (IsFloat(create_values2["GK_GL_IZNL"])==false)
+    {
+        print("Provjera GK_GL_IZNL nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNL nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_IZNL je prošla");
+    } 
+    
+    if (IsFloat(create_values2["GK_GL_IZNP"])==false)
+    {
+        print("Provjera GK_GL_IZNP nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNP nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_IZNP je prošla");
+    }
+    
+
+    createGKTransaction_zatv_klas = create_values2["GK_GL_ZATV_KLAS"];
+    if (createGKTransaction_zatv_klas.Length > 1)
+    {
+        print("Provjera GK_GL_ZATV_KLAS nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZATV_KLAS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_ZATV_KLAS je prošla");
+    }
+
+    createGKTransaction_poc_stanj = create_values2["GK_GL_POC_STANJ"];
+    if (createGKTransaction_poc_stanj.Length > 1)
+    {
+        print("Provjera GK_GL_POC_STANJ nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POC_STANJ nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_POC_STANJ je prošla");
+    }
+    
+    if (IsInt(create_values2["GK_GL_BRDOK"])==false)
+    {
+        print("Provjera GK_GL_BRDOK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BRDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_BRDOK je prošla");
+    }   
+
+
+    if (IsDate(create_values2["GK_GL_DATDOK"])==false)
+    {
+        print("Provjera GK_GL_DATDOK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_DATDOK je prošla");
+    }
+
+    createGKTransaction_partner = create_values2["GK_GL_PARTNER"];
+    if (createGKTransaction_partner.Length > 10)
+    {
+        print("Provjera GK_GL_PARTNER nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_PARTNER nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_PARTNER je prošla");
+    }
+
+    if (IsSmallInt(create_values2["GK_GL_BR_LIN"])==false)
+    {
+        print("Provjera GK_GL_BR_LIN nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_LIN nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+                
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_BR_LIN je prošla");
+    }   
+
+    print('INSERT GLAVE: VALIDACIJA JE PROŠLA ZA SVA POLJA OK');
+
+  
+    //*********************************************************
+    //*********************************************************
+    //SELECT COUNT(*) GLAVA sa GK_GL_BR_TEM = id
+    createGKTransaction_query = "SELECT COUNT(*) "+
+        " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+
+    createGKTransaction_sqlParams = {};
+    createGKTransaction_sqlParams.Add({"@id", int(createGKTransaction_id)});
+
+    createGKTransaction_sqlResult = sqlQuery(createGKTransaction_query, createGKTransaction_sqlParams);
+
+    //ako ima redaka return error
+    createGKTransaction_recordExist = false;
+    if( (createGKTransaction_sqlResult == null) || 
+        (Size(createGKTransaction_sqlResult) < 2) ) 
+    {
+        createGKTransaction_recordExist = false;
+    }
+    else
+    {
+        if (createGKTransaction_sqlResult[1][0] == 0)
+        {
+            createGKTransaction_recordExist = false;
+        }
+        else
+        {
+            createGKTransaction_recordExist = true;
+        }
+    }
+
+    if (createGKTransaction_recordExist)
+    {        
+        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " postoji: nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        createGKTransaction_headers = {"Content-Type": "text/html"};
+        createGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " već postoji.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+
+        createGKTransaction_validationerror_html = getNewGKTransactionFormWithValues2(create_values2, createGKTransaction_alert);
+
+        return Response(createGKTransaction_headers, createGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + createGKTransaction_id + " postoji je prošla");
+    }    
+    //***********************************
+
+
+
+
+
+    // Build insert query
+    create_query = "INSERT INTO NKGKGLTM (";
+    create_first = true;
+    for(create_i = 0; create_i < Size(create_fields); create_i++) {
+        if (!create_first){ 
+            create_query += ", ";
+        }    
+        create_query += create_fields[create_i];
+        create_first = false;
+    }
+    //print("Insert 1.dio: " + create_query);
+    create_query += ") VALUES (";
+    create_first = true;
+    for(create_i = 0; create_i < Size(create_fields); create_i++) {
+        if (!create_first) {
+            create_query += ", ";
+        }
+        //create_query += create_fields[create_i] + "  @" + create_fields[create_i];
+        create_query += "@" + create_fields[create_i];
+        create_first = false;
+    }
+    create_query += ")";
+    // Execute query
+    create_sqlParams = {};
+    for(create_i = 0; create_i < Size(create_fields); create_i++) {
+        ////create_sqlParams.Add({create_fields[create_i], create_values[create_fields[create_i]]});
+        //create_sqlParams.Add({"@"+create_fields[create_i], create_values[create_i]});
+        current_field_name = create_fields[create_i];        
+        create_sqlParams.Add({"@"+create_fields[create_i], create_values2[current_field_name]});
+    }
+    
+    print("INSERT GLAVA SQL query=" + create_query);
+    print("INSERT GLAVA SQL params=" + create_sqlParams);
+
+    sqlNonQuery(create_query, create_sqlParams);
+
+
+
+    //htmx.trigger("body", "refreshTable");
+    create_args2 = {};
+    create_args2["QueryParams"] = {"page": 1};
+
+    createGKTransaction_alert = "<script>Swal.fire({title: 'Successfully added!', text: 'Added transaction with id " + create_values2["GK_GL_BR_TEM"] + ".', icon: 'success', confirmButtonText: 'Close'});</script>";
+    
+    create_args2["QueryParams"] = {"alertText": createGKTransaction_alert};
+
+    return getGKTransactions(create_args2);
+}
+
+function IsInt(value)
+{
+    try
+    {
+        if (value=="")
+        {
+            return false;    
+        }
+
+        //da li je samo minus na početku
+        if ( (value.Length == 1) && (Substring(value, 0, 1) == "-") )
+        {
+            return false;
+        }
+
+        if (Substring(value, 0, 1) == "-")
+        {
+            broj = Substring(value, 1, value.Length-1);
+        }
+        else
+        {
+            broj = value;
+        }
+
+        prvaZnamenkaBroja = Substring(broj, 0, 1);    
+
+        //broj je value bez minusa na početku
+
+        broj = RemoveLeadingZeros(broj);
+
+        //broj je bez nula na početku
+
+        if ((broj.Length == 0) && (prvaZnamenkaBroja == "0"))
+        {
+            broj = "0";
+        }
+
+        //prođi kroz sve znakove i provjeri da li su u rasponu 0-9
+        bout = true;
+        for (i = 0; i < broj.Length; i++)
+        {
+            znak = Substring(broj, i, 1);        
+
+            b0 = (znak == "0");
+            b1 = (znak == "1");
+            b2 = (znak == "2");
+            b3 = (znak == "3");
+            b4 = (znak == "4");
+            b5 = (znak == "5");
+            b6 = (znak == "6");
+            b7 = (znak == "7");
+            b8 = (znak == "8");
+            b9 = (znak == "9");
+        
+            if (b0 || b1 || b2 || b3 || b4 || b5 || b6 || b7 || b8 || b9)
+            {
+                //sve ok            
+            }
+            else
+            {            
+                //return false;
+                bout = false;
+                break;            
+            }
+        }
+
+        if (bout == false)
+        {
+            return false;
+        }    
+
+        if (broj.Length > 10)
+        {
+            return false;
+        }
+
+        //testiramo da li je broj < -2147483648
+        if (Substring(value, 0, 1) == "-")
+        {
+            if (broj.Length == 10)
+            {      
+                if (broj > "2147483648")  
+                {
+                    return false;
+                }                        
+            }           
+        }
+        else //testiramo da li je broj > 2147483647
+        {      
+            if (broj.Length == 10)
+            {      
+                if (broj > "2147483647")  
+                {
+                    return false;
+                }            
+            }
+        }
+
+        return true;
+    }
+    catch(ex111)
+    {
+        return false;
+    }
+
+    return false;
+}
+
+
+function IsSmallInt(value)
+{
+    try
+    {
+        if (value=="")
+        {
+            return false;    
+        }
+
+        //da li je samo minus na početku
+        if ( (value.Length == 1) && (Substring(value, 0, 1) == "-") )
+        {
+            return false;
+        }
+
+        if (Substring(value, 0, 1) == "-")
+        {
+            broj = Substring(value, 1, value.Length-1);
+        }
+        else
+        {
+            broj = value;
+        }
+
+        prvaZnamenkaBroja = Substring(broj, 0, 1);    
+
+        //broj je value bez minusa na početku
+
+        broj = RemoveLeadingZeros(broj);
+
+        //broj je bez nula na početku
+
+        if ((broj.Length == 0) && (prvaZnamenkaBroja == "0"))
+        {
+            broj = "0";
+        }
+
+        //prođi kroz sve znakove i provjeri da li su u rasponu 0-9
+        bout = true;
+        for (i = 0; i < broj.Length; i++)
+        {
+            znak = Substring(broj, i, 1);        
+
+            b0 = (znak == "0");
+            b1 = (znak == "1");
+            b2 = (znak == "2");
+            b3 = (znak == "3");
+            b4 = (znak == "4");
+            b5 = (znak == "5");
+            b6 = (znak == "6");
+            b7 = (znak == "7");
+            b8 = (znak == "8");
+            b9 = (znak == "9");
+        
+            if (b0 || b1 || b2 || b3 || b4 || b5 || b6 || b7 || b8 || b9)
+            {
+                //sve ok            
+            }
+            else
+            {            
+                //return false;
+                bout = false;
+                break;            
+            }
+        }
+
+        if (bout == false)
+        {
+            return false;
+        }    
+
+        if (broj.Length > 5)
+        {
+            return false;
+        }
+
+        //testiramo da li je broj < -32768
+        if (Substring(value, 0, 1) == "-")
+        {
+            if (broj.Length == 5)
+            {      
+                if (broj > "32768")  
+                {
+                    return false;
+                }                        
+            }        
+        }
+        else //testiramo da li je broj > 32767
+        {      
+            if (broj.Length == 5)
+            {      
+                if (broj > "32767")  
+                {
+                    return false;
+                }            
+            }
+        }
+
+        return true;
+    }
+    catch(ex111)
+    {
+        return false;
+    }
+    
+    return false;
+}
+
+
+function IsDate(value)
+{
+    if (value == "")
+    {
+        return false;
+    }
+
+    try
+    {
+        numbers = value.Split("-");
+        if (Size(numbers) != 3)
+        {
+            throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+
+        stryear = numbers[0];
+        strmonth = numbers[1];
+        strday = numbers[2];
+
+        stryear = RemoveLeadingZeros(stryear);
+        strmonth = RemoveLeadingZeros(strmonth);
+        strday = RemoveLeadingZeros(strday);
+
+        if (IsInt(strday) == false || IsInt(strmonth) == false || IsInt(stryear) == false)
+        {
+            throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+
+        // Check if value is a valid date
+        day = int(strday);
+        month = int(strmonth);
+        year = int(stryear);
+
+
+        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+            throw "Date Validacija nije prošla.\nvalue = " + value;
+        }
+        //print("Date Validacija OK");
+        return true; 
+    }
+    catch(ex11)
+    {
+        //print(ex11);
+        return false;
+    }
+
+    return false;
+}
+
+function RemoveLeadingZeros(value)
+{
+    if (value == "")
+    {
+        return "";
+    }
+
+    // Remove leading zeros
+    while (value.StartsWith("0"))
+    {
+        value = value.Substring(1);
+    }
+
+    return value;
+}
+
+function IsFloat(value)
+{
+    if (value == "")
+    {
+        return false;
+    }
+
+    try
+    {
+        // Check if value is a valid float
+        value2 = value.Replace("," , ".");
+	
+	    //Check count of dots
+	    countDots = 0;
+	    for(i=0; i<value2.Length; i++)
+	    {
+	        znak = Substring(value2, i, 1);  
+	        if (znak == ".")
+	        {
+		        countDots++;
+	        }
+	    }
+	    //print("CountDots = " + countDots);
+	    if (countDots > 1)
+	    {
+	        return false;	
+	    } 
+
+	    //Remove minus on the beginning if it exists
+	    value3 = "";
+	    if (value2.Length > 0)
+	    {
+	        znak = Substring(value2, 0, 1);
+	        if (znak == "-")
+	        {
+		        value3 = Substring(value2, 1, value2.Length - 1);
+	        }
+	        else
+	        {
+ 		        value3 = value2;
+	        }
+	    }
+	
+	    //value3 contains the number without minus
+	    if (value3.Length == 0)
+	    {
+	        return false;
+	    }
+
+	    //check digits and dot
+	    bout = true;
+	    for(i=0; i<value3.Length; i++)
+	    {
+	        znak = Substring(value3, i, 1);  
+	   
+	        b0 = (znak == "0");
+            b1 = (znak == "1");
+            b2 = (znak == "2");
+            b3 = (znak == "3");
+            b4 = (znak == "4");
+            b5 = (znak == "5");
+            b6 = (znak == "6");
+            b7 = (znak == "7");
+            b8 = (znak == "8");
+            b9 = (znak == "9");
+            bdot = (znak == ".");
+        
+           if (b0 || b1 || b2 || b3 || b4 || b5 || b6 || b7 || b8 || b9 || bdot)
+           {
+                //sve ok            
+           }
+           else
+           {            
+                //return false;
+                bout = false;
+                break;            
+           }
+	    }
+
+	    if (bout == false)
+        {
+            return false;
+        }
+
+        //print("Float Validacija OK");
+        return true;
+    }
+    catch(ex11)
+    {
+        //print(ex11);
+        return false;
+    }
+
+    return false;
+}
+
+
+
+
+// Edit form
+//CreateEndpoint("GET", "/gk-transactions/{id}/edit", "getEditGKTransactionForm");
+/*
+function getEditGKTransactionForm(args) {
+    editForm_id = args["RouteValues"]["id"];
+    editForm_query = "SELECT GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS,"+
+        "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK,"+
+        "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ,"+
+        "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'yyyy-MM-dd') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN"+
+        " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    sqlParams = {};
+    sqlParams.Add({"@id", int(id)});
+    transaction = sqlQuery(editForm_query, sqlParams);
+    if(transaction == null || Size(transaction) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Transaction not found</div>", 200);
+    }
+    row = transaction[1];
+
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>" +
+           "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + row[0] + "' readonly></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + row[1] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + row[2] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + row[3] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + row[4] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + row[5] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + row[6] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + row[7] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + row[8] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + row[9] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + row[10] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + row[11] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + row[12] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + row[13] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + row[14] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + row[15] + "'></div>" +
+           "    </div>" +
+           "    <div class='form-actions mt-4'>" +
+           "      <button class='btn btn-success btn-sm' " +
+           "              hx-put='/gk-transactions/" + id + "' " +
+           "              hx-include='closest form' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML' " +
+           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Save</button>" +
+           "      <button class='btn btn-error btn-sm' " +
+           "              hx-get='/gk-transactions' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML' " +
+           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Cancel</button>" +
+           "    </div>" +
+           "  </form>" +
+           "</div>";
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, html, 200);
+}
+*/
+
+// Replace getEditGKTransactionForm with:
+function getEditGKTransactionForm(args) {
+
+    id = args["RouteValues"]["id"];
+    //query = "SELECT " + gk_masterFields.Join(", ") + " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    query = "SELECT GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS,"+
+        "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK,"+
+        "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ,"+
+        "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'yyyy-MM-dd') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN"+
+        " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+    
+    sqlParams = {};
+    sqlParams.Add({"@id", int(id)});
+
+    transaction = sqlQuery(query, sqlParams);
+
+    if(transaction == null || Size(transaction) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<script>showError('Transaction not found');</script>", 200);
+    }
+    
+    values = {};
+    for(i = 0; i < Size(gk_masterFields); i++) {
+        //values[gk_masterFields[i]] = transaction[1][i];
+        values[gk_masterFields[i]] = StrTrim(transaction[1][i]);
+    }    
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, gk_generateForm("edit", values, id), 200);
+}
+
+
+// update transactions
+//CreateEndpoint("PUT", "/gk-transactions/{id}", "updateGKTransaction");
+function updateGKTransaction(args) {
+    updateGKTransaction_id = args["RouteValues"]["id"];
+
+    updateGKTransaction_fields = [
+        "GK_GL_BR_TEM", "GK_GL_DATUM", "GK_GL_POSTED", "GK_GL_OPIS",
+        "GK_GL_GOD", "GK_GL_TIP", "GK_GL_OZNAKA", "GK_GL_ZNAK",
+        "GK_GL_IZNL", "GK_GL_IZNP", "GK_GL_ZATV_KLAS", "GK_GL_POC_STANJ",
+        "GK_GL_BRDOK", "GK_GL_DATDOK", "GK_GL_PARTNER", "GK_GL_BR_LIN"
+    ];
+    //values = {};
+    print("UPDATE GLAVE za GK_GL_BR_TEM = " + updateGKTransaction_id);
+    // print("sizefields: " + Size(fields));  
+    // for(i = 0; i < Size(fields); i++) {
+    //     field = fields[i];
+    //     values[field] = GetValueFromForm(args["Body"], field);
+    //     print("Field: " + field + " = " + values[field]);
+    // }
+
+    updateGKTransaction_values = {};
+    updateGKTransaction_values["GK_GL_BR_TEM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_TEM"));
+    updateGKTransaction_values["GK_GL_DATUM"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATUM"));
+    updateGKTransaction_values["GK_GL_POSTED"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POSTED"));
+    updateGKTransaction_values["GK_GL_OPIS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OPIS"));
+    updateGKTransaction_values["GK_GL_GOD"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_GOD"));
+    updateGKTransaction_values["GK_GL_TIP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_TIP"));
+    updateGKTransaction_values["GK_GL_OZNAKA"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_OZNAKA"));
+    updateGKTransaction_values["GK_GL_ZNAK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZNAK"));
+    updateGKTransaction_values["GK_GL_IZNL"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNL"));
+    updateGKTransaction_values["GK_GL_IZNP"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_IZNP"));
+    updateGKTransaction_values["GK_GL_ZATV_KLAS"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_ZATV_KLAS"));
+    updateGKTransaction_values["GK_GL_POC_STANJ"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_POC_STANJ"));
+    updateGKTransaction_values["GK_GL_BRDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BRDOK"));
+    updateGKTransaction_values["GK_GL_DATDOK"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_DATDOK"));
+    updateGKTransaction_values["GK_GL_PARTNER"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_PARTNER"));
+    updateGKTransaction_values["GK_GL_BR_LIN"] = StrTrim(GetValueFromForm(args["Body"], "GK_GL_BR_LIN"));
+
+    if (updateGKTransaction_values["GK_GL_ZNAK"]=="")
+    {
+        updateGKTransaction_values["GK_GL_ZNAK"]="0";//smallint
+    }
+
+    if (updateGKTransaction_values["GK_GL_IZNL"]=="")
+    {
+        updateGKTransaction_values["GK_GL_IZNL"]="0";//float
+    }
+
+    if (updateGKTransaction_values["GK_GL_IZNP"]=="")
+    {
+        updateGKTransaction_values["GK_GL_IZNP"]="0";//float
+    }
+
+    if (updateGKTransaction_values["GK_GL_BRDOK"]=="")
+    {
+        updateGKTransaction_values["GK_GL_BRDOK"]="0";//int
+    }
+
+    if (updateGKTransaction_values["GK_GL_DATDOK"]=="")
+    {
+        updateGKTransaction_values["GK_GL_DATDOK"]="1900-01-01";
+    }
+
+    if (updateGKTransaction_values["GK_GL_BR_LIN"]=="")
+    {
+        updateGKTransaction_values["GK_GL_BR_LIN"]="0";//smallint
+    }
+
+    //***************************************************
+    // Promjena zarez u točku za float brojeve
+    //***************************************************
+    updateGKTransaction_values["GK_GL_IZNL"] = updateGKTransaction_values["GK_GL_IZNL"].Replace("," , ".");
+    updateGKTransaction_values["GK_GL_IZNP"] = updateGKTransaction_values["GK_GL_IZNP"].Replace("," , ".");
+
+    //***************************************************
+    // Validate fields
+    //***************************************************    
+    if (IsInt(updateGKTransaction_values["GK_GL_BR_TEM"])==false)
+    {
+        print("Provjera GK_GL_BR_TEM nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_TEM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+                
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_BR_TEM je prošla");
+    }        
+
+    if (IsDate(updateGKTransaction_values["GK_GL_DATUM"])==false)
+    {
+        print("Provjera GK_GL_DATUM nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATUM nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_DATUM je prošla");
+    }
+
+    //print("updateGKTransaction_values[\"GK_GL_POSTED\"]=" + updateGKTransaction_values["GK_GL_POSTED"]);
+    //print("updateGKTransaction_values[\"GK_GL_POSTED\"].Length = " + updateGKTransaction_values["GK_GL_POSTED"].Length);
+    
+    
+    //if (updateGKTransaction_values["GK_GL_POSTED"].Length > 1)
+    updateGKTransaction_posted = updateGKTransaction_values["GK_GL_POSTED"];
+    if(updateGKTransaction_posted.Length > 1)
+    {
+        print("Provjera GK_GL_POSTED nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POSTED nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_POSTED je prošla");
+    }
+
+
+    //if (updateGKTransaction_values["GK_GL_OPIS"].Length > 50)
+    updateGKTransaction_opis = updateGKTransaction_values["GK_GL_OPIS"];
+    if (updateGKTransaction_opis.Length > 50)
+    {
+        print("Provjera GK_GL_OPIS nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OPIS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_OPIS je prošla");
+    }
+
+    //if (updateGKTransaction_values["GK_GL_GOD"].Length > 2)
+    updateGKTransaction_god = updateGKTransaction_values["GK_GL_GOD"];
+    if (updateGKTransaction_god.Length > 2)
+    {
+        print("Provjera GK_GL_GOD nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_GOD nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_GOD je prošla");
+    }
+
+    updateGKTransaction_tip = updateGKTransaction_values["GK_GL_TIP"];
+    if (updateGKTransaction_tip.Length > 2)
+    {
+        print("Provjera GK_GL_TIP nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_TIP nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_TIP je prošla");
+    }
+
+    updateGKTransaction_oznaka = updateGKTransaction_values["GK_GL_OZNAKA"];
+    if (updateGKTransaction_oznaka.Length > 10)
+    {
+        print("Provjera GK_GL_OZNAKA nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_OZNAKA nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_OZNAKA je prošla");
+    }
+    
+    if (IsSmallInt(updateGKTransaction_values["GK_GL_ZNAK"])==false)
+    {
+        print("Provjera GK_GL_ZNAK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZNAK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+                
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_ZNAK je prošla");
+    }   
+    
+    if (IsFloat(updateGKTransaction_values["GK_GL_IZNL"])==false)
+    {
+        print("Provjera GK_GL_IZNL nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNL nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+                
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_IZNL je prošla");
+    } 
+    
+    if (IsFloat(updateGKTransaction_values["GK_GL_IZNP"])==false)
+    {
+        print("Provjera GK_GL_IZNP nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_IZNP nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+                
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_IZNP je prošla");
+    }
+    
+
+    //if (updateGKTransaction_values["GK_GL_ZATV_KLAS"].Length > 1)
+    updateGKTransaction_zatv_klas = updateGKTransaction_values["GK_GL_ZATV_KLAS"];
+    if (updateGKTransaction_zatv_klas.Length > 1)
+    {
+        print("Provjera GK_GL_ZATV_KLAS nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_ZATV_KLAS nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_ZATV_KLAS je prošla");
+    }
+
+    updateGKTransaction_poc_stanj = updateGKTransaction_values["GK_GL_POC_STANJ"];
+    if (updateGKTransaction_poc_stanj.Length > 1)
+    {
+        print("Provjera GK_GL_POC_STANJ nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_POC_STANJ nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_POC_STANJ je prošla");
+    }
+    
+    if (IsInt(updateGKTransaction_values["GK_GL_BRDOK"])==false)
+    {
+        print("Provjera GK_GL_BRDOK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BRDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+                
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_BRDOK je prošla");
+    }   
+
+
+    if (IsDate(updateGKTransaction_values["GK_GL_DATDOK"])==false)
+    {
+        print("Provjera GK_GL_DATDOK nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_DATDOK nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_DATDOK je prošla");
+    }
+
+    updateGKTransaction_partner = updateGKTransaction_values["GK_GL_PARTNER"];
+    if (updateGKTransaction_partner.Length > 10)
+    {
+        print("Provjera GK_GL_PARTNER nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_PARTNER nije ispravno popunjen. Duljina je prevelika.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_PARTNER je prošla");
+    }
+
+    if (IsSmallInt(updateGKTransaction_values["GK_GL_BR_LIN"])==false)
+    {
+        print("Provjera GK_GL_BR_LIN nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GK_GL_BR_LIN nije ispravno popunjen.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+                
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera GK_GL_BR_LIN je prošla");
+    }   
+
+    print('UPDATE GLAVE: VALIDACIJA JE PROŠLA ZA SVA POLJA OK');
+
+    //***********************************
+    //SELECT COUNT(*) GLAVA sa GK_GL_BR_TEM = id
+    updateGKTransaction_query = "SELECT COUNT(*) "+
+        " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+
+    updateGKTransaction_sqlParams = {};
+    updateGKTransaction_sqlParams.Add({"@id", int(updateGKTransaction_id)});
+
+    updateGKTransaction_sqlResult = sqlQuery(updateGKTransaction_query, updateGKTransaction_sqlParams);
+
+    //ako nema redaka return error
+    updateGKTransaction_recordExist = false;
+    if( (updateGKTransaction_sqlResult == null) || 
+        (Size(updateGKTransaction_sqlResult) < 2) ) 
+    {
+        updateGKTransaction_recordExist = false;
+    }
+    else
+    {
+        if (updateGKTransaction_sqlResult[1][0] == 0)
+        {
+            updateGKTransaction_recordExist = false;
+        }
+        else
+        {
+            updateGKTransaction_recordExist = true;
+        }
+    }
+
+    if (!updateGKTransaction_recordExist)
+    {
+        //print("Transaction not found in database za: GK_GL_BR_TEM = " + id);
+        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " postoji: nije prošla");
+
+        // 🔴 Validation failed: Return the form again with values + error
+        updateGKTransaction_headers = {"Content-Type": "text/html"};
+        updateGKTransaction_alert = "<script>Swal.fire({title: 'ERROR!', text: 'GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " ne postoji.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+
+//print("OK 111");
+//print("updateGKTransaction_values[\"GK_GL_BR_TEM\"] = " + updateGKTransaction_values["GK_GL_BR_TEM"]);
+//print("OK prije poziva funkcije getEditGKTransactionFormWithValues2"); 
+
+// print("FIELDS prije poziva funkcije = " + updateGKTransaction_fields);
+// print("");
+// print("VALUES prije poziva funkcije = " + updateGKTransaction_values);
+// print("");
+// print("updateGKTransaction_id prije poziva funkcije = " + updateGKTransaction_id);
+// print("");
+// print("ALERT prije poziva funkcije = " + updateGKTransaction_alert);
+
+    //print("PRIJE POZIVA FUNKCIJE updateGKTransaction_values = " + updateGKTransaction_values);
+
+        updateGKTransaction_validationerror_html = getEditGKTransactionFormWithValues2(updateGKTransaction_id, updateGKTransaction_values, updateGKTransaction_alert);
+
+//print("OK prije response");
+
+        return Response(updateGKTransaction_headers, updateGKTransaction_validationerror_html, 200);
+    }
+    else
+    {
+        print("Provjera da li GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " postoji je prošla");
+    }    
+    //***********************************
+
+    print("BEFORE UPDATE GLAVE");
+    // Build update query
+    updateGKTransaction_query = "UPDATE NKGKGLTM SET ";
+    updateGKTransaction_first = true;
+    for(updateGKTransaction_i = 1; updateGKTransaction_i < Size(updateGKTransaction_fields); updateGKTransaction_i++) {
+        if (!updateGKTransaction_first) {
+            updateGKTransaction_query += ", ";
+        }
+        updateGKTransaction_query += updateGKTransaction_fields[updateGKTransaction_i] + " = @" + updateGKTransaction_fields[updateGKTransaction_i];
+        updateGKTransaction_first = false;
+    }
+    updateGKTransaction_query += " WHERE GK_GL_BR_TEM = @id";
+   
+    //Add query params
+    updateGKTransaction_sqlParams = {};
+    for(updateGKTransaction_i = 1; updateGKTransaction_i < Size(updateGKTransaction_fields); updateGKTransaction_i++) {
+        updateGKTransaction_sqlParams.Add({"@"+updateGKTransaction_fields[updateGKTransaction_i], updateGKTransaction_values[updateGKTransaction_i]});
+    }    
+    updateGKTransaction_sqlParams.Add({"@id", int(updateGKTransaction_id)});
+
+    print("BEFORE UPDATE GLAVE: query = " + updateGKTransaction_query);
+    print("BEFORE UPDATE GLAVE: params = " + updateGKTransaction_sqlParams);
+
+    // Execute query
+    sqlNonQuery(updateGKTransaction_query, updateGKTransaction_sqlParams);
+
+    print("UPDATE GLAVE: PROŠAO JE UPDATE OK");
+
+    updateGKTransaction_args2 = {};
+    updateGKTransaction_args2["QueryParams"] = {};
+    if (Contains(updateGKTransaction_args2["QueryParams"], "page")) {
+        updateGKTransaction_args2["QueryParams"]["page"] = updateGKTransaction_args2["QueryParams"]["page"];
+    } else {
+        updateGKTransaction_args2["QueryParams"]["page"] = 1;
+    }
+                                
+    updateGKTransaction_alert = "<script>Swal.fire({title: 'Successfully updated!', text: 'GLAVA sa GK_GL_BR_TEM = " + updateGKTransaction_id + " .', icon: 'success', confirmButtonText: 'Close'});</script>";        
+    updateGKTransaction_args2["QueryParams"]["alertText"] = updateGKTransaction_alert;
+
+    print ('UPDATE GLAVE: Refresh tablu sa GLAVAMA');
+    //htmx.trigger('body', 'refreshTable'); //it does not work in cdcd language, this is javascript
+    return getGKTransactions(updateGKTransaction_args2);    
+}
+
+
+// //new helper functions
+// function getNewGKTransactionFormWithValues(values, errorHtml) {
+//     // Default empty values
+//     defaults = {
+//         "GK_GL_BR_TEM": "0",
+//         "GK_GL_DATUM": "",
+//         "GK_GL_POSTED": "",
+//         "GK_GL_OPIS": "",
+//         "GK_GL_GOD": "",
+//         "GK_GL_TIP": "",
+//         "GK_GL_OZNAKA": "",
+//         "GK_GL_ZNAK": "",
+//         "GK_GL_IZNL": "",
+//         "GK_GL_IZNP": "",
+//         "GK_GL_ZATV_KLAS": "",
+//         "GK_GL_POC_STANJ": "",
+//         "GK_GL_BRDOK": "",
+//         "GK_GL_DATDOK": "",
+//         "GK_GL_PARTNER": "",
+//         "GK_GL_BR_LIN": ""
+//     };
+
+//     // Merge defaults with submitted values
+//     for(key in defaults) {
+//         if (Contains(values, key)) {
+//             defaults[key] = values[key];
+//         }
+//     }
+
+//     html = "<div class='datagrid-container-master'>" +
+//            "  <form class='vertical-form eight-column-form'>" +
+//            "    " + (errorHtml ? errorHtml : "") +
+//            "    <div class='grid grid-cols-8 gap-4'>" +
+//            "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + defaults["GK_GL_BR_TEM"] + "'></div>" +
+//            "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + defaults["GK_GL_DATUM"] + "'></div>" +
+//            "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + defaults["GK_GL_POSTED"] + "' maxlength='1'></div>" +
+//            "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + defaults["GK_GL_OPIS"] + "' maxlength='50'></div>" +
+//            "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + defaults["GK_GL_GOD"] + "' maxlength='2'></div>" +
+//            "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + defaults["GK_GL_TIP"] + "' maxlength='2'></div>" +
+//            "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + defaults["GK_GL_OZNAKA"] + "' maxlength='10'></div>" +
+//            "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + defaults["GK_GL_ZNAK"] + "'></div>" +
+//            "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + defaults["GK_GL_IZNL"] + "'></div>" +
+//            "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + defaults["GK_GL_IZNP"] + "'></div>" +
+//            "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + defaults["GK_GL_ZATV_KLAS"] + "' maxlength='1'></div>" +
+//            "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + defaults["GK_GL_POC_STANJ"] + "' maxlength='1'></div>" +
+//            "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + defaults["GK_GL_BRDOK"] + "'></div>" +
+//            "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + defaults["GK_GL_DATDOK"] + "'></div>" +
+//            "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + defaults["GK_GL_PARTNER"] + "' maxlength='10'></div>" +
+//            "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + defaults["GK_GL_BR_LIN"] + "'></div>" +
+//            "    </div>" +
+//            "    <div class='form-actions mt-4'>" +
+//            "      <button class='btn btn-success btn-sm' " +
+//            "              hx-post='/gk-transactions' " +
+//            "              hx-include='closest form' " +
+//            "              hx-target='.datagrid-container-master' " +
+//            "              hx-swap='outerHTML'>Save</button>" +
+//            "      <button class='btn btn-error btn-sm' " +
+//            "              hx-get='/gk-transactions' " +
+//            "              hx-target='.datagrid-container-master' " +
+//            "              hx-swap='outerHTML'>Cancel</button>" +
+//            "    </div>" +
+//            "  </form>" +
+//            "</div>";
+
+
+//     headers = {"Content-Type": "text/html"};
+//     return Response(headers, html, 200);
+// }
+
+
+function getNewGKTransactionFormWithValues2(values, errorScript) {
+    print("getNewGKTransactionFormWithValues2");
+    // Default empty values
+    /*defaults = {
+        "GK_GL_BR_TEM": "0",
+        "GK_GL_DATUM": "",
+        "GK_GL_POSTED": "",
+        "GK_GL_OPIS": "",
+        "GK_GL_GOD": "",
+        "GK_GL_TIP": "",
+        "GK_GL_OZNAKA": "",
+        "GK_GL_ZNAK": "",
+        "GK_GL_IZNL": "",
+        "GK_GL_IZNP": "",
+        "GK_GL_ZATV_KLAS": "",
+        "GK_GL_POC_STANJ": "",
+        "GK_GL_BRDOK": "",
+        "GK_GL_DATDOK": "",
+        "GK_GL_PARTNER": "",
+        "GK_GL_BR_LIN": ""
+    };
+*/
+/*
+    // Merge defaults with submitted values
+    for(key in defaults) {
+        if (Contains(values, key)) {
+            defaults[key] = values[key];
+        }
+    }
+*/
+
+   // print("DEFAULTS => " + defaults["GK_GL_BR_TEM"]);//ispiše 0 ako je bilo prazno
+   //print("getNewGKTransactionFormWithValues2 VALUES => " + values["GK_GL_BR_TEM"]);//ispiše 0 ako je bilo prazno
+
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>" +
+          
+           "    <div class='grid grid-cols-8 gap-4'>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + values["GK_GL_BR_TEM"] + "'></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + values["GK_GL_DATUM"] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + values["GK_GL_POSTED"] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + values["GK_GL_OPIS"] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + values["GK_GL_GOD"] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + values["GK_GL_TIP"] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + values["GK_GL_OZNAKA"] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + values["GK_GL_ZNAK"] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + values["GK_GL_IZNL"] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + values["GK_GL_IZNP"] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + values["GK_GL_ZATV_KLAS"] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + values["GK_GL_POC_STANJ"] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + values["GK_GL_BRDOK"] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + values["GK_GL_DATDOK"] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + values["GK_GL_PARTNER"] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + values["GK_GL_BR_LIN"] + "'></div>" +
+           "    </div>" +
+           "    <div class='form-actions mt-4'>" +
+           "      <button class='btn btn-success btn-sm' " +
+           "              hx-post='/gk-transactions' " +
+           "              hx-include='closest form' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML'>Save</button>" +
+           "      <button class='btn btn-error btn-sm' " +
+           "              hx-get='/gk-transactions' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML'>Cancel</button>" +
+           "    </div>" +
+           "  </form>" +
+           "</div>";
+
+    html += errorScript;
+    //print(html);
+
+    //headers = {"Content-Type": "text/html"};
+    //return Response(headers, html, 200);
+    return html;
+}
+
+// function getEditGKTransactionFormWithValues(id, values, errorHtml) {
+//     // Fetch current data from DB
+//     query = "SELECT GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS,"+
+//         "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK,"+
+//         "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ,"+
+//         "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'yyyy-MM-dd') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN"+
+//         " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+//     sqlParams = {};
+//     sqlParams.Add({"@id", int(id)});
+//     transaction = sqlQuery(query, sqlParams);
+//     if(transaction == null || Size(transaction) < 2) {
+//         headers = {"Content-Type": "text/html"};
+//         return Response(headers, "<div class='alert alert-error'>Transaction not found</div>", 200);
+//     }
+//     row = transaction[1];
+//     html = "<div class='datagrid-container-master'>" +
+//            "  <form class='vertical-form eight-column-form'>";
+//            if(errorHtml != ""){
+//               html += errorHtml;
+//            }
+//            html += "    <div class='grid grid-cols-8 gap-4'>" +
+//            "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + row[0] + "' readonly></div>" +
+//            "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + row[1] + "'></div>" +
+//            "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + row[2] + "' maxlength='1'></div>" +
+//            "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + row[3] + "' maxlength='50'></div>" +
+//            "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + row[4] + "' maxlength='2'></div>" +
+//            "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + row[5] + "' maxlength='2'></div>" +
+//            "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + row[6] + "' maxlength='10'></div>" +
+//            "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + row[7] + "'></div>" +
+//            "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + row[8] + "'></div>" +
+//            "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + row[9] + "'></div>" +
+//            "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + row[10] + "' maxlength='1'></div>" +
+//            "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + row[11] + "' maxlength='1'></div>" +
+//            "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + row[12] + "'></div>" +
+//            "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + row[13] + "'></div>" +
+//            "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + row[14] + "' maxlength='10'></div>" +
+//            "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + row[15] + "'></div>" +
+//            "    </div>" +
+//            "    <div class='form-actions mt-4'>" +
+//            "      <button class='btn btn-success btn-sm' " +
+//            "              hx-put='/gk-transactions/" + id + "' " +
+//            "              hx-include='closest form' " +
+//            "              hx-target='.datagrid-container-master' " +
+//            "              hx-swap='outerHTML' " +
+//            "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Save</button>" +
+//            "      <button class='btn btn-error btn-sm' " +
+//            "              hx-get='/gk-transactions' " +
+//            "              hx-target='.datagrid-container-master' " +
+//            "              hx-swap='outerHTML' " +
+//            "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Cancel</button>" +
+//            "    </div>" +
+//            "  </form>" +
+//            "</div>";
+
+
+//     headers = {"Content-Type": "text/html"};
+//     return Response(headers, html, 200);
+// }
+
+
+
+
+function getEditGKTransactionFormWithValues2(id, values_param, errorScript) {
+    //print("Na početku funkcije: getEditGKTransactionFormWithValues2");
+    //print("ID U FUNKCIJI = " + id);
+    //print("VALUES U FUNKCIJI = " + values_param);//16
+    
+    // abc_i = 0;
+    // for (item : values_param) 
+    // {
+    //     print("*");
+    //     print("Item " + abc_i + ": " + item);
+    //     abc_i++;
+    //     print("**");
+    // }
+    // for (abc_i=0; abc_i<16; abc_i++)
+    // {
+
+    // }
+    // for(key in values_param) {
+    //     print(key + " = " + values_param[key]);
+    // }
+    //print(values_param["GK_GL_BR_TEM"]);
+    //print(values_param["GK_GL_DATUM"]);
+    //print(values_param["GK_GL_POSTED"]);
+    //print(values_param["GK_GL_OPIS"]);
+    //print(values_param["GK_GL_GOD"]);
+    //print(values_param["GK_GL_TIP"]);
+    //print(values_param["GK_GL_OZNAKA"]);
+    //print(values_param["GK_GL_ZNAK"]);
+    //print(values_param["GK_GL_IZNL"]);
+    //print(values_param["GK_GL_IZNP"]);
+    //print(values_param["GK_GL_ZATV_KLAS"]);
+
+    print("errorScript U FUNKCIJI = " + errorScript);
+    //print("");
+
+    // print("values_param[\"GK_GL_BR_TEM\"] = " + values_param["GK_GL_BR_TEM"]);
+    // print("values_param[\"GK_GL_DATUM\"] = " + values_param["GK_GL_DATUM"]);
+    // print("values_param[\"GK_GL_POSTED\"] = " + values_param["GK_GL_POSTED"]);
+    // print("values_param[\"GK_GL_OPIS\"] = " + values_param["GK_GL_OPIS"]);
+    // print("values_param[\"GK_GL_GOD\"] = " + values_param["GK_GL_GOD"]);
+    // print("values_param[\"GK_GL_TIP\"] = " + values_param["GK_GL_TIP"]);
+    // print("values_param[\"GK_GL_OZNAKA\"] = " + values_param["GK_GL_OZNAKA"]);
+    // print("values_param[\"GK_GL_ZNAK\"] = " + values_param["GK_GL_ZNAK"]);
+    // print("values_param[\"GK_GL_IZNL\"] = " + values_param["GK_GL_IZNL"]);
+    // print("values_param[\"GK_GL_IZNP\"] = " + values_param["GK_GL_IZNP"]);
+    // print("values_param[\"GK_GL_ZATV_KLAS\"] = " + values_param["GK_GL_ZATV_KLAS"]);
+    // print("values_param[\"GK_GL_POC_STANJ\"] = " + values_param["GK_GL_POC_STANJ"]);
+    // print("values_param[\"GK_GL_BRDOK\"] = " + values_param["GK_GL_BRDOK"]);
+    // print("values_param[\"GK_GL_DATDOK\"] = " + values_param["GK_GL_DATDOK"]);
+    // print("values_param[\"GK_GL_PARTNER\"] = " + values_param["GK_GL_PARTNER"]);
+    // print("values_param[\"GK_GL_BR_LIN\"] = " + values_param["GK_GL_BR_LIN"]);
+    
+    // Fetch current data from DB
+    // print("Fetch current data from DB za: GK_GL_BR_TEM = " + id);
+
+    // query = "SELECT GK_GL_BR_TEM, FORMAT(GK_GL_DATUM, 'yyyy-MM-dd') AS GK_GL_DATUM, GK_GL_POSTED, GK_GL_OPIS,"+
+    //     "GK_GL_GOD, GK_GL_TIP, GK_GL_OZNAKA, GK_GL_ZNAK,"+
+    //     "GK_GL_IZNL, GK_GL_IZNP, GK_GL_ZATV_KLAS, GK_GL_POC_STANJ,"+
+    //     "GK_GL_BRDOK, FORMAT(GK_GL_DATDOK, 'yyyy-MM-dd') AS GK_GL_DATDOK, GK_GL_PARTNER, GK_GL_BR_LIN"+
+    //     " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+
+    // sqlParams = {};
+    // sqlParams.Add({"@id", int(id)});
+
+    // sqlResult = sqlQuery(query, sqlParams);
+    // if(sqlResult == null || Size(sqlResult) < 2) {
+    //     print("Transaction not found in database za: GK_GL_BR_TEM = " + id);
+    //     //headers = {"Content-Type": "text/html"};
+    //     //return Response(headers, "<div class='alert alert-error'>Transaction not found</div>", 200);
+    //     htmlNoTransaction = "<div class='datagrid-container-master'>" +
+    //                         "  <form class='vertical-form eight-column-form'>";
+    //     htmlNoTransaction += "    <div class='form-actions mt-4'>" +           
+    //                          "      <button class='btn btn-error btn-sm' " +
+    //                          "              hx-get='/gk-transactions' " +
+    //                          "              hx-target='.datagrid-container-master' " +
+    //                          "              hx-swap='outerHTML' " +
+    //                          "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Cancel</button>" +
+    //                          "    </div>" +
+    //                          "  </form>" +
+    //                          "</div>";
+
+    //     errorScriptNoTransaction = "<script>Swal.fire({title: 'ERROR!', text: 'Transaction not found in database.', icon: 'error', confirmButtonText: 'Close'});</script>";        
+       
+    //     htmlNoTransaction += errorScriptNoTransaction;
+
+    //     print ("Vraćam htmlNoTransaction" + htmlNoTransaction);
+    //     return htmlNoTransaction;
+    // }
+    // row = sqlResult[1];
+    html = "<div class='datagrid-container-master'>" +
+           "  <form class='vertical-form eight-column-form'>";
+           
+           html += "    <div class='grid grid-cols-8 gap-4'>" +
+           //"      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + values_param["GK_GL_BR_TEM"] + "' readonly></div>" +
+           "      <div><label>ID:</label><input class='input input-bordered input-sm w-full' name='GK_GL_BR_TEM' value='" + id + "' readonly></div>" +
+           "      <div><label>Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATUM' value='" + values_param["GK_GL_DATUM"] + "'></div>" +
+           "      <div><label>Posted:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POSTED' value='" + values_param["GK_GL_POSTED"] + "' maxlength='1'></div>" +
+           "      <div><label>Description:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OPIS' value='" + values_param["GK_GL_OPIS"] + "' maxlength='50'></div>" +
+           "      <div><label>Year:</label><input class='input input-bordered input-sm w-full' name='GK_GL_GOD' value='" + values_param["GK_GL_GOD"] + "' maxlength='2'></div>" +
+           "      <div><label>Type:</label><input class='input input-bordered input-sm w-full' name='GK_GL_TIP' value='" + values_param["GK_GL_TIP"] + "' maxlength='2'></div>" +
+           "      <div><label>Mark:</label><input class='input input-bordered input-sm w-full' name='GK_GL_OZNAKA' value='" + values_param["GK_GL_OZNAKA"] + "' maxlength='10'></div>" +
+           "      <div><label>Sign:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_ZNAK' value='" + values_param["GK_GL_ZNAK"] + "'></div>" +
+           "      <div><label>Amount NL:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNL' value='" + values_param["GK_GL_IZNL"] + "'></div>" +
+           "      <div><label>Amount NP:</label><input type='number' step='0.01' class='input input-bordered input-sm w-full' name='GK_GL_IZNP' value='" + values_param["GK_GL_IZNP"] + "'></div>" +
+           "      <div><label>Closed:</label><input class='input input-bordered input-sm w-full' name='GK_GL_ZATV_KLAS' value='" + values_param["GK_GL_ZATV_KLAS"] + "' maxlength='1'></div>" +
+           "      <div><label>Status:</label><input class='input input-bordered input-sm w-full' name='GK_GL_POC_STANJ' value='" + values_param["GK_GL_POC_STANJ"] + "' maxlength='1'></div>" +
+           "      <div><label>Doc Num:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BRDOK' value='" + values_param["GK_GL_BRDOK"] + "'></div>" +
+           "      <div><label>Doc Date:</label><input type='date' class='input input-bordered input-sm w-full' name='GK_GL_DATDOK' value='" + values_param["GK_GL_DATDOK"] + "'></div>" +
+           "      <div><label>Partner:</label><input class='input input-bordered input-sm w-full' name='GK_GL_PARTNER' value='" + values_param["GK_GL_PARTNER"] + "' maxlength='10'></div>" +
+           "      <div><label>Line:</label><input type='number' class='input input-bordered input-sm w-full' name='GK_GL_BR_LIN' value='" + values_param["GK_GL_BR_LIN"] + "'></div>" +
+           "    </div>" +
+           "    <div class='form-actions mt-4'>" +
+           "      <button class='btn btn-success btn-sm' " +
+           "              hx-put='/gk-transactions/" + id + "' " +
+           "              hx-include='closest form' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML' " +
+           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Save</button>" +
+           "      <button class='btn btn-error btn-sm' " +
+           "              hx-get='/gk-transactions' " +
+           "              hx-target='.datagrid-container-master' " +
+           "              hx-swap='outerHTML' " +
+           "              hx-on='htmx:afterRequest: handleMasterSaveCancel()'>Cancel</button>" +
+           "    </div>" +
+           "  </form>" +
+           "</div>";
+
+            if(errorScript != ""){
+                html += errorScript;
+            }
+
+    //headers = {"Content-Type": "text/html"};
+    //return Response(headers, html, 200);
+
+    //print("Na kraju funkcije: getEditGKTransactionFormWithValues2");
+
+    return html;
+}
+
+
+// Use submitted values if present, otherwise original
+function vrfy(field, fallback) {
+    if (Contains(values, field) && values[field] != null){
+        return values[field];
+    } else {
+        return fallback;
+    } 
+} 
+
+
+
+// Delete endpoint (already exists, keep as is)
+// Delete endpoint
+// //CreateEndpoint("DELETE", "/gk-transactions/{id}", "deleteGKTransaction");
+// function deleteGKTransaction(args) {
+//     print("U funkciji: deleteGKTransaction");
+//     deleteGKTransaction_id = args["RouteValues"]["id"];
+    
+//     // Execute delete
+//     deleteGKTransaction_query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+//     deleteGKTransaction_sqlParams = {};
+//     deleteGKTransaction_sqlParams.Add({"@id", int(deleteGKTransaction_id)});
+//     sqlNonQuery(deleteGKTransaction_query, deleteGKTransaction_sqlParams);
+
+//     // Return current view (preserve search/sort)
+//     deleteGKTransaction_args2 = {};
+//     deleteGKTransaction_args2["QueryParams"] = {"page": 1};
+//     /*
+//     args2["QueryParams"] = {};
+//     if (Contains(args["QueryParams"], "page")) {
+//         args2["QueryParams"]["page"] = args["QueryParams"]["page"];
+//     } else {
+//         args2["QueryParams"]["page"] = 1;
+//     }
+//     */
+//     //ove 2 linije se ne pokažu jer ima koda u template file-u za DELETE
+//     //deleteGKTransaction_alert = "<script>Swal.fire({title: 'Successfully deleted ABC!', text: 'GLAVA sa GK_GL_BR_TEM = " + deleteGKTransaction_id + " .', icon: 'success', confirmButtonText: 'Close'});</script>";        
+//     //deleteGKTransaction_args2["QueryParams"]["alertText"] = deleteGKTransaction_alert;
+
+//     return getGKTransactions(deleteGKTransaction_args2);
+// }
+
+//CreateEndpoint("DELETE", "/gk-transactions-norefresh/{id}", "deleteGKTransactionNoRefresh");
+function deleteGKTransactionNoRefresh(args) {
+    exMessage = "";
+    try
+    {        
+        //print("U funkciji: deleteGKTransactionNoRefresh");
+        id = args["RouteValues"]["id"];
+
+        query = "SELECT COUNT(*) FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
+        sqlParams = {};
+        sqlParams.Add({"@id", int(id)});
+
+        sqlResult = sqlQuery(query, sqlParams);
+
+        //ako ima redaka return error
+        recordExist = false;
+        if( (sqlResult == null) || 
+            (Size(sqlResult) < 2) ) 
+        {
+            recordExist = false;
+        }
+        else
+        {
+            if (sqlResult[1][0] == 0)
+            {
+                recordExist = false;
+            }
+            else
+            {
+                recordExist = true;
+            }
+        }
+
+        if (recordExist)
+        {
+            // If there are detail lines, prevent deletion
+            headers = {"Content-Type": "application/json"};
+            return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete transaction with existing lines."}', 400);    
+        }
+        //******************************************
+
+        // Execute delete
+        query = "DELETE FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+        sqlParams = {};
+        sqlParams.Add({"@id", int(id)});
+        rowsAffected = sqlNonQuery(query, sqlParams);
+    
+        if (rowsAffected > 0)
+        {
+            headers = {"Content-Type": "application/json"};
+            return Response(headers, '{"Result" : "Success", "Message" : ""}', 200);
+        }
+    }
+    catch(ex1111)
+    {
+        print("Error occurred while deleting transaction: " + ex1111);
+        exMessage = ex1111;
+    }
+    headers = {"Content-Type": "application/json"};   
+    return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete transaction. ' + exMessage + '"}', 200);
+}
+
+function formatForDisplay(dateStr) {
+    //if (dateStr == null || dateStr == "" || dateStr == "1900-01-01" || dateStr == "01.01.1900") {
+    //    return "";
+    //}
+    // Assume input is YYYY-MM-DD
+    if (Size(dateStr) >= 10) {
+        year = Substring(dateStr, 0, 4);   // YYYY
+        month = Substring(dateStr, 5, 2);  // MM
+        day = Substring(dateStr, 8, 2);    // DD
+        return day + "." + month + "." + year;
+    }
+    return dateStr;
+}
+
+
+//=============================================================================================================
+//DETAIL table endpoints
+//=======================================================================================
+//CreateEndpoint("GET", "/gk-lines/{id}", "getGKLines");
+function getGKLines(requestLinije) {
+    id = requestLinije["RouteValues"]["id"];
+    print("Fetching lines for GK transaction ID: " + id);
+    queryd = "SELECT " +
+            "GK_LN_BR_TEM, GK_LN_KONTO, GK_LN_OBJED, GK_LN_OPIS, " +
+            "GK_LN_DP, GK_LN_IZNOS, GK_LN_BRDOK, FORMAT(GK_LN_DATDOK, 'yyyy-MM-dd') AS GK_LN_DATDOK, " +
+            "GK_LN_PARTNR, GK_LN_BR_LIN, GK_LN_SIFDVZ, GK_LN_TECAJ, GK_LN_IZNDEV " +
+            "FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id ORDER BY GK_LN_BR_LIN";
+    sqlParamsd = {};
+    sqlParamsd.Add({"@id", int(id)});
+    
+    lines = sqlQuery(queryd, sqlParamsd);
+
+    htmld = "<div class='datagrid-container-detail'>";
+    htmld += "<h2 class='text-lg font-bold mb-2'>Transaction Lines (Transaction ID: " + id + ")</h2>";
+    htmld += "<table class='datagrid-table'>";
+    htmld += "<thead>";
+    htmld += "<tr>";
+    htmld += "<th class='frozen-column-select'>Select</th>";
+    htmld += "<th class='frozen-column-id'>Line</th>";
+    htmld += "<th>Account</th>";
+    htmld += "<th>Cost Center</th>";
+    htmld += "<th>Description</th>";
+    htmld += "<th>Debit</th>";
+    htmld += "<th>Credit</th>";
+    htmld += "<th>Doc ID</th>";
+    htmld += "<th>Doc Date</th>";
+    htmld += "<th>Partner</th>";
+    htmld += "<th>Currency</th>";
+    htmld += "<th>Rate</th>";
+    htmld += "<th>Amount/Curr</th>";
+    htmld += "<th class='frozen-column-right'>Actions</th>";
+    htmld += "</tr></thead><tbody>";
+
+    if (lines != null && Size(lines) > 1) {
+        for (idet = 1; idet < Size(lines); idet++) {
+            rowx = lines[idet];
+            lineId = rowx[9]; // GK_LN_BR_LIN
+            
+            // Proper alternating row styling like master table
+            if (idet % 2 == 0) {
+                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='bg-base-200 hover:bg-base-300 cursor-pointer' onclick='selectLineForEdit(this)'>";
+            } else {
+                htmld += "<tr data-id='" + id + "' data-line='" + lineId + "' class='hover:bg-base-300 cursor-pointer' onclick='selectLineForEdit(this)'>";
+            }
+
+            // Select column
+            htmld += "<td class='frozen-column-select'><input type='checkbox' class='checkbox' name='selectedLinesRows' value='" + lineId + "' title='Select line " + lineId + "' aria-label='Select line " + lineId + "'></td>";
+
+            // Line (ID column)
+            htmld += "<td class='frozen-column-id text-right' data-field='GK_LN_BR_LIN'>" + lineId + "</td>";
+
+            // Account
+            htmld += "<td data-field='GK_LN_KONTO' class='text-left'>" + safestr(rowx[1]) + "</td>";
+
+            // Cost Center
+            htmld += "<td data-field='GK_LN_OBJED' class='text-center'>" + safestr(rowx[2]) + "</td>";
+
+            // Description
+            htmld += "<td data-field='GK_LN_OPIS' class='text-left'>" + safestr(rowx[3]) + "</td>";
+
+            // Debit / Credit (based on GK_LN_DP)
+            // if (rowx[4] == "D") {
+            //     htmld += "<td class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+            //     htmld += "<td class='text-right'></td>";
+            // } else {
+            //     htmld += "<td class='text-right'></td>";
+            //     htmld += "<td class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+            // }
+
+            // Debit / Credit (based on GK_LN_DP)
+            if (rowx[4] == "D") {
+                htmld += "<td data-field='data-debit' class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+                htmld += "<td data-field='data-credit' class='text-right'></td>";
+            } else {
+                htmld += "<td data-field='data-debit' class='text-right'></td>";
+                htmld += "<td data-field='data-credit' class='text-right'>" + formatNumber(rowx[5]) + "</td>";
+            }
+
+            // Doc ID
+            htmld += "<td data-field='GK_LN_BRDOK' class='text-center'>" + safestr(rowx[6]) + "</td>";
+
+            // Doc Date
+            htmld += "<td data-field='GK_LN_DATDOK' class='text-center'>" + safestr(rowx[7]) + "</td>";
+
+            // Partner
+            htmld += "<td data-field='GK_LN_PARTNR' class='text-center'>" + safestr(rowx[8]) + "</td>";
+
+            // Currency
+            htmld += "<td data-field='GK_LN_SIFDVZ' class='text-center'>" + safestr(rowx[10]) + "</td>";
+
+            // Rate
+            htmld += "<td data-field='GK_LN_TECAJ' class='text-right'>" + formatNumber(rowx[11]) + "</td>";
+
+            // Amount/Currency
+            htmld += "<td data-field='GK_LN_IZNDEV' class='text-right'>" + formatNumber(rowx[12]) + "</td>";
+
+            // Actions column with same styling as master table
+            htmld += "<td class='flex gap-1 frozen-column-right'>";
+            // htmld += "<button class='btn btn-info btn-xs action-button' hx-get='/gk-lines/" + id + "/" + lineId + "/edit' hx-target='this' hx-swap='outerHTML'>Edit</button>";
+            //htmld += "<button class='btn btn-error btn-xs action-button' hx-delete='/gk-lines/" + id + "/" + lineId + "' hx-confirm='Delete line?' hx-target='closest tr' hx-swap='outerHTML'>Del</button>";
+            htmld += "<button class='btn btn-error btn-xs action-button' onclick='confirmDeleteLine(" + id + ", " + lineId + ")'>Delete</button>";
+            htmld += "</td>";
+
+            htmld += "</tr>";
+        }
+    }
+
+    htmld += "</tbody></table>";
+    htmld += "</div>";
+
+    // return htmld;
+
+    headers2 = {"Content-Type": "text/html"};
+    return Response(headers2, htmld, 200);
+}
+
+function formatNumber(vali) {
+    if (vali == null || vali == "") {
+        return "";
+    }
+    return vali; //parseFloat(val).toFixed(2).replace(/\.00$/, "");
+}
+
+//CreateEndpoint("GET", "/gk-lines/{id}/{line}/edit", "getEditLineForm");
+/*
+function getEditLineForm(args) {
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+
+    queryda = "SELECT GK_LN_KONTO, GK_LN_OBJED, GK_LN_OPIS, GK_LN_DP, GK_LN_IZNOS, " +
+            "GK_LN_BRDOK, GK_LN_DATDOK, GK_LN_PARTNR, GK_LN_SIFDVZ, GK_LN_TECAJ, GK_LN_IZNDEV " +
+            "FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id AND GK_LN_BR_LIN = @line";
+
+    sqlParamsa = {};
+    sqlParamsa.Add({"@id", int(masterId)});
+    sqlParamsa.Add({"@line", int(lineId)});
+
+    result = sqlQuery(queryda, sqlParamsa);
+    if (result == null || Size(result) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<div class='alert alert-error'>Transaction not found</div>", 200);
+    }
+    row = result[1];
+
+    htmlda = "<td class='text-center'>" + lineId + "</td>";
+
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_KONTO' value='" + safeStr(rowx[0]) + "' maxlength='15'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_OBJED' value='" + safeStr(rowx[1]) + "' maxlength='6'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_OPIS' value='" + safeStr(rowx[2]) + "' maxlength='50'></td>";
+
+    // DP: D/P selector
+    htmlda += "<td>";
+    htmlda += "<select class='select select-bordered select-xs w-full' name='GK_LN_DP' title='Debit or Credit' aria-label='Debit or Credit'>";
+    htmlda += "<option value='D'" + (rowx[3] == "D" ? " selected" : "") + ">D</option>";
+    htmlda += "<option value='P'" + (rowx[3] == "P" ? " selected" : "") + ">P</option>";
+    htmlda += "</select>";
+    htmlda += "</td>";
+
+    // Amount
+    htmlda += "<td><input type='number' step='0.01' class='input input-bordered input-xs w-full' name='GK_LN_IZNOS' value='" + (rowx[4] != "" ? rowx[4] : "0.00") + "'></td>";
+
+    // Rest as inputs
+    htmlda += "<td><input type='number' class='input input-bordered input-xs w-full' name='GK_LN_BRDOK' value='" + safeStr(rowx[5]) + "'></td>";
+    htmlda += "<td><input type='date' class='input input-bordered input-xs w-full' name='GK_LN_DATDOK' value='" + safeStr(rowx[6]) + "'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_PARTNR' value='" + safeStr(rowx[7]) + "' maxlength='10'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_SIFDVZ' value='" + safeStr(rowx[8]) + "' maxlength='3'></td>";
+    htmlda += "<td><input type='number' step='0.0001' class='input input-bordered input-xs w-full' name='GK_LN_TECAJ' value='" + safeStr(rowx[9]) + "'></td>";
+    htmlda += "<td><input type='number' step='0.01' class='input input-bordered input-xs w-full' name='GK_LN_IZNDEV' value='" + safeStr(rowx[10]) + "'></td>";
+
+    // Actions
+    htmlda += "<td class='flex gap-1'>";
+    htmlda += "<button class='btn btn-success btn-xs' " +
+            "hx-put='/gk-lines/" + masterId + "/" + lineId + "' " +
+            "hx-include='closest tr' " +
+            "hx-target='this' " +
+            "hx-swap='outerHTML'>Save</button>";
+    htmlda += "<button class='btn btn-error btn-xs' " +
+            "hx-get='/gk-lines/" + masterId + "/" + lineId + "/view' " +
+            "hx-target='this' " +
+            "hx-swap='outerHTML'>Cancel</button>";
+    htmlda += "</td>";
+
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, htmlda, 200);
+}
+*/
+
+// Replace getEditLineForm with:
+function getEditLineForm(args) {
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+    
+    query = "SELECT " + gk_lineFields.Join(", ") + 
+            " FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id AND GK_LN_BR_LIN = @line";
+    sqlParams = {"@id": int(masterId), "@line": int(lineId)};
+    result = sqlQuery(query, sqlParams);
+    
+    if(result == null || Size(result) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<td colspan='13'>Error</td>", 200);
+    }
+    
+    values = {};
+    for(i = 0; i < Size(gk_lineFields); i++) {
+        values[gk_lineFields[i]] = result[1][i];
+    }
+    
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, gk_generateLineForm("edit", values, masterId, lineId), 200);
+}
+
+
+//View Single Line (for Cancel)
+
+//CreateEndpoint("GET", "/gk-lines/{id}/{line}/view", "getViewLine");
+function getViewLine(args) {
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+
+    querydb = "SELECT GK_LN_KONTO, GK_LN_OBJED, GK_LN_OPIS, GK_LN_DP, GK_LN_IZNOS, " +
+            "GK_LN_BRDOK, GK_LN_DATDOK, GK_LN_PARTNR, GK_LN_SIFDVZ, GK_LN_TECAJ, GK_LN_IZNDEV " +
+            "FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id AND GK_LN_BR_LIN = @line";
+
+    sqlParamsb = {};
+    sqlParamsb.Add({"@id", int(masterId)});
+    sqlParamsb.Add({"@line", int(lineId)});
+
+    resultd = sqlQuery(querydb, sqlParamsb);
+    if (resultd == null || Size(resultd) < 2) {
+        headers = {"Content-Type": "text/html"};
+        return Response(headers, "<td colspan='13'>Error</td>", 200);
+    }
+    rowd = resultd[1];
+
+    htmlda = "<td class='text-center'>" + lineId + "</td>";
+    htmlda += "<td>" + safeStr(rowd[0]) + "</td>";
+    htmlda += "<td>" + safeStr(rowd[1]) + "</td>";
+    htmlda += "<td>" + safeStr(rowd[2]) + "</td>";
+
+    if (rowd[3] == "D") {
+        htmlda += "<td class='text-right'>" + formatNumber(rowd[4]) + "</td><td></td>";
+    } else {
+        htmlda += "<td></td><td class='text-right'>" + formatNumber(rowd[4]) + "</td>";
+    }
+
+    htmlda += "<td class='text-center'>" + safeStr(rowd[5]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[6]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[7]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[6]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[7]) + "</td>";
+    htmlda += "<td class='text-center'>" + safeStr(rowd[8]) + "</td>";
+    htmlda += "<td class='text-right'>" + formatNumber(rowd[9]) + "</td>";
+    htmlda += "<td class='text-right'>" + formatNumber(rowd[10]) + "</td>";
+
+    htmlda += "<td class='flex gap-1'>";
+    htmlda += "<button class='btn btn-info btn-xs' hx-get='/gk-lines/" + masterId + "/" + lineId + "/edit' hx-target='this' hx-swap='outerHTML'>Edit</button>";
+    htmlda += "<button class='btn btn-error btn-xs' hx-delete='/gk-lines/" + masterId + "/" + lineId + "' hx-confirm='Delete?' hx-target='closest tr' hx-swap='outerHTML'>Del</button>";
+    htmlda += "</td>";
+
+    headers = {"Content-Type": "text/html"};
+    return Response(headers, htmlda, 200);
+}
+
+function gk_generateLineForm(mode, values, masterId, lineId = null) {
+    isEdit = (mode == "edit");
+    
+    html = "<tr>";
+    html += "<td class='text-center'>" + (isEdit ? lineId : "(new)") + "</td>";
+    
+    for(i = 0; i < Size(gk_lineFields); i++) {
+        field = gk_lineFields[i];
+        value = Contains(values, field) ? values[field] : "";
+        
+        if(field == "GK_LN_DP") {
+            html += "<td><select class='select select-bordered select-xs w-full' name='" + field + "'>" +
+                    "<option value='D'" + (value == "D" ? " selected" : "") + ">D</option>" +
+                    "<option value='P'" + (value == "P" ? " selected" : "") + ">P</option>" +
+                    "</select></td>";
+        } else {
+            html += "<td><input type='" + 
+                   (field.Contains("IZNOS") || field.Contains("TECAJ") ? "number" : "text") + 
+                   "' class='input input-bordered input-xs w-full' name='" + field + "' value='" + value + "'></td>";
+        }
+    }
+    
+    html += "<td class='flex gap-1'>" +
+            "  <button class='btn btn-success btn-xs' " +
+            "          hx-" + (isEdit ? "put" : "post") + "='/gk-lines/" + masterId + (isEdit ? "/" + lineId : "") + "' " +
+            "          hx-include='closest tr' hx-target='closest tr' hx-swap='outerHTML'>Save</button>" +
+            "  <button class='btn btn-error btn-xs' " +
+            "          hx-get='" + (isEdit ? "/gk-lines/" + masterId + "/" + lineId + "/view" : "/gk-lines/" + masterId) + "' " +
+            "          hx-target='closest tr' hx-swap='outerHTML'>Cancel</button>" +
+            "</td></tr>";
+    
+    return html;
+}
+
+
+//NewLine Endpoint
+//CreateEndpoint("GET", "/gk-lines/{id}/new", "getNewLineForm");
+function getNewLineForm(args) {
+    print("U funkciji: getNewLineForm");
+
+    masterId = args["RouteValues"]["id"];
+
+    // Find next line number
+    querydc = "SELECT ISNULL(MAX(GK_LN_BR_LIN), 0) + 1 FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
+    sqlParamsc = {};
+    sqlParamsc.Add({"@id", int(masterId)});
+    resulte = sqlQuery(querydc, sqlParamsc);
+    nextLine = resulte[1][0];
+
+    htmlda = "<tr>";
+    htmlda += "<td class='text-center'>" + nextLine + "</td>";
+
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_KONTO' maxlength='15'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_OBJED' maxlength='6'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_OPIS' maxlength='50'></td>";
+
+    htmlda += "<td><select class='select select-bordered select-xs w-full' name='GK_LN_DP' title='Debit or Credit' aria-label='Debit or Credit'>";
+    htmlda += "<option value='D'>D</option><option value='P'>P</option></select></td>";
+
+    htmlda += "<td><input type='number' step='0.01' class='input input-bordered input-xs w-full' name='GK_LN_IZNOS'></td>";
+    htmlda += "<td><input type='number' class='input input-bordered input-xs w-full' name='GK_LN_BRDOK'></td>";
+    htmlda += "<td><input type='date' class='input input-bordered input-xs w-full' name='GK_LN_DATDOK'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_PARTNR' maxlength='10'></td>";
+    htmlda += "<td><input type='text' class='input input-bordered input-xs w-full' name='GK_LN_SIFDVZ' maxlength='3'></td>";
+    htmlda += "<td><input type='number' step='0.0001' class='input input-bordered input-xs w-full' name='GK_LN_TECAJ'></td>";
+    htmlda += "<td><input type='number' step='0.01' class='input input-bordered input-xs w-full' name='GK_LN_IZNDEV'></td>";
+
+    htmlda += "<td class='flex gap-1'>";
+    htmlda += "<button class='btn btn-success btn-xs' " +
+            "hx-post='/gk-lines/" + masterId + "' " +
+            "hx-include='closest tr' " +
+            "hx-target='this' " +
+            "hx-swap='outerHTML'>Save</button>";
+    htmlda += "<button class='btn btn-error btn-xs' " +
+            "hx-get='/gk-lines/" + masterId + "' " +
+            "hx-target='closest tr' " +
+            "hx-swap='outerHTML'>Cancel</button>";
+    htmlda += "</td>";
+
+    htmlda += "</tr>";
+
+
+    //test_alert = "<script>Swal.fire({title: 'ERROR!', text: 'TEST', icon: 'error', confirmButtonText: 'Close'});</script>";        
+    
+    //htmlda += test_alert;
+
+    headers = {"Content-Type": "text/html"};
+    //return Response(headers, htmlda + test_alert, 200);
+    return Response(headers, htmlda, 200);
+}
+
+//Create/Update/Delete Endpoints for lines
+//CreateEndpoint("POST", "/gk-lines/{id}", "createLine");
+function createLine(args) {
+    print("U funkciji: createLine");
+    try
+    {    
+    
+        masterId = args["RouteValues"]["id"];
+    
+        print("Master ID: " + masterId);
+
+        fieldsx = {
+            "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
+            "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
+            "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
+        };
+
+        dataObject = DeserializeJson(args["Body"]);
+
+        konto = dataObject["GK_LN_KONTO"];    
+        objed = dataObject["GK_LN_OBJED"];
+        opis = dataObject["GK_LN_OPIS"];
+        dp = dataObject["GK_LN_DP"];
+        iznos = dataObject["GK_LN_IZNOS"];
+        brdok = dataObject["GK_LN_BRDOK"];
+        datdok = dataObject["GK_LN_DATDOK"];
+        partnr = dataObject["GK_LN_PARTNR"];
+        sifdvz = dataObject["GK_LN_SIFDVZ"];
+        tecaj = dataObject["GK_LN_TECAJ"];
+        izndev = dataObject["GK_LN_IZNDEV"];
+
+        if (iznos == "")
+        {
+            iznos = "0"; //float
+        } 
+
+        if (brdok == "")
+        {
+            brdok = "0"; //int
+        }
+
+        if (datdok == "")
+        {
+            datdok = "1900-01-01"; //date
+        }
+
+        if (tecaj == "")
+        {
+            tecaj = "0"; //float
+        }
+
+        if (izndev == "")
+        {
+            izndev = "0"; //float
+        }
+
+        //***************************************************
+        // Promjena zarez u točku za float brojeve
+        //***************************************************
+        iznos = iznos.Replace("," , ".");   
+        tecaj = tecaj.Replace("," , ".");
+        izndev = izndev.Replace("," , ".");
+    
+        //********************************************
+        //VALIDACIJA
+        //******************************************** 
+        if (!IsInt(masterId))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera masterId nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: masterId is not integer."}';        
+            return Response(headers, jsonString, 200);         
+        }
+        else
+        {
+            print("Provjera masterId je prošla");
+        }
+
+        if(konto.Length > 15)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_KONTO nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_KONTO exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);        
+        }
+        else
+        {
+            print("Provjera GK_LN_KONTO je prošla");
+        }
+
+        if(objed.Length > 6)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_OBJED nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OBJED exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);         
+        }
+        else
+        {
+            print("Provjera GK_LN_OBJED je prošla");
+        }
+
+        if(opis.Length > 50)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_OPIS nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OPIS exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);                
+        }
+        else
+        {
+            print("Provjera GK_LN_OPIS je prošla");
+        }   
+
+        //if((dp != "D") && (dp != "P"))  
+        if(dp.Length > 1)
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_DP nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DP exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);        
+        }
+        else
+        {
+            print("Provjera GK_LN_DP je prošla");
+        }   
+
+        // IZNOS je float, može biti i negativan broj
+        if(!IsFloat(iznos))  
+        {
+       
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_IZNOS nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNOS is not a valid float."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_IZNOS je prošla");
+        }
+
+        if(!IsInt(brdok))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_BRDOK nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_BRDOK is not a valid integer."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_BRDOK je prošla");
+        }
+
+        // DATDOK je date
+        if(!IsDate(datdok))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_DATDOK nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DATDOK is not a valid date."}';        
+            return Response(headers, jsonString, 200);                
+        }
+        else
+        {
+            print("Provjera GK_LN_DATDOK je prošla");
+        }
+
+        if(partnr.Length > 10)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_PARTNR nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_PARTNR exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_PARTNR je prošla");
+        }
+
+        if(sifdvz.Length > 3)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_SIFDVZ nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_SIFDVZ exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_SIFDVZ je prošla");
+        }
+
+        // TECAJ je float
+        if(!IsFloat(tecaj))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_TECAJ nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_TECAJ is not a valid float."}';        
+            return Response(headers, jsonString, 200);               
+        }
+        else
+        {
+            print("Provjera GK_LN_TECAJ je prošla");
+        }
+
+        // IZNDEV je float
+        if(!IsFloat(izndev))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_IZNDEV nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNDEV is not a valid float."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_IZNDEV je prošla");
+        }
+        //********************************************
+        print("createLine: Nakon validacije");
+
+
+
+        // Get next line number
+        querydd = "SELECT ISNULL(MAX(GK_LN_BR_LIN), 0) + 1 FROM NKGKLNTM WHERE GK_LN_BR_TEM = @id";
+        sqlParamsdd = {};
+        sqlParamsdd.Add({"@id", int(masterId)});
+        resulte = sqlQuery(querydd, sqlParamsdd);
+        lineId = resulte[1][0];
+
+        //print("SELECT Next line ID: " + lineId);
+
+    
+
+        // Build INSERT
+        queryde = "INSERT INTO NKGKLNTM (GK_LN_BR_TEM, GK_LN_BR_LIN, " + fieldsx.Join(", ") + ") VALUES (@masterId, @lineId, ";
+        for(ig = 0; ig < Size(fieldsx); ig++) {
+            if (ig > 0) 
+            {
+                queryde += ", ";
+            }
+            queryde += "@" + fieldsx[ig];
+        }
+        queryde += ")";
+
+        // Set params
+        sqlParams = {};
+        sqlParams.Add({"@masterId", int(masterId)});
+        sqlParams.Add({"@lineId", int(lineId)});
+        for(ih = 0; ih < Size(fieldsx); ih++) {
+            fieldName = fieldsx[ih];
+            fieldValue = dataObject[fieldName]; 
+            sqlParams.Add({"@" + fieldName, fieldValue});
+        }
+
+        print("BEFORE INSERT LINE query: " + queryde);
+        print("BEFORE INSERT LINE params: " + sqlParams);
+
+        rowsAffected = sqlNonQuery(queryde, sqlParams);
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = "";
+        if (rowsAffected > 0)
+        {
+            jsonString = '{"Result" : "Success", "Message": ""}';
+        }
+        else
+        {
+            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+        }
+        return Response(headers, jsonString, 200);
+
+    }
+    catch(ex4444)
+    {
+        print("Error occurred while inserting line: " + ex4444);
+        exMessage = ex4444;        
+    }
+    headers = {"Content-Type": "application/json"}; 
+    jsonString = '{"Result" : "Failed", "Message": "Cannot insert line. ' + exMessage + '"}';  
+    return Response(headers, jsonString, 200);
+}
+
+// Update line endpoint
+//CreateEndpoint("PUT", "/gk-lines/{id}/{line}", "updateLine");
+function updateLine(args) {
+    print("U funkciji: updateLine");
+    exMessage = "";
+    try
+    {
+        masterId = args["RouteValues"]["id"];
+        lineId = args["RouteValues"]["line"];
+    
+        fieldsx = {
+            "GK_LN_KONTO", "GK_LN_OBJED", "GK_LN_OPIS", "GK_LN_DP",
+            "GK_LN_IZNOS", "GK_LN_BRDOK", "GK_LN_DATDOK", "GK_LN_PARTNR",
+            "GK_LN_SIFDVZ", "GK_LN_TECAJ", "GK_LN_IZNDEV"
+        };
+
+        dataObject = DeserializeJson(args["Body"]);
+
+        konto = dataObject["GK_LN_KONTO"];    
+        objed = dataObject["GK_LN_OBJED"];
+        opis = dataObject["GK_LN_OPIS"];
+        dp = dataObject["GK_LN_DP"];
+        iznos = dataObject["GK_LN_IZNOS"];
+        brdok = dataObject["GK_LN_BRDOK"];
+        datdok = dataObject["GK_LN_DATDOK"];
+        partnr = dataObject["GK_LN_PARTNR"];
+        sifdvz = dataObject["GK_LN_SIFDVZ"];
+        tecaj = dataObject["GK_LN_TECAJ"];
+        izndev = dataObject["GK_LN_IZNDEV"];
+
+        if (iznos == "")
+        {
+            iznos = "0"; //float
+        } 
+
+        if (brdok == "")
+        {
+            brdok = "0"; //int
+        }
+
+        if (datdok == "")
+        {
+            datdok = "1900-01-01"; //date
+        }
+
+        if (tecaj == "")
+        {
+            tecaj = "0"; //float
+        }
+
+        if (izndev == "")
+        {
+            izndev = "0"; //float
+        }
+
+        //***************************************************
+        // Promjena zarez u točku za float brojeve
+        //***************************************************
+        iznos = iznos.Replace("," , ".");
+        tecaj = tecaj.Replace("," , ".");
+        izndev = izndev.Replace("," , ".");
+    
+        //********************************************
+        //VALIDACIJA
+        //******************************************** 
+        if (!IsInt(masterId))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera masterId nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: masterId is not integer."}';        
+            return Response(headers, jsonString, 200);    
+        }
+        else
+        {
+            print("Provjera masterId je prošla");
+        }
+
+        if (!IsSmallInt(lineId))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera lineId nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: lineId is not small integer."}';        
+            return Response(headers, jsonString, 200);       
+        }
+        else
+        {
+            print("Provjera lineId je prošla");
+        }
+
+        if(konto.Length > 15)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_KONTO nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_KONTO exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_KONTO je prošla");
+        }
+
+        if(objed.Length > 6)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_OBJED nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OBJED exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_OBJED je prošla");
+        }
+
+        if(opis.Length > 50)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_OPIS nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_OPIS exceeds maximum length."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_OPIS je prošla");
+        }   
+
+        //if((dp != "D") && (dp != "P"))  
+        if(dp.Length > 1)
+        {   
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_DP nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DP exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_DP je prošla");
+        }   
+
+        // IZNOS je float, može biti i negativan broj
+        if(!IsFloat(iznos))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_IZNOS nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNOS is not a float."}';        
+            return Response(headers, jsonString, 200);    
+        }
+        else
+        {
+            print("Provjera GK_LN_IZNOS je prošla");
+        }
+
+        if(!IsInt(brdok))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_BRDOK nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_BRDOK is not an integer."}';
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_BRDOK je prošla");
+        }
+
+        // DATDOK je date
+        if(!IsDate(datdok))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_DATDOK nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_DATDOK is not a date."}';        
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_DATDOK je prošla");
+        }
+
+        if(partnr.Length > 10)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_PARTNR nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_PARTNR exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);
+        }
+        else
+        {
+            print("Provjera GK_LN_PARTNR je prošla");
+        }
+
+        if(sifdvz.Length > 3)  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_SIFDVZ nije prošla");
+
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_SIFDVZ exceeds maximum length."}';        
+            return Response(headers, jsonString, 200);       
+        }
+        else
+        {
+            print("Provjera GK_LN_SIFDVZ je prošla");
+        }
+
+        // TECAJ je float
+        if(!IsFloat(tecaj))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_TECAJ nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_TECAJ is not a float."}';        
+            return Response(headers, jsonString, 200);  
+        }
+        else
+        {
+            print("Provjera GK_LN_TECAJ je prošla");
+        }
+
+        // IZNDEV je float
+        if(!IsFloat(izndev))  
+        {
+            // 🔴 Validation failed: Return the error
+            print("Provjera GK_LN_IZNDEV nije prošla");
+        
+            headers = {"Content-Type": "application/json"};
+            jsonString = '{"Result" : "Failed", "Message": "Validation failed: GK_LN_IZNDEV is not a float."}';        
+            return Response(headers, jsonString, 200);      
+        }
+        else
+        {
+            print("Provjera GK_LN_IZNDEV je prošla");
+        }
+        //********************************************
+        print("updateLine: Nakon validacije");
+
+        // Build UPDATE
+        queryUpdate = "UPDATE NKGKLNTM SET ";
+        for(i = 0; i < Size(fieldsx); i++) {
+            if (i > 0) {
+                queryUpdate += ", ";
+            }
+            queryUpdate += fieldsx[i] + " = @" + fieldsx[i];
+        }
+        queryUpdate += " WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
+
+        // Set params
+        sqlParams = {};
+        sqlParams.Add({"@masterId", int(masterId)});
+        sqlParams.Add({"@lineId", int(lineId)});
+        for(i = 0; i < Size(fieldsx); i++) {
+            fieldName = fieldsx[i];
+            fieldValue = dataObject[fieldName];        
+            sqlParams.Add({"@" + fieldName, fieldValue});
+        }
+
+        print("BEFORE UPDATE LINE query: " + queryUpdate);
+        print("BEFORE UPDATE LINE params: " + sqlParams);
+
+        rowsAffected = sqlNonQuery(queryUpdate, sqlParams);
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = "";
+        if (rowsAffected > 0)
+        {
+            jsonString = '{"Result" : "Success", "Message": ""}';
+        }
+        else
+        {
+            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+        }
+        return Response(headers, jsonString, 200);
+    }
+    catch(ex3333)
+    {
+        print("Error occurred while updating line: " + ex3333);
+        exMessage = ex3333;        
+    }
+    headers = {"Content-Type": "application/json"}; 
+    jsonString = '{"Result" : "Failed", "Message": "Cannot update line. ' + exMessage + '"}';  
+    return Response(headers, jsonString, 200);
+}
+
+// Delete line endpoint
+//CreateEndpoint("DELETE", "/gk-lines/{id}/{line}", "deleteLine");
+function deleteLine(args) {
+    print('deleteLine');
+    masterId = args["RouteValues"]["id"];
+    lineId = args["RouteValues"]["line"];
+    
+    queryDelete = "DELETE FROM NKGKLNTM WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
+    sqlParams = {};
+    sqlParams.Add({"@masterId", int(masterId)});
+    sqlParams.Add({"@lineId", int(lineId)});
+    sqlNonQuery(queryDelete, sqlParams);
+
+    // Reload detail table
+    // args2 = {};
+    // args2["RouteValues"] = {"id": int(masterId)};
+    // return getGKLines(args2);
+}
+
+// Delete line endpoint
+//CreateEndpoint("DELETE", "/gk-lines-norefresh/{id}/{line}", "deleteLineNoRefresh");
+function deleteLineNoRefresh(args) {
+    //print('deleteLineNoRefresh');
+    exMessage = "";
+    try
+    {
+        masterId = args["RouteValues"]["id"];
+        lineId = args["RouteValues"]["line"];
+    
+        queryDelete = "DELETE FROM NKGKLNTM WHERE GK_LN_BR_TEM = @masterId AND GK_LN_BR_LIN = @lineId";
+        sqlParams = {};
+        sqlParams.Add({"@masterId", int(masterId)});
+        sqlParams.Add({"@lineId", int(lineId)});
+        rowsAffected = sqlNonQuery(queryDelete, sqlParams);
+
+        //print("rowsAffected=" + rowsAffected);
+
+        headers = {"Content-Type": "application/json"};
+        if (rowsAffected > 0)
+        {
+            jsonString = '{"Result" : "Success", "Message": ""}';
+        }
+        else
+        {
+            jsonString = '{"Result" : "Failed", "Message": "Rows affected 0"}';
+        }
+        return Response(headers, jsonString, 200);
+    }
+    catch(ex2222)
+    {
+        print("Error occurred while deleting line: " + ex2222);
+        exMessage = ex2222;
+    }
+    headers = {"Content-Type": "application/json"};   
+    return Response(headers, '{"Result" : "Failed", "Message": "Cannot delete line. ' + exMessage + '"}', 200);
+}
+
+function safeStr(valu) {
+    //if (valu == null || valu == "null" || valu == undefined) {
+    //    return "";
+    //}
+    return valu;
+}
+
+function gk_showAlert(title, message, icon = "error") {
+    return "<script>Swal.fire({" +
+           "title: '" + title + "'," +
+           "text: '" + message + "'," +
+           "icon: '" + icon + "'," +
+           "confirmButtonText: 'OK'" +
+           "});</script>";
+}
+
+
+
+return gk_get();
