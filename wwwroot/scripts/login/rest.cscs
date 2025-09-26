@@ -28,3 +28,20 @@ function chainHandler(request) {
     headers = {"Content-Type": "text/plain"};
     return Response(headers, "Chained to " + program, 200);
 }
+
+CreateEndpoint("GET", "/chainBack", "chainBackHandler");
+function chainBackHandler(request) {
+    if(!IsAuthenticated(request)){return RedirectToLogin();}
+
+    chainId = request["QueryParams"]["chainId"];
+
+    if(chainId == "" || chainId == null){
+        return RedirectToMainMenu();
+    }
+
+    // !!!!
+    // ChainBack(ReadConfig("ScriptsDirectory") + "programs\\" + chainId + ".cscs");
+
+    headers = {"Content-Type": "text/plain"};
+    return Response(headers, "Chained to " + program, 200);
+}

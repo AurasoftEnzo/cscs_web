@@ -38,9 +38,16 @@ function nabava_ur(request){
     }
 
     //Main Contnent
-
-    
     FillTemplatePlaceholder(htmlHndl, "mainContent", RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "nabava\\ur.html")));
+
+
+    dict = {};
+    dict["input1"] = "Value 1";
+    dict["input2"] = "Value 2";
+    dict["input3"] = "Value 3";
+    dict["input4"] = "Value 4";
+    FillTemplateFromDictionary(htmlHndl, dict);
+
 
     headers = {"Content-Type": "text/html"};
     return Response(headers, RenderHtml(htmlHndl), 200);

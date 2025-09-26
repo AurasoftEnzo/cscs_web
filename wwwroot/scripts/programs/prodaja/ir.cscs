@@ -19,9 +19,9 @@ function prodaja_ir(request){
 
     //Chains
     chains = {};
-    chains.Add({"name": "Matični podaci kupaca", "script": "prodaja/mpk"});
-    chains.Add({"name": "Matični podaci mjesta otpreme", "script": "prodaja/mpmo"});
-    chains.Add({"name": "Otpremnice", "script": "prodaja/otp"});
+    // chains.Add({"name": "Matični podaci kupaca", "script": "prodaja/mpk"});
+    // chains.Add({"name": "Matični podaci mjesta otpreme", "script": "prodaja/mpmo"});
+    // chains.Add({"name": "Otpremnice", "script": "prodaja/otp"});
 
     chainsHtmlString = "";
 

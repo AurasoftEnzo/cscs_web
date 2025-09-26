@@ -2,7 +2,7 @@ function chain(script) {
     fetch('/chain?program=' + script)
         .then(response => {
             if (response.status === 200) {
-                console.log(window.location);
+                // console.log(window.location);
                 
                 window.location.replace('/' + script);
                 return;
@@ -27,8 +27,8 @@ function chain(script) {
     // });
 }
 
-function chainBack(script) {
-    fetch('/chain?program=' + script)
+function chainBack(chainId) {
+    fetch('/chainBack?chainId=' + chainId)
         .then(response => {
             if (response.status === 200) {
                 window.location.replace('/' + script);
