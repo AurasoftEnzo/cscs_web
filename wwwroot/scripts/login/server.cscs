@@ -26,22 +26,32 @@ CREATE INDEX IX_SessionStore_ExpiresAt ON SessionStore(ExpiresAt);
 // include(ReadConfig("ScriptsDirectory") + "login\\JWT.cscs");
 
 
-// include("endpoints.cscs");
-// include("redirectFunctions.cscs");
-// include("sessionFunctions.cscs");
-// include("rest.cscs");
-// // include("JWT.cscs");
+include("endpoints.cscs");
+include("redirectFunctions.cscs");
+include("sessionFunctions.cscs");
+include("rest.cscs");
+// include("JWT.cscs");
 
 
 
 
-//--- CHAIN --------------------------------------------------------
+// //--- CHAIN --------------------------------------------------------
 
-CreateEndpoint("GET", "/chain", "chainHandler");
-function chainHandler(request) {
-    program = request["QueryParams"]["program"];
-    RunScript(ReadConfig("ScriptsDirectory") + "programs\\" + program + ".cscs");
-}
+// CreateEndpoint("GET", "/chain", "chainHandler");
+// function chainHandler(request) {
+//     if(!IsAuthenticated(request)){return RedirectToLogin();}
+
+//     program = request["QueryParams"]["program"];
+
+//     if(program == "main-menu" || program == "" || program == null){
+//         return RedirectToMainMenu();
+//     }
+    
+//     Chain(ReadConfig("ScriptsDirectory") + "programs\\" + program + ".cscs");
+
+//     headers = {"Content-Type": "text/plain"};
+//     return Response(headers, "Chained to " + program, 200);
+// }
 
 
 
@@ -50,178 +60,252 @@ function chainHandler(request) {
 ///--------------------------- Endpoints ---------------------------
 
 
+// CreateEndpoint("GET", "/", "getRoot");
+// function getRoot(request) {
+//     sessionId = GetSessionIdFromCookie(request);
+//     if (sessionId != null) {
+//         sd = GetSessionData(sessionId);
+//         if(HasAllData(sd)){
+//             return RedirectToMainMenu();
+//         }
+//     }
 
-CreateEndpoint("GET", "/", "showLoginStep1");
-function showLoginStep1(args) {
-    sessionId = GetSessionIdFromCookie(args);
-    if (sessionId != null) {
-        sd = GetSessionData(sessionId);
-        if(HasAllData(sd)){
-            return RedirectToMainMenu();
-        }
-    }
-
-    headers = {"Content-Type": "text/html"};
-    return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\step1-company-year.html")), 200);
-}
-
-CreateEndpoint("POST", "/api/validate-company-year", "validateCompanyYear");
-function validateCompanyYear(args) {
-    companyCode = GetValueFromForm(args["Body"], "CompanyCode");
-    yearStr = GetValueFromForm(args["Body"], "FiscalYear");
-
-    if (companyCode == null || companyCode == "") {
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, "<div class='alert alert-error'>Company code is required</div>", 200);
-    }
-
-    if (yearStr == null || yearStr == "") {
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, "<div class='alert alert-error'>Fiscal year is required</div>", 200);
-    }
-
-    fiscalYear = int(yearStr);
-    currentYear = int(Now("yyyy"));
-    if (fiscalYear < 1900 || fiscalYear > currentYear + 5) {
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, "<div class='alert alert-error'>Invalid fiscal year</div>", 200);
-    }
-
-    query = "SELECT sy_cc_desc, sy_cc_dbase FROM " + ReadConfig("CommonDB") + ".dbo.NKSYCCYR WHERE sy_cc_user = @code AND sy_cc_year = @year";
-    sqlParams = {};
-    sqlParams.Add({"@code", companyCode});
-    sqlParams.Add({"@year", fiscalYear});
-
-    result = sqlQuery(query, sqlParams);
-
-    if (result == null || Size(result) < 2) {
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, "<div class='alert alert-error'>No database found for this company/year</div>", 200);
-    }
-
-    companyName = strTrim(result[1][0]);
-    databaseName = strTrim(result[1][1]);
-
-    // // Save to session
-    sessionId = GetSessionIdFromCookie(args);
-    if (sessionId == null) {
-        sessionId = GenerateSessionId();
-    }
-
-    SetSession(sessionId, "CompanyCode", companyCode);
-    SetSession(sessionId, "FiscalYear", fiscalYear);
-    SetSession(sessionId, "CompanyName", companyName);
-    SetSession(sessionId, "DatabaseName", databaseName);
-
-    // Load and fill template
-    htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\step2-user-credentials.html");
-
-    valuesDict = {};
-    valuesDict["companyName"] = companyName;
-    valuesDict["companyCode"]  = companyCode;
-    valuesDict["fiscalYear"] = fiscalYear;
-
-    FillTemplateFromDictionary(htmlHndl, valuesDict);
-
-    headers = {"Content-Type": "text/html"};
-    headers["Set-Cookie"] = "sessionId=" + sessionId + "; path=/; HttpOnly; SameSite=Lax";
-    
-    // Render next step
-    return Response(headers, RenderHtml(htmlHndl), 200);
-}
-
-CreateEndpoint("POST", "/api/authenticate", "authenticateUser");
-function authenticateUser(args) {
-    
-    sessionId = GetSessionIdFromCookie(args);
-
-    if(sessionId == null) {
-        // redirectScript = "<script>window.location.href='/';</script>";
-        // headers = {"Content-Type": "text/html"};
-        // return Response(headers, redirectScript, 303);
-
-        return RedirectToLogin();
-    }
-    
-    sd = GetSessionData(sessionId);
-    if(HasAllData(sd)){
-        return RedirectToMainMenu();
-    }
-
-    companyCode = ExtractSessionEntry(sd, "CompanyCode");
-    fiscalYear  = ExtractSessionEntry(sd, "FiscalYear");
-    databaseName = ExtractSessionEntry(sd, "DatabaseName");
-
-    if (companyCode == null || fiscalYear == null || databaseName == null) {
-        // redirectScript = "<script>window.location.href='/';</script>";
-        // headers = {"Content-Type": "text/html"};
-        // return Response(headers, redirectScript, 303);
-
-        return RedirectToLogin();
-    }
-
-    userCode = GetValueFromForm(args["Body"], "UserCode");
-    password = GetValueFromForm(args["Body"], "Password");
-
-    if (userCode == null || userCode == "") {
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, "<div class='alert alert-error'>User code is required</div>", 200);
-    }
-
-    if (password == null || password == "") {
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, "<div class='alert alert-error'>Password is required</div>", 200);
-    }
-
-    // Authenticate user
-    query = "SELECT kpsy_user_naziv, kpsy_user_scty FROM " + databaseName + ".dbo.KPSYUSER WHERE kpsy_user_code = @code AND kpsy_user_pswd = @pswd";
-    sqlParams = {};
-    sqlParams.Add({"@code", userCode});
-    sqlParams.Add({"@pswd", password});
-
-    result = sqlQuery(query, sqlParams);
-
-    if (result == null || Size(result) < 2) {
-        headers = {"Content-Type": "text/html"};
-        return Response(headers, "<div class='alert alert-error'>Invalid user code or password</div>", 200);
-    }
-
-    userName = strTrim(result[1][0]);
-    userRole = strTrim(result[1][1]);
-
-    // Save to session (for server-side validation)
-    SetSession(sessionId, "UserCode", userCode);
-    SetSession(sessionId, "UserName", userName);
-    SetSession(sessionId, "UserRole", userRole);
+//     return RedirectToLogin();
+// }
 
 
-    return RedirectToMainMenu();
+// CreateEndpoint("GET", "/login", "showLoginStep1");
+// function showLoginStep1(request) {
+//     sessionId = GetSessionIdFromCookie(request);
+//     if (sessionId != null) {
+//         sd = GetSessionData(sessionId);
+//         if(HasAllData(sd)){
+//             return RedirectToMainMenu();
+//         }
+//     }
 
-    // redirectScript = "<script>window.location.href='/main-menu';</script>";
-    // headers = {"Content-Type": "text/html"};
-    // return Response(headers, redirectScript, 303);
+//     headers = {"Content-Type": "text/html"};
+//     return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\step1-company-year.html")), 200);
+// }
 
-    // headers = {"HX-Redirect": "/main-menu"};
-    // return Response(headers, "", 303);
-}
+// CreateEndpoint("POST", "/api/validate-company-year", "validateCompanyYear");
+// function validateCompanyYear(args) {
+//     companyCode = GetValueFromForm(args["Body"], "CompanyCode");
+//     yearStr = GetValueFromForm(args["Body"], "FiscalYear");
 
-// CreateEndpoint("GET", "/main-menu", "showMainMenu");
-// function showMainMenu(args) {
+//     if (companyCode == null || companyCode == "") {
+//         headers = {"Content-Type": "text/html"};
+//         return Response(headers, "<div class='alert alert-error'>Company code is required</div>", 200);
+//     }
 
+//     if (yearStr == null || yearStr == "") {
+//         headers = {"Content-Type": "text/html"};
+//         return Response(headers, "<div class='alert alert-error'>Fiscal year is required</div>", 200);
+//     }
+
+//     fiscalYear = int(yearStr);
+//     currentYear = int(Now("yyyy"));
+//     if (fiscalYear < 1900 || fiscalYear > currentYear + 5) {
+//         headers = {"Content-Type": "text/html"};
+//         return Response(headers, "<div class='alert alert-error'>Invalid fiscal year</div>", 200);
+//     }
+
+//     query = "SELECT sy_cc_desc, sy_cc_dbase FROM " + ReadConfig("CommonDB") + ".dbo.NKSYCCYR WHERE sy_cc_user = @code AND sy_cc_year = @year";
+//     sqlParams = {};
+//     sqlParams.Add({"@code", companyCode});
+//     sqlParams.Add({"@year", fiscalYear});
+
+//     result = sqlQuery(query, sqlParams);
+
+//     if (result == null || Size(result) < 2) {
+//         headers = {"Content-Type": "text/html"};
+//         return Response(headers, "<div class='alert alert-error'>No database found for this company/year</div>", 200);
+//     }
+
+//     companyName = strTrim(result[1][0]);
+//     databaseName = strTrim(result[1][1]);
+
+//     // // Save to session
 //     sessionId = GetSessionIdFromCookie(args);
-//     sd = GetSessionData(sessionId);
-//     if(!HasAllData(sd)){
+//     if (sessionId == null) {
+//         sessionId = GenerateSessionId();
+//     }
+
+//     SetSession(sessionId, "CompanyCode", companyCode);
+//     SetSession(sessionId, "FiscalYear", fiscalYear);
+//     SetSession(sessionId, "CompanyName", companyName);
+//     SetSession(sessionId, "DatabaseName", databaseName);
+
+//     // Load and fill template
+//     htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\step2-user-credentials.html");
+
+//     valuesDict = {};
+//     valuesDict["companyName"] = companyName;
+//     valuesDict["companyCode"]  = companyCode;
+//     valuesDict["fiscalYear"] = fiscalYear;
+
+//     FillTemplateFromDictionary(htmlHndl, valuesDict);
+
+//     headers = {"Content-Type": "text/html"};
+//     headers["Set-Cookie"] = "sessionId=" + sessionId + "; path=/; HttpOnly; SameSite=Lax";
+    
+//     // Render next step
+//     return Response(headers, RenderHtml(htmlHndl), 200);
+// }
+
+// CreateEndpoint("POST", "/api/authenticate", "authenticateUser");
+// function authenticateUser(args) {
+    
+//     sessionId = GetSessionIdFromCookie(args);
+
+//     if(sessionId == null) {
+//         // redirectScript = "<script>window.location.href='/';</script>";
+//         // headers = {"Content-Type": "text/html"};
+//         // return Response(headers, redirectScript, 303);
+
 //         return RedirectToLogin();
 //     }
     
-//     // Load and fill template
+//     sd = GetSessionData(sessionId);
+//     if(HasAllData(sd)){
+//         return RedirectToMainMenu();
+//     }
+
+//     companyCode = ExtractSessionEntry(sd, "CompanyCode");
+//     fiscalYear  = ExtractSessionEntry(sd, "FiscalYear");
+//     databaseName = ExtractSessionEntry(sd, "DatabaseName");
+
+//     if (companyCode == null || fiscalYear == null || databaseName == null) {
+//         // redirectScript = "<script>window.location.href='/';</script>";
+//         // headers = {"Content-Type": "text/html"};
+//         // return Response(headers, redirectScript, 303);
+
+//         return RedirectToLogin();
+//     }
+
+//     userCode = GetValueFromForm(args["Body"], "UserCode");
+//     password = GetValueFromForm(args["Body"], "Password");
+
+//     if (userCode == null || userCode == "") {
+//         headers = {"Content-Type": "text/html"};
+//         return Response(headers, "<div class='alert alert-error'>User code is required</div>", 200);
+//     }
+
+//     if (password == null || password == "") {
+//         headers = {"Content-Type": "text/html"};
+//         return Response(headers, "<div class='alert alert-error'>Password is required</div>", 200);
+//     }
+
+//     // Authenticate user
+//     query = "SELECT kpsy_user_naziv, kpsy_user_scty FROM " + databaseName + ".dbo.KPSYUSER WHERE kpsy_user_code = @code AND kpsy_user_pswd = @pswd";
+//     sqlParams = {};
+//     sqlParams.Add({"@code", userCode});
+//     sqlParams.Add({"@pswd", password});
+
+//     result = sqlQuery(query, sqlParams);
+
+//     if (result == null || Size(result) < 2) {
+//         headers = {"Content-Type": "text/html"};
+//         return Response(headers, "<div class='alert alert-error'>Invalid user code or password</div>", 200);
+//     }
+
+//     userName = strTrim(result[1][0]);
+//     userRole = strTrim(result[1][1]);
+
+//     // Save to session (for server-side validation)
+//     SetSession(sessionId, "UserCode", userCode);
+//     SetSession(sessionId, "UserName", userName);
+//     SetSession(sessionId, "UserRole", userRole);
+
+
+//     return RedirectToMainMenu();
+
+//     // redirectScript = "<script>window.location.href='/main-menu';</script>";
+//     // headers = {"Content-Type": "text/html"};
+//     // return Response(headers, redirectScript, 303);
+
+//     // headers = {"HX-Redirect": "/main-menu"};
+//     // return Response(headers, "", 303);
+// }
+
+// // CreateEndpoint("GET", "/main-menu", "showMainMenu");
+// // function showMainMenu(args) {
+
+// //     sessionId = GetSessionIdFromCookie(args);
+// //     sd = GetSessionData(sessionId);
+// //     if(!HasAllData(sd)){
+// //         return RedirectToLogin();
+// //     }
+    
+// //     // Load and fill template
+// //     htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\main-menu.html");
+
+// //     valuesDict = {};
+// //     valuesDict["UserName"]    = sd["UserName"];
+// //     valuesDict["UserRole"]    = sd["UserRole"];
+// //     valuesDict["CompanyName"] = sd["CompanyName"];
+// //     valuesDict["FiscalYear"]  = sd["FiscalYear"];
+
+// //     FillTemplateFromDictionary(htmlHndl, valuesDict);
+
+// //     headers = {"Content-Type": "text/html"};
+// //     return Response(headers, RenderHtml(htmlHndl), 200);
+// // }
+
+// CreateEndpoint("GET", "/main-menu", "showMainMenu");
+// function showMainMenu(request) {
+//     if(!IsAuthenticated(request)){return RedirectToLogin();}
+
+//     sd = GetSessionData(GetSessionIdFromCookie(request));
+
+//     userRole = ExtractSessionEntry(sd, "UserRole");
+
+//     // Load allowed modules
+//     allowedModules = BuildUserMenu(userRole, sd["DatabaseName"]);
+
+
+//     // Load template
 //     htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\main-menu.html");
 
+//     // Inject values
 //     valuesDict = {};
-//     valuesDict["UserName"]    = sd["UserName"];
-//     valuesDict["UserRole"]    = sd["UserRole"];
+//     valuesDict["UserName"] = sd["UserName"];
+//     valuesDict["UserRole"] = sd["UserRole"];
 //     valuesDict["CompanyName"] = sd["CompanyName"];
-//     valuesDict["FiscalYear"]  = sd["FiscalYear"];
+//     valuesDict["FiscalYear"] = sd["FiscalYear"];
+
+//     menuList = "";
+//     for (moduleKey : allowedModules.Keys) {
+//         module = allowedModules[moduleKey];
+//         menuList += "<li class='menu-title'><span>" + moduleKey + "</span></li>";
+//         for (subKey : module["submodules"].Keys) {
+//             sub = module["submodules"][subKey];
+//             // menuList += "<li><a href='" + sub["path"] + "' hx-get='" + sub["path"] + "' hx-target='#content-area' hx-swap='innerHTML'><i class='" + module["icon"] + "'></i> " + sub["title"] + "</a></li>";
+//             // menuList += "<li><a href='" + sub["script"] + "'><i class='" + module["icon"] + "'></i> " + subKey + "</a></li>";
+//             menuList += "<li><a onclick='chain(\"" + sub["script"] + "\")'><i class='" + module["icon"] + "'></i> " + subKey + "</a></li>";
+//         }
+//     }
+
+    
+//     // // {{#each menuItems}}
+    
+//     //         <li class="menu-title"><span>{{this.title}}</span></li>
+    
+//     //     // {{#each this.submodules}}
+        
+//     //         <li>
+//     //             <a href="{{this.path}}" hx-get="{{this.path}}" hx-target="#content-area" hx-swap="innerHTML">
+//     //                 <i class="{{../icon}}"></i> {{this.title}}
+//     //             </a>
+//     //         </li>
+
+//     //     // {{/each}}
+//     // // {{/each}}
+    
+
+//     valuesDict["MenuList"] = menuList;
+
+//     // valuesDict["menuItems"] = SerializeJson(allowedModules);  // Use built-in Serialize for JSON
 
 //     FillTemplateFromDictionary(htmlHndl, valuesDict);
 
@@ -229,190 +313,135 @@ function authenticateUser(args) {
 //     return Response(headers, RenderHtml(htmlHndl), 200);
 // }
 
-CreateEndpoint("GET", "/main-menu", "showMainMenu");
-function showMainMenu(args) {
-    sessionId = GetSessionIdFromCookie(args);
-    sd = GetSessionData(sessionId);
-    if (!HasAllData(sd)) {
-        return RedirectToLogin();
-    }
+// function BuildUserMenu(userRoleCode, databaseName) {
+//     // Load module config
+//     configFile = ReadConfig("ScriptsDirectory") + "login\\modules.json";
+//     jsonText = ReadFile(configFile).Join("");
+//     // print(jsonText);
+//     allModules = DeserializeJson(jsonText);
+//     // print(allModules);
 
-    userRole = ExtractSessionEntry(sd, "UserRole");
+//     return allModules;
 
-    // Load allowed modules
-    allowedModules = BuildUserMenu(userRole, sd["DatabaseName"]);
+//     //...
+
+//     // Query NKSYROLL to get all permissions for this role
+//     query = "SELECT SYRL_PROGNAME FROM " + databaseName + ".dbo.NKSYROLL WHERE SYRL_CODE = @role";
+//     sqlParams = {};
+//     sqlParams.Add({"@role", userRoleCode});
+
+//     result = sqlQuery(query, sqlParams);
+//     if (result == null || Size(result) <= 1) {
+//         return {};  // No permissions
+//     }
+
+//     allowedKeys = {};
+//     for(i = 1; i < Size(result); i++) {  // Skip header row
+//         key = strTrim(result[i][0]);
+//         allowedKeys[key] = true;
+//     }
+
+//     // Filter modules
+//     allowedModules = {};
+//     for(moduleKey : allModules.Keys) {
+//         // print("Processing module: " + moduleKey);
+//         module = allModules[moduleKey];
+//         allowedSubs = {};
+
+//         for(subKey : module["submodules"].Keys) {
+//             sub = module["submodules"][subKey];
+//             requiredRole = sub["requiredRole"];
+
+//             if (allowedKeys.Contains(requiredRole)) {
+//                 allowedSubs[subKey] = sub;
+//             }
+//         }
+
+//         if (Size(allowedSubs) > 0) {
+//             allowedModules[moduleKey] = Copy(module);
+//             allowedModules[moduleKey]["submodules"] = allowedSubs;
+//         }
+//     }
 
 
-    // Load template
-    htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\main-menu.html");
+//     // print("Allowed modules: " + allowedModules);
 
-    // Inject values
-    valuesDict = {};
-    valuesDict["UserName"] = sd["UserName"];
-    valuesDict["UserRole"] = sd["UserRole"];
-    valuesDict["CompanyName"] = sd["CompanyName"];
-    valuesDict["FiscalYear"] = sd["FiscalYear"];
+//     return allowedModules;
+// }
 
-    menuList = "";
-    for (moduleKey : allowedModules.Keys) {
-        module = allowedModules[moduleKey];
-        menuList += "<li class='menu-title'><span>" + moduleKey + "</span></li>";
-        for (subKey : module["submodules"].Keys) {
-            sub = module["submodules"][subKey];
-            // menuList += "<li><a href='" + sub["path"] + "' hx-get='" + sub["path"] + "' hx-target='#content-area' hx-swap='innerHTML'><i class='" + module["icon"] + "'></i> " + sub["title"] + "</a></li>";
-            menuList += "<li><a href='" + sub["script"] + "'><i class='" + module["icon"] + "'></i> " + subKey + "</a></li>";
-        }
-    }
-
+// CreateEndpoint("GET", "/logout", "logout");
+// function logout(args) {
+//     sessionId = GetSessionIdFromCookie(args);
+//     ClearSessionById(sessionId);
     
-    // // {{#each menuItems}}
-    
-    //         <li class="menu-title"><span>{{this.title}}</span></li>
-    
-    //     // {{#each this.submodules}}
-        
-    //         <li>
-    //             <a href="{{this.path}}" hx-get="{{this.path}}" hx-target="#content-area" hx-swap="innerHTML">
-    //                 <i class="{{../icon}}"></i> {{this.title}}
-    //             </a>
-    //         </li>
-
-    //     // {{/each}}
-    // // {{/each}}
-    
-
-    valuesDict["MenuList"] = menuList;
-
-    // valuesDict["menuItems"] = SerializeJson(allowedModules);  // Use built-in Serialize for JSON
-
-    FillTemplateFromDictionary(htmlHndl, valuesDict);
-
-    headers = {"Content-Type": "text/html"};
-    return Response(headers, RenderHtml(htmlHndl), 200);
-}
-
-function BuildUserMenu(userRoleCode, databaseName) {
-    // Load module config
-    configFile = ReadConfig("ScriptsDirectory") + "login\\modules.json";
-    jsonText = ReadFile(configFile).Join("");
-    // print(jsonText);
-    allModules = DeserializeJson(jsonText);
-    // print(allModules);
-
-    return allModules;
-
-    //...
-
-    // Query NKSYROLL to get all permissions for this role
-    query = "SELECT SYRL_PROGNAME FROM " + databaseName + ".dbo.NKSYROLL WHERE SYRL_CODE = @role";
-    sqlParams = {};
-    sqlParams.Add({"@role", userRoleCode});
-
-    result = sqlQuery(query, sqlParams);
-    if (result == null || Size(result) <= 1) {
-        return {};  // No permissions
-    }
-
-    allowedKeys = {};
-    for(i = 1; i < Size(result); i++) {  // Skip header row
-        key = strTrim(result[i][0]);
-        allowedKeys[key] = true;
-    }
-
-    // Filter modules
-    allowedModules = {};
-    for(moduleKey : allModules.Keys) {
-        // print("Processing module: " + moduleKey);
-        module = allModules[moduleKey];
-        allowedSubs = {};
-
-        for(subKey : module["submodules"].Keys) {
-            sub = module["submodules"][subKey];
-            requiredRole = sub["requiredRole"];
-
-            if (allowedKeys.Contains(requiredRole)) {
-                allowedSubs[subKey] = sub;
-            }
-        }
-
-        if (Size(allowedSubs) > 0) {
-            allowedModules[moduleKey] = Copy(module);
-            allowedModules[moduleKey]["submodules"] = allowedSubs;
-        }
-    }
+//     return RedirectToLogin();
+// }
 
 
-    // print("Allowed modules: " + allowedModules);
+// CreateEndpoint("GET", "/sales/orders", "showOrders");
+// function showOrders(args) {
+//     // Reuse session to get tenant DB
+//     sessionId = GetSessionIdFromCookie(args);
+//     sd = GetSessionData(sessionId);
+//     // if (!HasAllData(sd) || !UserHasPermission(sd["UserRole"], "SALES_VIEW") ) {
+//     if (!HasAllData(sd) ) {
+//         return RedirectToLogin();
+//     }
 
-    return allowedModules;
-}
+//     // Switch to tenant DB
+//     dbName = sd["DatabaseName"];
+//     // connStr = Replace(ReadConfig("TenantDbTemplate"), "{DBNAME}", dbName);
+//     // SQLConnectionString(connStr);
 
-CreateEndpoint("GET", "/logout", "logout");
-function logout(args) {
-    sessionId = GetSessionIdFromCookie(args);
-    ClearSessionById(sessionId);
-    
-    return RedirectToLogin();
-}
+//     // Fetch data
+//     result = sqlQuery("SELECT TOP 10 * FROM " + dbName + ".dbo.SalesOrders");
 
-
-CreateEndpoint("GET", "/sales/orders", "showOrders");
-function showOrders(args) {
-    // Reuse session to get tenant DB
-    sessionId = GetSessionIdFromCookie(args);
-    sd = GetSessionData(sessionId);
-    // if (!HasAllData(sd) || !UserHasPermission(sd["UserRole"], "SALES_VIEW") ) {
-    if (!HasAllData(sd) ) {
-        return RedirectToLogin();
-    }
-
-    // Switch to tenant DB
-    dbName = sd["DatabaseName"];
-    // connStr = Replace(ReadConfig("TenantDbTemplate"), "{DBNAME}", dbName);
-    // SQLConnectionString(connStr);
-
-    // Fetch data
-    result = sqlQuery("SELECT TOP 10 * FROM " + dbName + ".dbo.SalesOrders");
-
-    // Render
-    htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\orders\\view.html");
+//     // Render
+//     htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "login\\orders\\view.html");
 
 
-    FillTemplateFromDictionary(htmlHndl, {"orders": Serialize(result)});
+//     FillTemplateFromDictionary(htmlHndl, {"orders": Serialize(result)});
 
 
-    return Response({"Content-Type": "text/html"}, RenderHtml(htmlHndl), 200);
-}
+//     return Response({"Content-Type": "text/html"}, RenderHtml(htmlHndl), 200);
+// }
 
-function UserHasPermission(userRole, requiredKey) {
-    SQLConnectionString(ReadConfig("CommonDBConnectionString"));
-    query = "SELECT COUNT(*) FROM NKSYROLL WHERE ROLG_CODE = @role AND ROLL_KEY = @key";
-    sqlParams = {};
-    sqlParams.Add({"@role", userRole});
-    sqlParams.Add({"@key", requiredKey});
-    result = sqlQuery(query, sqlParams);
-    return (int(result[1][0]) > 0);
-}
+// function UserHasPermission(userRole, requiredKey) {
+//     SQLConnectionString(ReadConfig("CommonDBConnectionString"));
+//     query = "SELECT COUNT(*) FROM NKSYROLL WHERE ROLG_CODE = @role AND ROLL_KEY = @key";
+//     sqlParams = {};
+//     sqlParams.Add({"@role", userRole});
+//     sqlParams.Add({"@key", requiredKey});
+//     result = sqlQuery(query, sqlParams);
+//     return (int(result[1][0]) > 0);
+// }
 
 
 ///---------------- Redirect Functions -----------------------
 ///---------------- Redirect Functions -----------------------
 ///---------------- Redirect Functions -----------------------
 
+// function RedirectToLogin() {
 
-function RedirectToLogin() {
-    redirectScript = "<script>window.location.href='/';</script>";
-    headers = {"Content-Type": "text/html"};
-    // Invalidate session cookie
-    headers["Set-Cookie"] = "sessionId=; path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax";
-    return Response(headers, redirectScript, 303);
-}
+//     /*
+//     redirectScript = "<script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11\">"
+//     + "Swal.fire({title: 'ERROR!', text: 'Potrebno se je prijaviti.', icon: 'error', confirmButtonText: 'Close'})"
+//     + ".then((result) => {window.location.replace('/login');});"
+//     + "</script>";    
+//     */
 
-function RedirectToMainMenu() {
-    redirectScript = "<script>window.location.href='/main-menu';</script>";
-    headers = {"Content-Type": "text/html"};
-    return Response(headers, redirectScript, 303);
-}
+//     redirectScript = "<script>window.location.replace('/login');</script>";
+//     headers = {"Content-Type": "text/html"};
+//     // Invalidate session cookie
+//     headers["Set-Cookie"] = "sessionId=; path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax";
+//     return Response(headers, redirectScript, 303);
+// }
+
+// function RedirectToMainMenu() {
+//     redirectScript = "<script>window.location.replace('/main-menu');</script>";
+//     headers = {"Content-Type": "text/html"};
+//     return Response(headers, redirectScript, 303);
+// }
 
 
 
@@ -424,182 +453,189 @@ function RedirectToMainMenu() {
 ///---------------- Session Functions -----------------------
 ///---------------- Session Functions -----------------------
 
+// function IsAuthenticated(request) {
+//     sessionId = GetSessionIdFromCookie(request);
+//     sd = GetSessionData(sessionId);
+//     return HasAllData(sd);
+// }
+
+// function HasAllData(sessionData) {
+//     hasAllData = true;
+//     requiredKeys = ["CompanyCode", "FiscalYear", "CompanyName", "DatabaseName", "UserCode", "UserName", "UserRole"];
+//     for(i = 0; i < Size(requiredKeys); i++) {
+//         if (!sessionData.Keys.Contains(requiredKeys[i]) || sessionData[requiredKeys[i]] == null) {
+//             hasAllData = false;
+//             break;
+//         }
+//     }
+//     // print(hasAllData);
+//     return hasAllData;
+// }
+
+// function GetSessionIdFromCookie(args) {
+//     headers = args["Headers"];
+//     cookies = headers.Contains("Cookie") ? headers["Cookie"] : "";
+
+//     // Try to extract session ID
+//     sessionCookie = ExtractCookie(cookies, "sessionId");
+//     return sessionCookie;
+// }
+
+// function GenerateSessionId() {
+//     // Simple timestamp + random
+//     ts = Now("yyyyMMddHHmmss");
+//     rnd = Math.Round(Math.Random() * 10000);
+//     return ts + "_" + rnd;
+// }
+
+// function ExtractCookie(cookieHeader, name) {
+//     if (cookieHeader == null || cookieHeader == ""){
+//         return null;
+//     }
+
+//     returnValue = null;
+
+//     parts = cookieHeader.Split(";");
+//     for(i = 0; i < Size(parts); i++) {
+//         part = strTrim(parts[i]);
+//         kv = part.Split("=");
+//         if (Size(kv) == 2 && kv[0] == name) {
+//             returnValue = kv[1];
+//             break;
+//         }
+//     }
+
+//     return returnValue;
+// }
 
 
-function GetSessionIdFromCookie(args) {
-    headers = args["Headers"];
-    cookies = headers.Contains("Cookie") ? headers["Cookie"] : "";
+// function SetSession(sessionId, key, value) {
+//     // Get current session data from DB
+//     existing = GetSessionRowFromDb(sessionId);
+//     if (existing == null) {
+//         // Create new session
+//         dataDict = {};
+//     } else {
+//         dataDict = DeserializeJson(existing[1]); // Data column
+//     }
 
-    // Try to extract session ID
-    sessionCookie = ExtractCookie(cookies, "sessionId");
-    return sessionCookie;
-}
+//     // Update or add key
+//     dataDict[key] = value;
 
-function GenerateSessionId() {
-    // Simple timestamp + random
-    ts = Now("yyyyMMddHHmmss");
-    rnd = Math.Round(Math.Random() * 10000);
-    return ts + "_" + rnd;
-}
+//     // Serialize
+//     jsonData = SerializeJson(dataDict);
+//     now = Now("yyyy-MM-dd HH:mm:ss");
 
-function ExtractCookie(cookieHeader, name) {
-    if (cookieHeader == null || cookieHeader == ""){
-        return null;
-    }
+//     query = "MERGE " + ReadConfig("CommonDB") + ".dbo.SessionStore AS target " +
+//             "USING (SELECT @sessionId AS SessionId) AS source " +
+//             "ON target.SessionId = source.SessionId " +
+//             "WHEN MATCHED THEN " +
+//             "    UPDATE SET Data = @data, UpdatedAt = @now, ExpiresAt = DATEADD(MINUTE, 30, @now) " +
+//             "WHEN NOT MATCHED THEN " +
+//             "    INSERT (SessionId, Data, CreatedAt, UpdatedAt, ExpiresAt) " +
+//             "    VALUES (@sessionId, @data, @now, @now, DATEADD(MINUTE, 30, @now));";
 
-    returnValue = null;
+//     sqlParams = {};
+//     sqlParams.Add({"@sessionId", sessionId});
+//     sqlParams.Add({"@data", jsonData});
+//     sqlParams.Add({"@now", now});
 
-    parts = cookieHeader.Split(";");
-    for(i = 0; i < Size(parts); i++) {
-        part = strTrim(parts[i]);
-        kv = part.Split("=");
-        if (Size(kv) == 2 && kv[0] == name) {
-            returnValue = kv[1];
-            break;
-        }
-    }
-
-    return returnValue;
-}
+//     sqlNonQuery(query, sqlParams);
+// }
 
 
-function SetSession(sessionId, key, value) {
-    // Get current session data from DB
-    existing = GetSessionRowFromDb(sessionId);
-    if (existing == null) {
-        // Create new session
-        dataDict = {};
-    } else {
-        dataDict = DeserializeJson(existing[1]); // Data column
-    }
+// function CheckSession(sessionId) {
+//     if (sessionId == null){
+//         return false;
+//     }
 
-    // Update or add key
-    dataDict[key] = value;
+//     row = GetSessionRowFromDb(sessionId);
+//     if (row == null) {
+//         return false;
+//     }
 
-    // Serialize
-    jsonData = SerializeJson(dataDict);
-    now = Now("yyyy-MM-dd HH:mm:ss");
+//     // Check if expired
+//     expiresAt = row[2]; // ExpiresAt column
+//     now = Now("yyyy-MM-dd HH:mm:ss");
 
-    query = "MERGE " + ReadConfig("CommonDB") + ".dbo.SessionStore AS target " +
-            "USING (SELECT @sessionId AS SessionId) AS source " +
-            "ON target.SessionId = source.SessionId " +
-            "WHEN MATCHED THEN " +
-            "    UPDATE SET Data = @data, UpdatedAt = @now, ExpiresAt = DATEADD(MINUTE, 30, @now) " +
-            "WHEN NOT MATCHED THEN " +
-            "    INSERT (SessionId, Data, CreatedAt, UpdatedAt, ExpiresAt) " +
-            "    VALUES (@sessionId, @data, @now, @now, DATEADD(MINUTE, 30, @now));";
+//     if (now > expiresAt) {
+//         ClearSessionById(sessionId);
+//         return false;
+//     }
 
-    sqlParams = {};
-    sqlParams.Add({"@sessionId", sessionId});
-    sqlParams.Add({"@data", jsonData});
-    sqlParams.Add({"@now", now});
+//     return true;
+// }
 
-    sqlNonQuery(query, sqlParams);
-}
+// function GetSessionData(sessionId) {
+//     if(!CheckSession(sessionId)) {
+//         return {};
+//     }
 
+//     row = GetSessionRowFromDb(sessionId);
+//     if (row == null) {
+//         return {};
+//     }
 
-function CheckSession(sessionId) {
-    if (sessionId == null){
-        return false;
-    }
+//     // Update access time
+//     RefreshSessionExpiry(sessionId);
 
-    row = GetSessionRowFromDb(sessionId);
-    if (row == null) {
-        return false;
-    }
+//     // Parse data and return full dict
+//     dataJson = row[1]; // Data column
+//     dict = DeserializeJson(dataJson);
+//     return dict;
+// }
 
-    // Check if expired
-    expiresAt = row[2]; // ExpiresAt column
-    now = Now("yyyy-MM-dd HH:mm:ss");
-
-    if (now > expiresAt) {
-        ClearSessionById(sessionId);
-        return false;
-    }
-
-    return true;
-}
-
-function GetSessionData(sessionId) {
-    if(!CheckSession(sessionId)) {
-        return {};
-    }
-
-    row = GetSessionRowFromDb(sessionId);
-    if (row == null) {
-        return {};
-    }
-
-    // Update access time
-    RefreshSessionExpiry(sessionId);
-
-    // Parse data and return full dict
-    dataJson = row[1]; // Data column
-    dict = DeserializeJson(dataJson);
-    return dict;
-}
-
-function ExtractSessionEntry(sessionData, key, defaultValue = null) {
-    if (sessionData.Contains(key)) {
-        return sessionData[key];
-    }
-    return defaultValue;
-}
-
-function HasAllData(sessionData) {
-    hasAllData = true;
-    requiredKeys = ["CompanyCode", "FiscalYear", "CompanyName", "DatabaseName", "UserCode", "UserName", "UserRole"];
-    for(i = 0; i < Size(requiredKeys); i++) {
-        if (!sessionData.Keys.Contains(requiredKeys[i]) || sessionData[requiredKeys[i]] == null) {
-            hasAllData = false;
-            break;
-        }
-    }
-    return hasAllData;
-}
-
-// Helper: Fetch full session row
-function GetSessionRowFromDb(sessionId) {
-    query = "SELECT SessionId, Data, Convert(nvarchar, ExpiresAt, 20) FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE SessionId = @id";
-    sqlParams = {};
-    sqlParams.Add({"@id", sessionId});
-    result = sqlQuery(query, sqlParams);
-    return (result != null && Size(result) > 1) ? result[1] : null;
-}
-
-// Helper: Refresh UpdatedAt and extend expiry
-function RefreshSessionExpiry(sessionId) {
-    query = "UPDATE " + ReadConfig("CommonDB") + ".dbo.SessionStore SET UpdatedAt = GETDATE(), ExpiresAt = DATEADD(MINUTE, 30, GETDATE()) WHERE SessionId = @id";
-    sqlParams = {};
-    sqlParams.Add({"@id", sessionId});
-    sqlNonQuery(query, sqlParams);
-}
-
-
-function ClearSessionById(sessionId) {
-    query = "DELETE FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE SessionId = @id";
-    sqlParams = {};
-    sqlParams.Add({"@id", sessionId});
-    sqlNonQuery(query, sqlParams);
-}
+// function ExtractSessionEntry(sessionData, key, defaultValue = null) {
+//     if (sessionData.Contains(key)) {
+//         return sessionData[key];
+//     }
+//     return defaultValue;
+// }
 
 
 
+// // Helper: Fetch full session row
+// function GetSessionRowFromDb(sessionId) {
+//     query = "SELECT SessionId, Data, Convert(nvarchar, ExpiresAt, 20) FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE SessionId = @id";
+//     sqlParams = {};
+//     sqlParams.Add({"@id", sessionId});
+//     result = sqlQuery(query, sqlParams);
+//     return (result != null && Size(result) > 1) ? result[1] : null;
+// }
+
+// // Helper: Refresh UpdatedAt and extend expiry
+// function RefreshSessionExpiry(sessionId) {
+//     query = "UPDATE " + ReadConfig("CommonDB") + ".dbo.SessionStore SET UpdatedAt = GETDATE(), ExpiresAt = DATEADD(MINUTE, 30, GETDATE()) WHERE SessionId = @id";
+//     sqlParams = {};
+//     sqlParams.Add({"@id", sessionId});
+//     sqlNonQuery(query, sqlParams);
+// }
 
 
-// You can call this via a scheduled task or cron job.
-CreateEndpoint("GET", "/admin/cleanup-sessions", "CleanupExpiredSessions");
-function CleanupExpiredSessions(args) {
-    // Optional: Add auth check
-    if (GetSession(args, "UserRole") != "admin") {
-        return Response({"Content-Type": "text/html"}, "<h1>Unauthorized</h1>", 403);
-    }
+// function ClearSessionById(sessionId) {
+//     query = "DELETE FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE SessionId = @id";
+//     sqlParams = {};
+//     sqlParams.Add({"@id", sessionId});
+//     sqlNonQuery(query, sqlParams);
+// }
 
-    query = "DELETE FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE ExpiresAt < GETDATE()";
-    sqlNonQuery(query, {});
 
-    return Response({"Content-Type": "text/html"}, "<p>Cleanup complete. Expired sessions removed.</p>", 200);
-}
+
+
+
+// // You can call this via a scheduled task or cron job.
+// CreateEndpoint("GET", "/admin/cleanup-sessions", "CleanupExpiredSessions");
+// function CleanupExpiredSessions(args) {
+//     // Optional: Add auth check
+//     if (GetSession(args, "UserRole") != "admin") {
+//         return Response({"Content-Type": "text/html"}, "<h1>Unauthorized</h1>", 403);
+//     }
+
+//     query = "DELETE FROM " + ReadConfig("CommonDB") + ".dbo.SessionStore WHERE ExpiresAt < GETDATE()";
+//     sqlNonQuery(query, {});
+
+//     return Response({"Content-Type": "text/html"}, "<p>Cleanup complete. Expired sessions removed.</p>", 200);
+// }
 
 
 
@@ -614,16 +650,16 @@ function CleanupExpiredSessions(args) {
 ///---------------- rest -----------------------
 
 
-//-- endpoint to log window close event -------
-CreateEndpoint("POST", "/windowClosed", "windowClosedHandler");
-function windowClosedHandler(args) {
-    sessionId = GetSessionIdFromCookie(args);
+// //-- endpoint to log window close event -------
+// CreateEndpoint("POST", "/windowClosed", "windowClosedHandler");
+// function windowClosedHandler(args) {
+//     sessionId = GetSessionIdFromCookie(args);
 
-    data = DeserializeJson(args["Body"]);
+//     data = DeserializeJson(args["Body"]);
 
-    console.log("Window closed:", data);
+//     console.log("Window closed:", data);
 
-    return;
-}
+//     return;
+// }
 
 

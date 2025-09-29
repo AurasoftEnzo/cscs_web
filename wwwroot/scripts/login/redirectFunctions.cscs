@@ -1,5 +1,13 @@
 function RedirectToLogin() {
-    redirectScript = "<script>window.location.href='/';</script>";
+
+    /*
+    redirectScript = "<script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11\">"
+    + "Swal.fire({title: 'ERROR!', text: 'Potrebno se je prijaviti.', icon: 'error', confirmButtonText: 'Close'})"
+    + ".then((result) => {window.location.replace('/login');});"
+    + "</script>";    
+    */
+
+    redirectScript = "<script>window.location.replace('/login');</script>";
     headers = {"Content-Type": "text/html"};
     // Invalidate session cookie
     headers["Set-Cookie"] = "sessionId=; path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax";
@@ -7,7 +15,7 @@ function RedirectToLogin() {
 }
 
 function RedirectToMainMenu() {
-    redirectScript = "<script>window.location.href='/main-menu';</script>";
+    redirectScript = "<script>window.location.replace('/main-menu');</script>";
     headers = {"Content-Type": "text/html"};
     return Response(headers, redirectScript, 303);
 }

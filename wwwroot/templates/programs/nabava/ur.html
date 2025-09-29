@@ -1,18 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Ulazni Račun</h1>
-    <button onclick="print(222)">Print UR</button>
+<!-- <h1>Ulazni Račun</h1> -->
+<button onclick="print(222)">Print UR</button><br/>
 
-    <script>
-        function print(brRac){
-            fetch('/ur/print/' + brRac);
-        }
-    </script>
-</body>
-</html>
+<input type="text" value="{{input1}}"></input><br/>
+<input type="text" value="{{input2}}"></input><br/>
+<input type="text" value="{{input3}}"></input><br/>
+<input type="text" value="{{input4}}"></input><br/>
+
+<script>
+    function print(brRac) {
+        fetch('/ur/print/' + brRac);
+    }
+</script>

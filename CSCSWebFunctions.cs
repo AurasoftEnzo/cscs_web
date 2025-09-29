@@ -49,13 +49,13 @@ namespace cscs_web
             interpreter.RegisterFunction("GetValueFromForm", new GetValueFromFormFunction());
             
             
-            interpreter.RegisterFunction("RunScript", new RunScriptFunction());
+            interpreter.RegisterFunction("Chain", new ChainFunction());
 
             interpreter.RegisterFunction("ExtractEndpoints", new ExtractEndpointsFunction());
         }
     }
 
-    class RunScriptFunction : ParserFunction
+    class ChainFunction : ParserFunction
     {
         protected override Variable Evaluate(ParsingScript script)
         {
@@ -74,7 +74,7 @@ namespace cscs_web
             }
             catch (Exception ex)
             {
-                Console.WriteLine("RunScriptFunction exception: " + ex.Message);
+                Console.WriteLine("ChainFunction exception: " + ex.Message);
                 return new Variable("Server error.");
             }
         }
@@ -1125,7 +1125,9 @@ namespace cscs_web
                 //Console.WriteLine($"Failed to retrieve HTML with handle {htmlHndl}!");
                 throw new Exception($"Failed to retrieve HTML with handle {htmlHndl}!");
             }
-            
+
+            HtmlTemplates.TemplatesDictionary.Remove(htmlHndl);
+
             return new Variable(string.Join("\n", finalHtmlLines));
         }
     }

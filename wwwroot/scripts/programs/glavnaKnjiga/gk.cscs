@@ -140,7 +140,8 @@ function gk_generateForm(mode, values, id = null, errorHtml = "") {
 }
 
 //MASTER TABLE
-function gk_get(){
+//CreateEndpoint("GET", "/gk", "gk");
+function gk(){
     root_headers = {"Content-Type": "text/html"};
     return Response(root_headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "glavnaKnjiga\\" + "gk.html")), 200);
 }
@@ -3289,4 +3290,4 @@ function gk_showAlert(title, message, icon = "error") {
 
 
 
-return gk_get();
+// return gk();

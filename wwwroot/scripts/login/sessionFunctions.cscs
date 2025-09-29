@@ -1,3 +1,22 @@
+function IsAuthenticated(request) {
+    sessionId = GetSessionIdFromCookie(request);
+    sd = GetSessionData(sessionId);
+    return HasAllData(sd);
+}
+
+function HasAllData(sessionData) {
+    hasAllData = true;
+    requiredKeys = ["CompanyCode", "FiscalYear", "CompanyName", "DatabaseName", "UserCode", "UserName", "UserRole"];
+    for(i = 0; i < Size(requiredKeys); i++) {
+        if (!sessionData.Keys.Contains(requiredKeys[i]) || sessionData[requiredKeys[i]] == null) {
+            hasAllData = false;
+            break;
+        }
+    }
+    // print(hasAllData);
+    return hasAllData;
+}
+
 function GetSessionIdFromCookie(args) {
     headers = args["Headers"];
     cookies = headers.Contains("Cookie") ? headers["Cookie"] : "";
@@ -118,17 +137,7 @@ function ExtractSessionEntry(sessionData, key, defaultValue = null) {
     return defaultValue;
 }
 
-function HasAllData(sessionData) {
-    hasAllData = true;
-    requiredKeys = ["CompanyCode", "FiscalYear", "CompanyName", "DatabaseName", "UserCode", "UserName", "UserRole"];
-    for(i = 0; i < Size(requiredKeys); i++) {
-        if (!sessionData.Keys.Contains(requiredKeys[i]) || sessionData[requiredKeys[i]] == null) {
-            hasAllData = false;
-            break;
-        }
-    }
-    return hasAllData;
-}
+
 
 // Helper: Fetch full session row
 function GetSessionRowFromDb(sessionId) {

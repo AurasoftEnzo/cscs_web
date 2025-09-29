@@ -9,3 +9,39 @@ function windowClosedHandler(args) {
 
     return;
 }
+
+
+//--- CHAIN --------------------------------------------------------
+
+CreateEndpoint("GET", "/chain", "chainHandler");
+function chainHandler(request) {
+    if(!IsAuthenticated(request)){return RedirectToLogin();}
+
+    program = request["QueryParams"]["program"];
+
+    if(program == "main-menu" || program == "" || program == null){
+        return RedirectToMainMenu();
+    }
+    
+    Chain(ReadConfig("ScriptsDirectory") + "programs\\" + program + ".cscs");
+
+    headers = {"Content-Type": "text/plain"};
+    return Response(headers, "Chained to " + program, 200);
+}
+
+CreateEndpoint("GET", "/chainBack", "chainBackHandler");
+function chainBackHandler(request) {
+    if(!IsAuthenticated(request)){return RedirectToLogin();}
+
+    chainId = request["QueryParams"]["chainId"];
+
+    if(chainId == "" || chainId == null){
+        return RedirectToMainMenu();
+    }
+
+    // !!!!
+    // ChainBack(ReadConfig("ScriptsDirectory") + "programs\\" + chainId + ".cscs");
+
+    headers = {"Content-Type": "text/plain"};
+    return Response(headers, "Chained to " + program, 200);
+}

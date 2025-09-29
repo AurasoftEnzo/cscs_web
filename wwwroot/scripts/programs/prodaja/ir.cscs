@@ -1,15 +1,53 @@
 print("IR script loaded");
 
-function ir(){
+//CreateEndpoint("Get", "/prodaja/ir", "prodaja_ir");
+function prodaja_ir(request){
+    if(!IsAuthenticated(request)){return RedirectToLogin();}
+
+    sd = GetSessionData(GetSessionIdFromCookie(request));
+
+    htmlHndl = LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "mainLayout.html");
+
+    FillTemplatePlaceholder(htmlHndl, "backButtonPath", "main-menu");
+
+    //Navbar    
+    FillTemplatePlaceholder(htmlHndl, "programTitle", "Izlazni Račun");
+    
+    FillTemplatePlaceholder(htmlHndl, "companyName", sd["CompanyName"]);
+    FillTemplatePlaceholder(htmlHndl, "fiscalYear", sd["FiscalYear"] + ".");
+    FillTemplatePlaceholder(htmlHndl, "userName", sd["UserName"]);
+
+    //Chains
+    chains = {};
+    // chains.Add({"name": "Matični podaci kupaca", "script": "prodaja/mpk"});
+    // chains.Add({"name": "Matični podaci mjesta otpreme", "script": "prodaja/mpmo"});
+    // chains.Add({"name": "Otpremnice", "script": "prodaja/otp"});
+
+    chainsHtmlString = "";
+
+    for(chain : chains){
+        chainsHtmlString += "<a onclick=\"chain('" + chain["script"] + "')\" style=\"display:block;padding:8px 16px;text-decoration:none;color:#fff;\">" + chain["name"] + "</a>";
+    }
+
+    if(chainsHtmlString != ""){
+        RenderCondition(htmlHndl, "displayChains", true);
+        FillTemplatePlaceholder(htmlHndl, "chainOptions", chainsHtmlString);
+    }else{
+        RenderCondition(htmlHndl, "displayChains", false);
+    }
+
+    //Main Contnent
+    FillTemplatePlaceholder(htmlHndl, "mainContent", RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\" + "prodaja\\ir.html")));
+
     headers = {"Content-Type": "text/html"};
-    return Response(headers, RenderHtml(LoadTemplate(ReadConfig("TemplatesDirectory") + "programs\\prodaja\\ir.html")), 200);
+    return Response(headers, RenderHtml(htmlHndl), 200);
 }
 
-//CreateEndpoint("GET", "/ir/print/{brRac}", "ir_print");
-function ir_print(args){
-    brRac = args["RouteValues"]["brRac"];
-    print("IR PRINT called with brRac: " + brRac);
-    return;
-}
+// //CreateEndpoint("GET", "/prodaja/ir/print/{brRac}", "prodaja_ir_print");
+// function prodaja_ir_print(request){
+//     brRac = request["RouteValues"]["brRac"];
+//     print("IR PRINT called with brRac: " + brRac);
+//     return;
+// }
 
-return ir();
+// return prodaja_ir();
