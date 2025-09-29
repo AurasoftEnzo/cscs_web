@@ -3608,3 +3608,228 @@ function gk_showAlert(title, message, icon = "error") {
            "confirmButtonText: 'OK'" +
            "});</script>";
 }
+
+
+CreateEndpoint("PUT", "/gk-sumvalidation/{id}", "sumValidation");
+function sumValidation(args) {    
+  try
+  {
+    print("SERVER U funkciji: sumValidation");
+
+    masterId = args["RouteValues"]["id"];
+
+    print("SERVER Master ID: " + masterId);
+
+    //********************************************
+    //VALIDACIJA
+    //********************************************
+
+    if (masterId=="" || masterId=="0")
+    {
+        print("SERVER Provjera masterId nije prošla. error1 (sumValidation)");
+        
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: masterId nije ispravan. (sumValidation)"}';
+        return Response(headers, jsonString, 200);    
+    }
+    else
+    {
+        print("SERVER Provjera masterId je prošla (A)(sumValidation)");
+    }   
+
+    if (IsInt(masterId)==false)
+    {
+        print("SERVER Provjera masterId nije prošla. error2 (sumValidation)");
+
+        // 🔴 Validation failed: Return Failed error
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: masterId nije ispravan. (sumValidation)"}';
+        return Response(headers, jsonString, 200);        
+    }
+    else
+    {
+        print("SERVER Provjera masterId je prošla (B)(sumValidation)");
+    }  
+
+    //***********************************
+    //SELECT COUNT(*) GLAVA sa GK_GL_BR_TEM = id
+    query = "SELECT COUNT(*) "+
+        " FROM NKGKGLTM WHERE GK_GL_BR_TEM = @id";
+
+    sqlParams = {};
+    sqlParams.Add({"@id", int(masterId)});
+
+    sqlResult = sqlQuery(query, sqlParams);
+
+    //ako nema redaka return error
+    recordExist = false;
+    if( (sqlResult == null) || 
+        (Size(sqlResult) < 2) ) 
+    {
+        recordExist = false;
+    }
+    else
+    {
+        if (sqlResult[1][0] == 0)
+        {
+            recordExist = false;
+        }
+        else
+        {
+            recordExist = true;
+        }
+    }
+
+    if (!recordExist)
+    {
+        //print("Transaction not found in database za: GK_GL_BR_TEM = " + id);
+        print("SERVER Provjera da li GLAVA sa GK_GL_BR_TEM = " + masterId + " postoji: nije prošla");
+
+        // 🔴 Validation failed: Return Failed error
+        
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Validation failed: GLAVA sa GK_GL_BR_TEM = ' + masterId + ' ne postoji."}';        
+        return Response(headers, jsonString, 200);
+    }
+    else
+    {
+        print("SERVER Provjera da li GLAVA sa GK_GL_BR_TEM = " + masterId + " postoji je prošla");
+    }    
+    //***********************************
+
+    // select ISNULL(SUM(ISNULL(GK_LN_IZNOS, 0)), 0) AS IznosD
+    // from NKGKLNTM
+    // where GK_LN_BR_TEM=10000
+    // and GK_LN_DP='D'
+
+    // select ISNULL(SUM(ISNULL(GK_LN_IZNOS, 0)), 0) AS IznosP
+    // from NKGKLNTM
+    // where GK_LN_BR_TEM=10000
+    // and GK_LN_DP='P'
+
+    iznosD_query = "select ISNULL(SUM(ISNULL(GK_LN_IZNOS, 0)), 0) AS IznosD " +
+        " from NKGKLNTM " +
+        " where GK_LN_BR_TEM=@id " +
+        " and GK_LN_DP='D'";
+
+    iznosD_sqlParams = {};
+    iznosD_sqlParams.Add({"@id", int(masterId)});
+
+    iznosD_sqlResult = sqlQuery(iznosD_query, iznosD_sqlParams);
+
+    //ako nema retka return error
+    if( (iznosD_sqlResult == null) || 
+        (Size(iznosD_sqlResult) < 2) ) 
+    {        
+        print("SERVER iznosD nije dostupan za masterId = " + masterId);
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER failed: iznosD nije dostupan za masterId = ' + masterId + '"}';
+        return Response(headers, jsonString, 200);
+    }
+
+    iznosD = iznosD_sqlResult[1][0];
+
+    //******************************
+
+    iznosP_query = "select ISNULL(SUM(ISNULL(GK_LN_IZNOS, 0)), 0) AS IznosP " +
+        " from NKGKLNTM " +
+        " where GK_LN_BR_TEM=@id " +
+        " and GK_LN_DP='P'";
+
+    iznosP_sqlParams = {};
+    iznosP_sqlParams.Add({"@id", int(masterId)});
+
+    iznosP_sqlResult = sqlQuery(iznosP_query, iznosP_sqlParams);
+
+    //ako nema retka return error
+    if( (iznosP_sqlResult == null) || 
+        (Size(iznosP_sqlResult) < 2) ) 
+    {        
+        print("SERVER iznosP nije dostupan za masterId = " + masterId);
+
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER failed: iznosP nije dostupan za masterId = ' + masterId + '"}';
+        return Response(headers, jsonString, 200);
+    }
+
+    iznosP = iznosP_sqlResult[1][0];
+
+    //******************************************************
+
+    print("SERVER IznosD = " + iznosD);
+    print("SERVER IznosP = " + iznosP);
+
+    Posted = "";
+    if (iznosD == iznosP)
+    {
+        Posted = "";
+    }
+    else
+    {
+        Posted = "B";
+    }
+    print ("SERVER Posted = " + Posted);
+
+    //*******************************************************
+
+    print("SERVER BEFORE UPDATE GLAVE");
+    // Build update query
+    query = "UPDATE NKGKGLTM SET GK_GL_POSTED = @Posted ";
+    query += " WHERE GK_GL_BR_TEM = @id";
+   
+    //Add query params
+    sqlParams = {};
+    sqlParams.Add({"@Posted", Posted});
+    sqlParams.Add({"@id", int(masterId)});
+
+    print("SERVER BEFORE UPDATE GLAVE: query = " + query);
+    print("SERVER BEFORE UPDATE GLAVE: params = " + sqlParams);
+
+    // Execute query
+    rowsAffected = sqlNonQuery(query, sqlParams);
+
+    print("SERVER UPDATE GLAVE: PROŠAO JE UPDATE OK");
+
+    //**********************************************************
+
+    headers = {"Content-Type": "application/json"};
+    jsonString = "";
+    if (rowsAffected > 0)
+    {
+        if (Posted == "")
+        {
+            jsonString = '{"Result" : "Success", "Message": "SERVER IznosD = IznosP"}';
+        }
+        else
+        {
+            jsonString = '{"Result" : "Success", "Message": "SERVER IznosD NIJE JEDNAKO IznosP"}';            
+        }        
+    }
+    else
+    {
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Rows affected 0"}';
+    }
+    return Response(headers, jsonString, 200);
+
+
+  }
+  catch(ex)
+  {
+    print("SERVER Error occurred in sumValidation: " + ex);
+
+    try
+    {
+        headers = {"Content-Type": "application/json"};
+        jsonString = '{"Result" : "Failed", "Message": "SERVER Error occurred in sumValidation: ' + ex + '"}';        
+        return Response(headers, jsonString, 200);
+    }
+    catch(ex2)
+    {
+        print("SERVER Error2 occurred in sumValidation: " + ex2);
+    }
+  }
+}
