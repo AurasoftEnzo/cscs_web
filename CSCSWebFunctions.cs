@@ -53,55 +53,52 @@ namespace cscs_web
 
             interpreter.RegisterFunction("ExtractEndpoints", new ExtractEndpointsFunction());
 
-            Constants.FUNCT_WITH_SPACE.Add("DLoc");
-            interpreter.RegisterFunction("DLoc", new DLocCommand());
+
+
+            //Constants.FUNCT_WITH_SPACE.Add("DLoc");
+            //interpreter.RegisterFunction("DLoc", new DLocCommand());
         }
     }
 
-    class DLocCommand : ParserFunction
-    {
-        protected override Variable Evaluate(ParsingScript script)
-        {
-            // Expect: loc variable_name = value;
-            script.MoveForwardIf(' ');
+    //class DLocCommand : ParserFunction
+    //{
+    //    protected override Variable Evaluate(ParsingScript script)
+    //    {
+    //        // Expect: loc variable_name = value;
+    //        script.MoveForwardIf(' ');
 
-            // 1. Get the variable name
-            string varName = Utils.GetToken(script, Constants.TOKEN_SEPARATION);
-            Utils.CheckForValidName(varName, script);
+    //        // 1. Get the variable name
+    //        string varName = Utils.GetToken(script, Constants.TOKEN_SEPARATION);
+    //        Utils.CheckForValidName(varName, script);
 
-            script.MoveForwardIf(' ');
+    //        script.MoveForwardIf(' ');
 
-            // 2. Expect '='
-            if (script.Current != '=')
-            {
-                Utils.ThrowErrorMsg("Expected '=' after local variable name.", script, "loc");
-            }
-            script.Forward(); // skip '='
-            script.MoveForwardIf(' ');
+    //        // 2. Expect '='
+    //        if (script.Current != '=')
+    //        {
+    //            Utils.ThrowErrorMsg("Expected '=' after local variable name.", script, "loc");
+    //        }
+    //        script.Forward(); // skip '='
+    //        script.MoveForwardIf(' ');
 
-            // 3. Parse the value expression
-            Variable value = Utils.GetItem(script);
+    //        // 3. Parse the value expression
+    //        Variable value = Utils.GetItem(script);
 
-            // 4. Register as local variable in the current stack level
-            if (script.StackLevel != null)
-            {
-                script.InterpreterInstance.AddLocalVariable(new GetVarFunction(value), script, varName);
-            }
-            else
-            {
-                // Optionally, allow local scope outside functions (file scope)
-                string scopeName = Path.GetFileName(script.Filename);
-                script.InterpreterInstance.AddLocalScopeVariable(varName, scopeName, new GetVarFunction(value));
-            }
+    //        // 4. Register as local variable in the current stack level
+    //        if (script.StackLevel != null)
+    //        {
+    //            script.InterpreterInstance.AddLocalVariable(new GetVarFunction(value), script, varName);
+    //        }
+    //        else
+    //        {
+    //            // Optionally, allow local scope outside functions (file scope)
+    //            string scopeName = Path.GetFileName(script.Filename);
+    //            script.InterpreterInstance.AddLocalScopeVariable(varName, scopeName, new GetVarFunction(value));
+    //        }
 
-            return value;
-        }
-
-        //public override string Description()
-        //{
-        //    return "Defines a local variable: loc variable_name = value;";
-        //}
-    }
+    //        return value;
+    //    }
+    //}
 
     class ChainFunction : ParserFunction
     {
@@ -122,7 +119,7 @@ namespace cscs_web
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ChainFunction exception: " + ex.Message);
+                Console.WriteLine("ChainFunction exception: " + ex.Message + "\nIn script: " + script.Filename);
                 return new Variable("Server error.");
             }
         }
@@ -227,7 +224,7 @@ namespace cscs_web
     class CreateEndpointFunction : ParserFunction
     {
         private async Task<Variable> ExecScriptFunctionAsync(HttpContext context,
-            string scriptFunctionName, string httpMethod)
+            string scriptFunctionName, string httpMethod, ParsingScript script)
         {
             // Create a request object containing all parts of the request
             var requestData = new Variable(Variable.VarType.ARRAY);
@@ -285,11 +282,11 @@ namespace cscs_web
             // Execute the CSCS script function with all request data
             try
             {
-                return CSCSWebApplication.Interpreter.Run(scriptFunctionName, requestData);
+                return CSCSWebApplication.Interpreter.Run(scriptFunctionName, requestData, null, null, script);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ExecScriptFunction exception: " + ex.Message);
+                Console.WriteLine("ExecScriptFunction exception: " + ex.Message + "\nIn script: " + script.Filename);
                 return new Variable("Server error.");
             }
         }
@@ -308,28 +305,28 @@ namespace cscs_web
                 case "GET":
                     CSCSWebApplication.WebApplication.MapGet(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod);
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script);
                             await ProcessResponse(context, result);
                         });
                     break;
                 case "POST":
                     CSCSWebApplication.WebApplication.MapPost(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod);
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script);
                             await ProcessResponse(context, result);
                         });
                     break;
                 case "PUT":
                     CSCSWebApplication.WebApplication.MapPut(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod);
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script);
                             await ProcessResponse(context, result);
                         });
                     break;
                 case "DELETE":
                     CSCSWebApplication.WebApplication.MapDelete(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod);
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script);
                             await ProcessResponse(context, result);
                         });
                     break;
