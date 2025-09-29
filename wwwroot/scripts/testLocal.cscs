@@ -3,11 +3,11 @@ CreateEndpoint("GET", "/2", "func2");
 CreateEndpoint("GET", "/3", "func3");
 
 function func1(){
-    localVar = 100;
+    dloc localVar = 100;
     print("init localVar in FUNC 1: " + localVar);
 
     for(i = 0; i < 3; i++){
-        sleep(5000);
+        sleep(3000);
 
         localVar += 1;
         print("localVar in FUNC 1 changed: " + localVar);
@@ -15,10 +15,10 @@ function func1(){
     return 201;
 }
 function func2(){
-    localVar = 200;
+    dloc localVar = 200;
     print("init localVar in FUNC 2: " + localVar);
 
-    for(i = 0; i < 4; i++){
+    for(j = 0; j < 4; j++){
         sleep(2000);
         localVar += 1;
         print("localVar in FUNC 2 changed: " + localVar);
@@ -26,12 +26,12 @@ function func2(){
     return 202;
 }
 function func3(){
-    localVar = 300;
+    dloc localVar = 300;
     print("init localVar in FUNC 3: " + localVar);
 
-    for(i = 0; i < 5; i++){
+    for(k = 0; k < 5; k++){
         sleep(1000);
-        localVar += 1;
+        localVar = (localVar + 1);
         print("localVar in FUNC 3 changed: " + localVar);
     }
     return 203;

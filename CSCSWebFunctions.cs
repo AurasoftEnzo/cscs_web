@@ -52,7 +52,55 @@ namespace cscs_web
             interpreter.RegisterFunction("Chain", new ChainFunction());
 
             interpreter.RegisterFunction("ExtractEndpoints", new ExtractEndpointsFunction());
+
+            Constants.FUNCT_WITH_SPACE.Add("DLoc");
+            interpreter.RegisterFunction("DLoc", new DLocCommand());
         }
+    }
+
+    class DLocCommand : ParserFunction
+    {
+        protected override Variable Evaluate(ParsingScript script)
+        {
+            // Expect: loc variable_name = value;
+            script.MoveForwardIf(' ');
+
+            // 1. Get the variable name
+            string varName = Utils.GetToken(script, Constants.TOKEN_SEPARATION);
+            Utils.CheckForValidName(varName, script);
+
+            script.MoveForwardIf(' ');
+
+            // 2. Expect '='
+            if (script.Current != '=')
+            {
+                Utils.ThrowErrorMsg("Expected '=' after local variable name.", script, "loc");
+            }
+            script.Forward(); // skip '='
+            script.MoveForwardIf(' ');
+
+            // 3. Parse the value expression
+            Variable value = Utils.GetItem(script);
+
+            // 4. Register as local variable in the current stack level
+            if (script.StackLevel != null)
+            {
+                script.InterpreterInstance.AddLocalVariable(new GetVarFunction(value), script, varName);
+            }
+            else
+            {
+                // Optionally, allow local scope outside functions (file scope)
+                string scopeName = Path.GetFileName(script.Filename);
+                script.InterpreterInstance.AddLocalScopeVariable(varName, scopeName, new GetVarFunction(value));
+            }
+
+            return value;
+        }
+
+        //public override string Description()
+        //{
+        //    return "Defines a local variable: loc variable_name = value;";
+        //}
     }
 
     class ChainFunction : ParserFunction
