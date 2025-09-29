@@ -1615,7 +1615,10 @@
                   icon: 'success',
                   //timer: 3000,
                   confirmButtonText: 'Close'
-              }).then((result2) => {                                    
+              }).then((result2) => {    
+                  // Check DP sum after deletion
+                  SumDPValidation(currentMasterId);
+
                   // Reload the data grid
                   htmx.ajax('GET', '/gk-lines/' + currentMasterId, {
                     target: '.datagrid-container-detail',
@@ -2229,6 +2232,9 @@
                     //timer: 3000,
                     confirmButtonText: 'Close'
                   }).then((result2) => {
+                    // Check DP sum after deletion
+                    SumDPValidation(masterId);
+
                     // Reload the data grid
                     htmx.ajax('GET', '/gk-lines/' + masterId, {
                       target: '.datagrid-container-detail',
@@ -3322,6 +3328,83 @@
         return false;
     }
 </script>
+<script>
+    function SumDPValidation(id)
+    {
+        try
+        {
+            console.log("SumDPValidation - masterId: " + id);
+
+            if ((id == null) || (id == undefined) || (id == 0))
+            {
+                console.log("SumDPValidation - masterId is not valid: " + id);
+
+                Swal.fire({
+                        title: "Error",
+                        text: "SumDPValidation - masterId is not valid: " + id,
+                        icon: 'error',                  
+                        confirmButtonText: 'Close'
+                    });
+
+                return false;
+            }
+
+            const url = `/gk-sumvalidation/${id}`;
+            const method = 'PUT';
+
+            console.log("URL " + url);
+            console.log("Method " + method);
+
+            fetch(url, {
+                method: method,
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              })   
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Result:', data.Result);
+
+                    //Failed
+                    if (data.Result != "Success")
+                    {                  
+                        console.log("SumDPValidation failed.")
+
+                        Swal.fire({
+                          title: 'FAILED!',
+                          text: 'Sum DP validation failed for transaction id = ' + id + '. ' + data.Message,
+                          icon: 'error',                  
+                          confirmButtonText: 'Close'
+                        });
+
+                        return;                                      
+                    }                    
+                   
+                    //Success
+                    Swal.fire({
+                        title: "SumD SumP Recalculation => Posted!",
+                        text: data.Message,
+                        icon: 'success',                  
+                        confirmButtonText: 'Close'
+                    });
+                  });
+        }
+
+        catch(error)
+        {
+          console.error('Error:', error);
+
+          Swal.fire({
+              title: 'Error!',
+              text: 'Failed SumDPValidation: ' + error.message,
+              icon: 'error',
+              confirmButtonText: 'Close'
+          });
+        }
+
+    }
+</script>
+
 </body>
 
 </html>
