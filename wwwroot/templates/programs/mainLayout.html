@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,200 +8,74 @@
 
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.tailwindcss.com/4.1.3"></script>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet"> -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-</head>
+</head> -->
 
-<style>
-    html,
-    body {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        font-family: 'Times New Roman', Times, serif;
-        overflow-x: hidden;
-    }
 
-    body {
-        height: 100vh;
-        width: 100%;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        overflow-x: hidden;
-    }
+<!-- </head> -->
 
-    .navbar {
-        height: 5vh;
-        width: 100%;
-        margin: 0 auto;
-        background-color: #0b2244;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        /* Removed left padding */
-        font-size: 1.2em;
-        gap: 1vw;
-        position: relative;
-    }
+<!-- <body> -->
 
-    .main-content {
-        height: 95vh;
-        width: 100%;
-        background: #f5f5f5;
-        overflow: auto;
-    }
 
-    .back-btn {
-        background: none;
-        border: none;
-        color: #fff;
-        cursor: pointer;
-        font-size: 1.5em;
-        margin-right: 1vw;
-        /* Removed left margin */
-    }
+<!-- Overlay's Overlay -->
+<div id="page-overlay-" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:1; 
+    display:none;">
+    <div
+        style=" background:rgba(0,0,0,0.3); width:100%; height:100%; display: flex; align-items:center; justify-content:center;">
+        <div class="text-white text-2xl font-bold">Loading...</div>
+    </div>
+</div>
 
-    #programTitle {
-        margin-right: 1vw;
-        font-size: 1.1em;
-        font-weight: 500;
-        white-space: nowrap;
-    }
 
-    .dropdown-container {
-        position: relative;
-        display: inline-block;
-    }
+<!-- innerHTML of page-overlay-1 div -->
+<div style="background:white; width:100%; height:100%;">
 
-    #dropdownBtn {
-        background: none;
-        border: none;
-        color: #fff;
-        cursor: pointer;
-        font-size: 1.2em;
-        font-family: 'Times New Roman', Times, serif;
-    }
-
-    #dropdownMenu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        /* Removed left alignment, default position */
-        background: #444;
-        color: #fff;
-        min-width: 120px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        z-index: 10;
-    }
-
-    #dropdownMenu a {
-        display: block;
-        padding: 8px 16px;
-        text-decoration: none;
-        color: #fff;
-    }
-
-    .flex-spacer {
-        flex: 1 1 auto;
-    }
-
-    .hero-btn-container {
-        position: relative;
-    }
-
-    #heroBtn {
-        background: #007bff;
-        border: none;
-        color: #fff;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        font-size: 1em;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 4px;
-    }
-
-    #heroPopup {
-        display: none;
-        position: absolute;
-        top: 110%;
-        right: 0;
-        background: #fff;
-        color: #333;
-        min-width: 160px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        border-radius: 8px;
-        z-index: 20;
-        padding: 8px;
-    }
-
-    #heroPopup div {
-        padding: 6px 12px;
-    }
-
-    #heroPopup hr {
-        margin: 8px 0;
-    }
-
-    #heroPopup button {
-        width: 100%;
-        background: #e53e3e;
-        color: #fff;
-        border: none;
-        padding: 8px 0;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    #mainLayoutContent {
-        padding: 10px;
-    }
-</style>
-</head>
-
-<body>
     <div class="navbar">
         <!-- Back Button -->
         <!-- <button onclick="chain('{{backButtonPath}}')" -->
-        <button onclick="chainBack('{{backButtonPath}}')"
+        <button onclick="chainBack()"
             style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.5em;margin-right:1vw;margin-left:2px;">
             <i class="fa fa-arrow-left"></i>
         </button>
 
         <!-- Program Title Placeholder -->
-        <span id="programTitle"
+        <span class="programTitle"
             style="margin:10vh 1vw;font-size:1.5em;font-weight:500;white-space:nowrap;">{{programTitle}}</span>
 
         <!-- Dropdown Menu -->
         {{IF_displayChains}}
         <div style="position:relative;display:inline-block;">
-            <button id="dropdownBtn"
+            <button class="dropdownBtn"
                 style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.1em;font-family:'Times New Roman', Times, serif;">
                 Pokreni <i class="fa fa-caret-down"></i>
             </button>
-            <div id="dropdownMenu"
-                style="display:none;position:absolute;top:100%;left:0;background:#444;color:#fff;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:10;">
+            <div class="dropdownMenu"
+                style="display:none;position:absolute;top:100%;left:0;background:#0f2e5c;color:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:2.5;">
                 {{chainOptions}}
             </div>
         </div>
         {{IF_displayChains}}
 
 
-        <script src="/js/chain.js"></script>
+        <!-- <script src="/js/chain.js"></script> -->
 
         <script>
             // Chain dropdown hover behavior
-            const dropdownBtn = document.getElementById('dropdownBtn');
-            const dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownBtns = document.getElementsByClassName('dropdownBtn');
+            dropdownMenus = document.getElementsByClassName('dropdownMenu');
+
+            console.log(dropdownBtns.length, dropdownMenus.length);
+
+
+            dropdownBtn = dropdownBtns[0];
+            dropdownMenu = dropdownMenus[0];
+            // dropdownBtn = dropdownBtns[dropdownBtns.length - 1];
+            // dropdownMenu = dropdownMenus[dropdownMenus.length - 1];
+
             dropdownBtn.onmouseenter = function () {
                 dropdownMenu.style.display = 'block';
             };
@@ -216,6 +90,10 @@
             dropdownMenu.onmouseleave = function () {
                 dropdownMenu.style.display = 'none';
             };
+
+            // dropdownMenu.onmouseleave = function () {
+            //     dropdownMenu.style.display = 'none';
+            // };
         </script>
 
         <!-- Right-aligned placeholders before hero button -->
@@ -228,11 +106,11 @@
                 style="border-radius: 6px; padding: 6px 16px; min-width: 60px; text-align: center;">{{userName}}</label>
             <!-- Hero Button (right side) -->
             <div style="position:relative;">
-                <button id="heroBtn"
+                <button class="heroBtn"
                     style="background:#007bff;border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:1em;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:4px;">
                     <span style="font-weight:bold;">H</span>
                 </button>
-                <div id="heroPopup"
+                <div class="heroPopup"
                     style="display:none;position:absolute;top:110%;right:0;background:#fff;color:#333;min-width:160px;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:8px;z-index:20;padding:8px;">
                     <div style="padding:6px 12px;">Label 1</div>
                     <div style="padding:6px 12px;">Label 2</div>
@@ -244,8 +122,8 @@
             </div>
         </div>
         <script>
-            const heroBtn = document.getElementById('heroBtn');
-            const heroPopup = document.getElementById('heroPopup');
+            heroBtn = document.getElementById('heroBtn');
+            heroPopup = document.getElementById('heroPopup');
             heroBtn.onmouseenter = function () {
                 heroPopup.style.display = 'block';
             };
@@ -262,10 +140,12 @@
             };
         </script>
     </div>
-    <div id="mainLayoutContent" class="main-content">
+    <div class="main-content">
         <!-- Main content goes here -->
         {{mainContent}}
     </div>
-</body>
+</div>
 
-</html>
+<!-- </body> -->
+
+<!-- </html> -->

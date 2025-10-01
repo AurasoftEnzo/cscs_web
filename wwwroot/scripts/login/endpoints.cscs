@@ -215,12 +215,12 @@ function showMainMenu(request) {
     menuList = "";
     for (moduleKey : allowedModules.Keys) {
         module = allowedModules[moduleKey];
-        menuList += "<li class='menu-title'><span>" + moduleKey + "</span></li>";
+        menuList += "<li class='menu-title'><i class='" + module["icon"] + "'></i><span class='menu-title-text'>" + moduleKey + "</span></li>";
         for (subKey : module["submodules"].Keys) {
             sub = module["submodules"][subKey];
             // menuList += "<li><a href='" + sub["path"] + "' hx-get='" + sub["path"] + "' hx-target='#content-area' hx-swap='innerHTML'><i class='" + module["icon"] + "'></i> " + sub["title"] + "</a></li>";
             // menuList += "<li><a href='" + sub["script"] + "'><i class='" + module["icon"] + "'></i> " + subKey + "</a></li>";
-            menuList += "<li><a onclick='chain(\"" + sub["script"] + "\")'><i class='" + module["icon"] + "'></i> " + subKey + "</a></li>";
+            menuList += "<li><button onclick='chain(\"" + sub["script"] + "\")'> " + subKey + "</button></li>";
         }
     }
 

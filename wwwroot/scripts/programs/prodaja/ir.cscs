@@ -22,11 +22,12 @@ function prodaja_ir(request){
     // chains.Add({"name": "Matični podaci kupaca", "script": "prodaja/mpk"});
     // chains.Add({"name": "Matični podaci mjesta otpreme", "script": "prodaja/mpmo"});
     // chains.Add({"name": "Otpremnice", "script": "prodaja/otp"});
+    chains.Add({"name": "Ulazni Račun", "script": "nabava/ur"});
 
     chainsHtmlString = "";
 
     for(chain : chains){
-        chainsHtmlString += "<a onclick=\"chain('" + chain["script"] + "')\" style=\"display:block;padding:8px 16px;text-decoration:none;color:#fff;\">" + chain["name"] + "</a>";
+        chainsHtmlString += "<button style='white-space: nowrap; padding: 10px;' onclick=\"chain('" + chain["script"] + "')\" style=\"display:block;padding:8px 16px;text-decoration:none;color:#fff;\">" + chain["name"] + "</button>";
     }
 
     if(chainsHtmlString != ""){

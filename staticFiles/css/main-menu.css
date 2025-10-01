@@ -1,0 +1,156 @@
+html,
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Font Awesome', Arial, sans-serif;
+    overflow-x: hidden;
+    background-color: #0b2244;
+}
+
+body {
+    height: 100vh;
+    width: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+.menu-title-text{
+    margin-left: 8px;
+    font-weight: 600;
+    font-size: 1.1em;
+    color: white;
+    ;
+}
+
+.navbar {
+    height: 5vh;
+    width: 100%;
+    margin: 0 auto;
+    background-color: #0b2244;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    /* Removed left padding */
+    font-size: 1.2em;
+    gap: 1vw;
+    position: relative;
+}
+
+.main-content {
+    height: 95vh;
+    width: 100%;
+    background: #f5f5f5;
+    overflow: auto;
+    padding: 10px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.5em;
+    margin-right: 1vw;
+    /* Removed left margin */
+}
+
+.programTitle {
+    margin-right: 1vw;
+    font-size: 1.1em;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdownBtn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.dropdownMenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    /* Removed left alignment, default position */
+    background: #444;
+    color: #fff;
+    min-width: 120px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.dropdownMenu a {
+    display: block;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: #fff;
+}
+
+.flex-spacer {
+    flex: 1 1 auto;
+}
+
+.hero-btn-container {
+    position: relative;
+}
+
+.heroBtn {
+    background: #007bff;
+    border: none;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px;
+}
+
+.heroPopup {
+    display: none;
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background: #fff;
+    color: #333;
+    min-width: 160px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    z-index: 20;
+    padding: 8px;
+}
+
+.heroPopup div {
+    padding: 6px 12px;
+}
+
+.heroPopup hr {
+    margin: 8px 0;
+}
+
+.heroPopup button {
+    width: 100%;
+    background: #e53e3e;
+    color: #fff;
+    border: none;
+    padding: 8px 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+

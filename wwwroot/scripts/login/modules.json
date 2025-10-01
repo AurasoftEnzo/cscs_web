@@ -1,5 +1,5 @@
 {
-  "main": {
+  "Osnovno": {
     "title": "Glavni Meni",
     "icon": "fas fa-home",
     "order": 0,
@@ -9,23 +9,32 @@
       }
     }
   },
-  "sales": {
+  "Prodaja": {
     "title": "Prodaja",
     "icon": "fas fa-shopping-cart",
     "order": 10,
     "submodules": {
-      "Izlazni Račun": {
+      "Izlazni Računi": {
         "script": "prodaja/ir"
+      },
+      "Ponude": {
+        "script": "prodaja/pon"
+      },
+      "Ponude": {
+        "script": "prodaja/pon"
       }
     }
   },
-  "purchases": {
+  "Nabava": {
     "title": "Nabava",
     "icon": "fas fa-truck",
     "order": 20,
     "submodules": {
-      "Ulazni Račun": {
+      "Ulazni Računi": {
         "script": "nabava/ur"
+      },
+      "Primke": {
+        "script": "nabava/pri"
       }
     }
   },

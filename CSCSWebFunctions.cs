@@ -143,7 +143,7 @@ namespace cscs_web
                 var lines = File.ReadAllLines(file);
                 foreach (var line in lines)
                 {
-                    if (line.Trim().ToLower().StartsWith("//createendpoint("))
+                    if (line.TrimStart().TrimStart('/').Trim().ToLower().StartsWith("createendpoint("))
                     {
                         var lineToExecute = line.Trim();
                         lineToExecute = lineToExecute.Substring(2, lineToExecute.IndexOf(';') + 1 - 2);
@@ -175,6 +175,9 @@ namespace cscs_web
                     return new Variable(CSCSWebApplication.CSCSConfig.ScriptsDirectory);
                 case "templatesdirectory":
                     return new Variable(CSCSWebApplication.CSCSConfig.TemplatesDirectory);
+                
+                case "programsdirectory":
+                    return new Variable(CSCSWebApplication.CSCSConfig.ProgramsDirectory);
                 
                 case "startscript":
                     return new Variable(CSCSWebApplication.CSCSConfig.StartScript);
