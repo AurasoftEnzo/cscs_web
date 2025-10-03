@@ -227,7 +227,7 @@ namespace cscs_web
     class CreateEndpointFunction : ParserFunction
     {
         private async Task<Variable> ExecScriptFunctionAsync(HttpContext context,
-            string scriptFunctionName, string httpMethod, ParsingScript script)
+            string scriptFunctionName, string httpMethod, ParsingScript script, string requestGUID)
         {
             // Create a request object containing all parts of the request
             var requestData = new Variable(Variable.VarType.ARRAY);
@@ -281,6 +281,9 @@ namespace cscs_web
                 requestData.SetHashVariable("Body", Variable.EmptyInstance);
             }
 
+            // Add GUID
+            requestData.SetHashVariable("GUID", new Variable(requestGUID));
+
 
             // Execute the CSCS script function with all request data
             try
@@ -308,29 +311,33 @@ namespace cscs_web
                 case "GET":
                     CSCSWebApplication.WebApplication.MapGet(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script);
-                            await ProcessResponse(context, result);
+                            string requestGUID = Guid.NewGuid().ToString();
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script, requestGUID);
+                            await ProcessResponse(context, result, requestGUID);
                         });
                     break;
                 case "POST":
                     CSCSWebApplication.WebApplication.MapPost(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script);
-                            await ProcessResponse(context, result);
+                            string requestGUID = Guid.NewGuid().ToString();
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script, requestGUID);
+                            await ProcessResponse(context, result, requestGUID);
                         });
                     break;
                 case "PUT":
                     CSCSWebApplication.WebApplication.MapPut(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script);
-                            await ProcessResponse(context, result);
+                            string requestGUID = Guid.NewGuid().ToString();
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script, requestGUID);
+                            await ProcessResponse(context, result, requestGUID);
                         });
                     break;
                 case "DELETE":
                     CSCSWebApplication.WebApplication.MapDelete(endpointRoute,
                         async context => {
-                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script);
-                            await ProcessResponse(context, result);
+                            string requestGUID = Guid.NewGuid().ToString();
+                            var result = await ExecScriptFunctionAsync(context, scriptFunctionName, httpMethod, script, requestGUID);
+                            await ProcessResponse(context, result, requestGUID);
                         });
                     break;
                 default:
@@ -340,72 +347,84 @@ namespace cscs_web
             return Variable.EmptyInstance;
         }
 
-        private async Task ProcessResponse(HttpContext context, Variable result)
+        private async Task ProcessResponse(HttpContext context, Variable result, string requestGUID)
         {
-            if (result == null || result.Type == Variable.VarType.NONE)
+            try
             {
-                context.Response.StatusCode = 204; // No Content
-                return;
-            }
-
-            // Handle different response types
-            if (result.Type == Variable.VarType.ARRAY)
-            {
-                List<string> keys = result.GetKeys();
-                List<string> lowerKeys = keys.Select(p => p.ToLower()).ToList();
-
-                if (lowerKeys.Contains("headers"))
+                if (result == null || result.Type == Variable.VarType.NONE)
                 {
-                    Variable headersVariable = result.GetVariable("headers");
+                    context.Response.StatusCode = 204; // No Content
+                    return;
+                }
 
-                    // Set content type
-                    Variable contentType = headersVariable.GetVariable("content-type");
-                    if (contentType != null && contentType.Type == Variable.VarType.STRING)
+                // Handle different response types
+                if (result.Type == Variable.VarType.ARRAY)
+                {
+                    List<string> keys = result.GetKeys();
+                    List<string> lowerKeys = keys.Select(p => p.ToLower()).ToList();
+
+                    if (lowerKeys.Contains("headers"))
                     {
-                        context.Response.ContentType = contentType.AsString();
-                    }
-                    else
-                    {
-                        context.Response.ContentType = "text/plain"; // Default content type
-                    }
-                    
-                    // Set Set-Cookie
-                    Variable setCookie = headersVariable.GetVariable("set-cookie");
-                    if (setCookie != null && setCookie.Type == Variable.VarType.STRING)
-                    {
-                        context.Response.Headers.Append("Set-Cookie", setCookie.String);// = contentType.AsString();
-                    }
+                        Variable headersVariable = result.GetVariable("headers");
+
+                        // Set content type
+                        Variable contentType = headersVariable.GetVariable("content-type");
+                        if (contentType != null && contentType.Type == Variable.VarType.STRING)
+                        {
+                            context.Response.ContentType = contentType.AsString();
+                        }
+                        else
+                        {
+                            context.Response.ContentType = "text/plain"; // Default content type
+                        }
+
+                        // Set Set-Cookie
+                        Variable setCookie = headersVariable.GetVariable("set-cookie");
+                        if (setCookie != null && setCookie.Type == Variable.VarType.STRING)
+                        {
+                            context.Response.Headers.Append("Set-Cookie", setCookie.String);// = contentType.AsString();
+                        }
 
 
-                    // status code
-                    Variable statusCode = result.GetVariable("statusCode");
-                    if (statusCode != null && statusCode.Type == Variable.VarType.NUMBER)
-                    {
-                        context.Response.StatusCode = (int)Math.Floor(statusCode.Value);
-                    }
-                    else
-                    {
-                        context.Response.StatusCode = 200; // Default status code
-                    }
+                        // status code
+                        Variable statusCode = result.GetVariable("statusCode");
+                        if (statusCode != null && statusCode.Type == Variable.VarType.NUMBER)
+                        {
+                            context.Response.StatusCode = (int)Math.Floor(statusCode.Value);
+                        }
+                        else
+                        {
+                            context.Response.StatusCode = 200; // Default status code
+                        }
 
-                    // body
-                    Variable body = result.GetVariable("body");
-                    if (body != null && body.Type == Variable.VarType.STRING)
-                    {
-                        var bodyString = body.AsString();
-                        await context.Response.WriteAsync(bodyString);
-                    }
-                    else
-                    {
-                        await context.Response.WriteAsync("");
+                        // body
+                        Variable body = result.GetVariable("body");
+                        if (body != null && body.Type == Variable.VarType.STRING)
+                        {
+                            var bodyString = body.AsString();
+                            await context.Response.WriteAsync(bodyString);
+                        }
+                        else
+                        {
+                            await context.Response.WriteAsync("");
+                        }
                     }
                 }
+                else // Default to string handling
+                {
+                    context.Response.ContentType = "text/plain";
+                    await context.Response.WriteAsync(result.AsString());
+                }
             }
-            else // Default to string handling
+            catch (Exception ex)
             {
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync(result.AsString());
+                
             }
+            finally
+            {
+                HtmlTemplates.TemplatesDictionary.Remove(requestGUID);
+            }
+            
         }
     }
         
@@ -967,8 +986,10 @@ namespace cscs_web
 
     public static class HtmlTemplates
     {
-        public static int templateHndl = 1;
-        public static Dictionary<int, List<string>> TemplatesDictionary = new Dictionary<int, List<string>>();
+        //public static int templateHndl = 1;
+
+        // Dictionary<requestGUID, List<<templateLines>>>
+        public static Dictionary<string, List<List<string>>> TemplatesDictionary = new Dictionary<string, List<List<string>>>();
     }
 
     class LoadTemplateFunction : ParserFunction
@@ -976,25 +997,30 @@ namespace cscs_web
         protected override Variable Evaluate(ParsingScript script)
         {
             List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 1, m_name);
+            Utils.CheckArgs(args.Count, 2, m_name);
 
-            var htmlTemplatePath = Utils.GetSafeString(args, 0);
+            var requestGUID = Utils.GetSafeString(args, 0);
+            var htmlTemplatePath = Utils.GetSafeString(args, 1);
 
             if (!File.Exists(htmlTemplatePath))
             {
-                Console.WriteLine($"HTML template file not found: {htmlTemplatePath}");
+                Utils.ThrowErrorMsg($"HTML template file not found: {htmlTemplatePath}", script, "");
 
                 return new Variable(-1);
             }
-
 
             try
             {
                 List<string> templateContent = File.ReadAllLines(htmlTemplatePath).ToList();
 
-                HtmlTemplates.TemplatesDictionary[HtmlTemplates.templateHndl] = templateContent;
+                if (!HtmlTemplates.TemplatesDictionary.ContainsKey(requestGUID))
+                {
+                    HtmlTemplates.TemplatesDictionary.Add(requestGUID, new List<List<string>>());
+                }
 
-                return new Variable(HtmlTemplates.templateHndl++);
+                HtmlTemplates.TemplatesDictionary[requestGUID].Add(templateContent);
+
+                return new Variable(HtmlTemplates.TemplatesDictionary[requestGUID].Count - 1);
             }
             catch (Exception ex)
             {
@@ -1007,9 +1033,9 @@ namespace cscs_web
 
     public static class Placeholders
     {
-        public static bool ReplaceAll(int templateHndl, string placeholderName, string newValue)
+        public static bool ReplaceAll(string requestGUID, int templateHndl, string placeholderName, string newValue)
         {
-            var tempHtmlLines = HtmlTemplates.TemplatesDictionary[templateHndl];
+            var tempHtmlLines = HtmlTemplates.TemplatesDictionary[requestGUID][templateHndl];
 
             List<string> relatedLines = tempHtmlLines.FindAll(p => p.Contains("{{" + placeholderName + "}}"));
 
@@ -1024,7 +1050,7 @@ namespace cscs_web
 
                 string newLine = tempHtmlLines[lineIndex].Replace(@"{{" + placeholderName + "}}", newValue);
 
-                HtmlTemplates.TemplatesDictionary[templateHndl][lineIndex] = newLine;
+                HtmlTemplates.TemplatesDictionary[requestGUID][templateHndl][lineIndex] = newLine;
             }
 
             if (wasError)
@@ -1041,13 +1067,14 @@ namespace cscs_web
         protected override Variable Evaluate(ParsingScript script)
         {
             List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 3, m_name);
+            Utils.CheckArgs(args.Count, 4, m_name);
 
-            var templateHndl = Utils.GetSafeInt(args, 0);
-            var placeholderName = Utils.GetSafeString(args, 1);
-            var newValue = Utils.GetSafeVariable(args, 2);
+            var requestGUID = Utils.GetSafeString(args, 0);
+            var templateHndl = Utils.GetSafeInt(args, 1);
+            var placeholderName = Utils.GetSafeString(args, 2);
+            var newValue = Utils.GetSafeVariable(args, 3);
 
-            Placeholders.ReplaceAll(templateHndl, placeholderName, newValue.AsString());
+            Placeholders.ReplaceAll(requestGUID, templateHndl, placeholderName, newValue.AsString());
 
             //var tempHtmlLines = HtmlTemplates.TemplatesDictionary[templateHndl];
 
@@ -1082,10 +1109,11 @@ namespace cscs_web
         protected override Variable Evaluate(ParsingScript script)
         {
             List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 2, m_name);
+            Utils.CheckArgs(args.Count, 3, m_name);
 
-            int htmlHndl = Utils.GetSafeInt(args, 0);
-            Variable valuesDictionary = Utils.GetSafeVariable(args, 1);
+            var requestGUID = Utils.GetSafeString(args, 0);
+            var htmlHndl = Utils.GetSafeInt(args, 1);
+            Variable valuesDictionary = Utils.GetSafeVariable(args, 2);
 
             List<string> dictionaryKeys = valuesDictionary.GetKeys(); 
             List<Variable> dictionaryVariables = valuesDictionary.GetAllKeys(); 
@@ -1094,7 +1122,7 @@ namespace cscs_web
             {
                 Variable newValue = valuesDictionary.GetVariable(key);
 
-                Placeholders.ReplaceAll(htmlHndl, key, newValue.AsString());
+                Placeholders.ReplaceAll(requestGUID, htmlHndl, key, newValue.AsString());
             }
 
 
@@ -1119,14 +1147,15 @@ namespace cscs_web
         protected override Variable Evaluate(ParsingScript script)
         {
             List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 3, m_name);
+            Utils.CheckArgs(args.Count, 4, m_name);
 
-            int templateHndl = Utils.GetSafeInt(args, 0);   
-            string conditionIdentifier = Utils.GetSafeString(args, 1);
-            bool shouldDisplay = Utils.ConvertToBool(Utils.GetSafeInt(args, 2));
+            string requestGUID = Utils.GetSafeString(args, 0);
+            int templateHndl = Utils.GetSafeInt(args, 1);
+            string conditionIdentifier = Utils.GetSafeString(args, 2);
+            bool shouldDisplay = Utils.ConvertToBool(Utils.GetSafeInt(args, 3));
 
 
-            var tempHtmlLines = HtmlTemplates.TemplatesDictionary[templateHndl];
+            var tempHtmlLines = HtmlTemplates.TemplatesDictionary[requestGUID][templateHndl];
 
             List<string> relatedLines = tempHtmlLines.FindAll(p => p.Contains("{{IF_" + conditionIdentifier + "}}"));
 
@@ -1140,7 +1169,7 @@ namespace cscs_web
                 foreach (var line in relatedLines)
                 {
                     int lineIndex = tempHtmlLines.FindLastIndex(p => p.Contains("{{IF_" + conditionIdentifier + "}}"));
-                    HtmlTemplates.TemplatesDictionary[templateHndl].RemoveAt(lineIndex);
+                    HtmlTemplates.TemplatesDictionary[requestGUID][templateHndl].RemoveAt(lineIndex);
 
                     lineIndex = tempHtmlLines.FindLastIndex(p => p.Contains("{{IF_" + conditionIdentifier + "}}"));
                 }
@@ -1148,7 +1177,7 @@ namespace cscs_web
             else // remove template block
             {
                 int firstIndex = tempHtmlLines.FindIndex(p => p.Contains("{{IF_" + conditionIdentifier + "}}"));
-                HtmlTemplates.TemplatesDictionary[templateHndl].RemoveRange(
+                HtmlTemplates.TemplatesDictionary[requestGUID][templateHndl].RemoveRange(
                     firstIndex,
                     tempHtmlLines.FindLastIndex(p => p.Contains("{{IF_" + conditionIdentifier + "}}")) - firstIndex + 1
                     );
@@ -1164,17 +1193,18 @@ namespace cscs_web
         protected override Variable Evaluate(ParsingScript script)
         {
             List<Variable> args = script.GetFunctionArgs();
-            Utils.CheckArgs(args.Count, 1, m_name);
+            Utils.CheckArgs(args.Count, 2, m_name);
 
-            int htmlHndl = Utils.GetSafeInt(args, 0);
-            
-            List<string>? finalHtmlLines = new List<string>();
-            if (!HtmlTemplates.TemplatesDictionary.TryGetValue(htmlHndl, out finalHtmlLines)){
-                //Console.WriteLine($"Failed to retrieve HTML with handle {htmlHndl}!");
-                throw new Exception($"Failed to retrieve HTML with handle {htmlHndl}!");
-            }
+            string requestGUID = Utils.GetSafeString(args, 0);
+            int htmlHndl = Utils.GetSafeInt(args, 1);
 
-            HtmlTemplates.TemplatesDictionary.Remove(htmlHndl);
+            List<string>? finalHtmlLines = HtmlTemplates.TemplatesDictionary[requestGUID][htmlHndl];
+            //if (!
+            //    //Console.WriteLine($"Failed to retrieve HTML with handle {htmlHndl}!");
+            //    Utils.ThrowErrorMsg($"Failed to retrieve HTML with handle {htmlHndl}!", script, "");
+            //}
+
+            //HtmlTemplates.TemplatesDictionary.Remove(requestGUID);
 
             return new Variable(string.Join("\n", finalHtmlLines));
         }
