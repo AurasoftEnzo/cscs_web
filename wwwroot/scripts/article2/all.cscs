@@ -7,6 +7,7 @@
     // </html>
     // ";
 
+StartDebugger(13337, true, "*");
 
 
 //Hello World page (simple html)
@@ -127,11 +128,6 @@ function listRequestBody(request){
 
 SQLConnectionString(ReadConfig("SqlConnectionString"));
 
-
-if(!TableEmployeesExists()){
-    CreateTableEmployees();
-}
-
 function TableEmployeesExists(){
     sqlString = "IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'employees' AND TABLE_SCHEMA = 'dbo')" +
         " BEGIN SELECT 1 END" +
@@ -166,12 +162,6 @@ function CreateTableEmployees(){
     }catch(ex){
         print("Error creating table employees: " + ex.message);
     }
-}
-
-
-if(true){// if(!EmployeesTableHasData())
-    TruncateTableEmployees();
-    InsertDataIntoEmployees();
 }
 
 function EmployeesTableHasData(){
@@ -261,6 +251,16 @@ employees_defaultValues = {
     "City": "",
     "Email": ""
 };
+
+
+if(!TableEmployeesExists()){
+    CreateTableEmployees();
+}
+
+if(true){// if(!EmployeesTableHasData())
+    TruncateTableEmployees();
+    InsertDataIntoEmployees();
+}
 
 
 //get initial html template
