@@ -143,10 +143,12 @@ namespace cscs_web
                 var lines = File.ReadAllLines(file);
                 foreach (var line in lines)
                 {
-                    if (line.TrimStart().TrimStart('/').Trim().ToLower().StartsWith("createendpoint("))
+                    //if (line.TrimStart().TrimStart('/').Trim().ToLower().StartsWith("createendpoint("))
+                    if (line.Trim().ToLower().StartsWith("createendpoint("))
                     {
                         var lineToExecute = line.Trim();
-                        lineToExecute = lineToExecute.Substring(2, lineToExecute.IndexOf(';') + 1 - 2);
+
+                        //lineToExecute = lineToExecute.Substring(2, lineToExecute.IndexOf(';') + 1 - 2);
 
                         CSCSWebApplication.Interpreter.Process(lineToExecute);
                     }
@@ -226,6 +228,8 @@ namespace cscs_web
 
     class CreateEndpointFunction : ParserFunction
     {
+        List<string> endpointsList = new List<string>();
+
         private async Task<Variable> ExecScriptFunctionAsync(HttpContext context,
             string scriptFunctionName, string httpMethod, ParsingScript script, string requestGUID)
         {
@@ -306,6 +310,11 @@ namespace cscs_web
             var endpointRoute = Utils.GetSafeString(args, 1);
             var scriptFunctionName = Utils.GetSafeString(args, 2).ToLower();
 
+            if(endpointsList.Contains(httpMethod + "_" + endpointRoute))
+            {
+                return Variable.EmptyInstance;
+            }
+
             switch (httpMethod)
             {
                 case "GET":
@@ -343,6 +352,8 @@ namespace cscs_web
                 default:
                     throw new Exception($"Invalid HTTP method: {httpMethod}");
             }
+
+            endpointsList.Add(httpMethod + "_" + endpointRoute);
 
             return Variable.EmptyInstance;
         }
