@@ -532,7 +532,7 @@ namespace cscs_web
                         {
                             case Variable.VarType.NUMBER:
                             case Variable.VarType.INT:
-                                itemValue = itemVariable.Value.ToString();
+                                itemValue = itemVariable.Value.ToString().Replace(',', '.');
                                 break;
 
                             case Variable.VarType.STRING:
