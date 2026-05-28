@@ -2,7 +2,7 @@
 title: CSCS_WPF Web Overview
 module: web
 topic: overview
-applies_to: CSCS_WPF
+applies_to: CSCS_WEB
 version: 1
 ---
 

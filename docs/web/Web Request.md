@@ -2,7 +2,7 @@
 title: WebRequest
 module: web
 topic: outbound-http
-applies_to: CSCS_WPF
+applies_to: CSCS_WEB
 version: 1
 ---
 

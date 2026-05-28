@@ -2,7 +2,7 @@
 
 ## Purpose
 `WebRequest(...)` sends an HTTP request to an external URL.  
-It supports success and failure callbacks, custom headers, configurable content type, timeout and synchronous or asynchronous behavior [file:104].
+It supports success and failure callbacks, custom headers, configurable content type, timeout and synchronous or asynchronous behavior .
 
 ## Syntax
 ```internal-script

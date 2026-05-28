@@ -2,7 +2,7 @@
 title: CreateEndpoint
 module: web
 topic: endpoint
-applies_to: CSCS_WPF
+applies_to: CSCS_WEB
 version: 1
 ---
 

@@ -2,7 +2,7 @@
 title: GetValueFromForm
 module: web
 topic: forms
-applies_to: CSCS_WPF
+applies_to: CSCS_WEB
 version: 1
 ---
 

@@ -2,7 +2,7 @@
 title: JSON Serialize and Deserialize
 module: web
 topic: json
-applies_to: CSCS_WPF
+applies_to: CSCS_WEB
 version: 1
 ---
 

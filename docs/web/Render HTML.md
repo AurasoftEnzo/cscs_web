@@ -2,7 +2,7 @@
 title: RenderHtml
 module: web
 topic: templates
-applies_to: CSCS_WPF
+applies_to: CSCS_WEB
 version: 1
 ---
 
